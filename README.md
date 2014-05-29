@@ -3,7 +3,16 @@ jar2bpl
 
 Translate java jar files into Boogie programs.
 
+Requirements:
+- java version >= 7 
+
+
+For a quick start, download:
+https://github.com/martinschaef/jar2bpl/blob/master/jar2bpl/dist/jar2bpl.jar
+
 Usage: java -jar jar2bpl.jar -j [jar file to translate] -b [output boogie file]
+
+
 
 To test the translation, go to the dist sub-directory and execute:
 
