@@ -24,20 +24,20 @@ By default, jar2bpl uses Boogie-assertions to model runtime errors. For example 
       return x.value;
     }
 
-is be translated into a Boogie procedure like
+is translated into a Boogie procedure like
 
     implementation foo (x : ref) returns ($return : int) {
       assert x != $null;
       $return := $heap[x, value];
     }
     
-This is very convenient when building a safety checker, but not very sound. Actually, if *x* happens to be *null*, Java creates a RuntimeException and leaves the function before returning a value. This can be achieved by using the **-err** option which encodes runtime exceptions using actual Java exceptions. That is, instead of running:
+This is very convenient when building a safety checker, but not very sound. Actually, if *x* happens to be *null*, Java does not stop the execution of the program (like an assertion would do), but instead creates a RuntimeException and leaves the function before returning a value. This can be achieved by using the **-err** option which encodes runtime exceptions using actual Java exceptions. That is, instead of running:
 
   java -jar jar2bpl.jar -j ../lib/log4j-1.2.16.jar -b out.bpl
 
 one would run
 
-  java -jar jar2bpl.jar -err -j ../lib/log4j-1.2.16.jar -b out.bpl
+  java -jar jar2bpl.jar **-err** -j ../lib/log4j-1.2.16.jar -b out.bpl
 
 and the result would look somewhat like:
 
