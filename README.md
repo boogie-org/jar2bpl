@@ -70,3 +70,7 @@ https://code.google.com/p/boogieamp/
 
 A paper containing some details of the translation is available here:
 http://iist.unu.edu/sites/iist.unu.edu/files/biblio/soap2013.pdf
+
+For our infeasible code detection tool Joogie visit:
+https://code.google.com/p/joogie/ or http://www.joogie.org
+
