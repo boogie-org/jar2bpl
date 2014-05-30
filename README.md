@@ -20,8 +20,6 @@ For a quick test of the translation, go to the dist sub-directory and execute:
 ####Advanced options
 By default, jar2bpl uses Boogie-assertions to model runtime errors. For example the java procedure:
 
-    // toy.java
-
     public static int foo(MyObject x) {
       return x.value;
     }
