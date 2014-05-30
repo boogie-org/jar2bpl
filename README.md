@@ -61,6 +61,10 @@ and the result would look somewhat like:
 
 To do safety checking on a program like this, one could, for example, add a postcondition *$exception* must be *null* when leaving the function.
 
+####What to do with Boogie files?
+Boogie is an intermediate verification language (IVL) that is understood by a bunch of static analysis tools such as
+[GraVy](http://rise4fun.com/GraVy), [Boogie](http://boogie.codeplex.com/), [Corral](http://corral.codeplex.com/), or [Ultimate](https://monteverdi.informatik.uni-freiburg.de/tomcat//Website/?task=VerifyC#). If you prefer **C** over Java, you should check [Smack](https://github.com/smackers/smack).
+
 ####Links
 For the old checker (GraVy) visit:
 https://code.google.com/p/jimple2boogie/
