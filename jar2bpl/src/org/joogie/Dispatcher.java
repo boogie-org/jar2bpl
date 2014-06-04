@@ -58,11 +58,6 @@ public class Dispatcher {
 	private StopWatch swSoot;
 
 	/**
-	 * StopWatch for ProgramAnalysis
-	 */
-	private StopWatch swProgramAnalysis;
-
-	/**
 	 * C-tor
 	 * 
 	 * @param input
