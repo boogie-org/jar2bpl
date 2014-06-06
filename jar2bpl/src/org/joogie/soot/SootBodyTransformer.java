@@ -19,17 +19,12 @@
 
 package org.joogie.soot;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.joogie.GlobalsCache;
 import org.joogie.Options;
-import org.joogie.errormodel.ExceptionErrorModel;
 import org.joogie.util.Log;
 
 import soot.Body;
@@ -39,12 +34,10 @@ import soot.SootMethod;
 import soot.Unit;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.ExceptionalUnitGraph;
-import boogie.declaration.Procedure;
+import boogie.declaration.Implementation;
 import boogie.enums.BinaryOperator;
 import boogie.location.ILocation;
-import boogie.statement.IfStatement;
 import boogie.statement.Statement;
-import boogie.statement.WhileStatement;
 
 /**
  * Boogie Body Transformer
@@ -137,7 +130,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		
 		//now create the procedure implementation that combines
 		//the signature procInfo and the body.
-		Procedure proc = GlobalsCache
+		Implementation proc = GlobalsCache
 				.v()
 				.getPf()
 				.mkProcedure(
@@ -145,7 +138,7 @@ public class SootBodyTransformer extends BodyTransformer {
 						boogieStatements.toArray(new Statement[boogieStatements
 								.size()]), procInfo.getLocalVariables());
 				
-		procInfo.setBoogieProcedure(proc);
+		procInfo.setProcedureImplementation(proc);
 
 		
 		

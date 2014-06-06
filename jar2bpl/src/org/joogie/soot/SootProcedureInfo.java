@@ -28,8 +28,8 @@ import org.joogie.GlobalsCache;
 import org.joogie.util.TranslationHelpers;
 
 import soot.Local;
-import soot.RefType;
 import soot.PrimType;
+import soot.RefType;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Type;
@@ -40,7 +40,8 @@ import soot.tagkit.VisibilityAnnotationTag;
 import soot.toolkits.exceptions.UnitThrowAnalysis;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import util.Log;
-import boogie.declaration.Procedure;
+import boogie.declaration.Implementation;
+import boogie.declaration.ProcedureDeclaration;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
@@ -71,8 +72,8 @@ public class SootProcedureInfo {
 	private ILocation methodLocation;
 	private String cleanName;
 
-	private Procedure procedureDeclaration;
-	private Procedure boogieProcedure = null;
+	private ProcedureDeclaration procedureDeclaration;
+	private Implementation boogieProcedure = null;
 	
 	public boolean nonNullReturn = false; //TODO: hack
 	public boolean exactReturnType = false; //TODO: hack to ensure the return type of String funs
@@ -330,16 +331,16 @@ public class SootProcedureInfo {
 				+ ((this.sootMethod.isStatic()) ? 0 : 1));
 	}
 
-	public Procedure getProcedureDeclaration() {
+	public ProcedureDeclaration getProcedureDeclaration() {
 		return this.procedureDeclaration;
 	}
 
-	public Procedure getBoogieProcedure() {
+	public Implementation getBoogieProcedure() {
 		return boogieProcedure;
 	}
 
-	public void setBoogieProcedure(Procedure boogieProcedure) {
-		this.boogieProcedure = boogieProcedure;
+	public void setProcedureImplementation(Implementation impl) {
+		this.boogieProcedure = impl;
 	}
 
 }
