@@ -139,11 +139,6 @@ public class SootBodyTransformer extends BodyTransformer {
 								.size()]), procInfo.getLocalVariables());
 				
 		procInfo.setProcedureImplementation(proc);
-
-		
-		
-		
 	}
-	
 	
 }

@@ -19,9 +19,18 @@
 
 package org.joogie.soot;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 
 import org.joogie.GlobalsCache;
+import org.joogie.Main;
 import org.joogie.util.TranslationHelpers;
 
 import util.Log;
@@ -72,21 +81,21 @@ public class SootPrelude {
 	private IdentifierExpression fieldAllocVariable;
 	private IdentifierExpression fieldClassVariable;
 
-    private FunctionDeclaration arrayTypeConstructor;
-    private IdentifierExpression intArrayConstructor;
-    private IdentifierExpression byteArrayConstructor;
-    private IdentifierExpression charArrayConstructor;
-    private IdentifierExpression longArrayConstructor;
-    private IdentifierExpression boolArrayConstructor;
-    
+	private FunctionDeclaration arrayTypeConstructor;
+	private IdentifierExpression intArrayConstructor;
+	private IdentifierExpression byteArrayConstructor;
+	private IdentifierExpression charArrayConstructor;
+	private IdentifierExpression longArrayConstructor;
+	private IdentifierExpression boolArrayConstructor;
+
 	private IdentifierExpression intArrHeapVariable;
 	private IdentifierExpression realArrHeapVariable;
 	private IdentifierExpression boolArrHeapVariable;
 	private IdentifierExpression refArrHeapVariable;
-	
+
 	private IdentifierExpression stringSizeHeapVariable;
 
-	private IdentifierExpression arrSizeHeapVariable;	
+	private IdentifierExpression arrSizeHeapVariable;
 
 	private FunctionDeclaration int2bool, bool2int, ref2bool;
 
@@ -97,8 +106,29 @@ public class SootPrelude {
 	private FunctionDeclaration shlInt, shrInt, ushrInt, xorInt;
 
 	private FunctionDeclaration bitAnd, bitOr;
-	
+
 	private String fieldTypeName = "Field";
+
+	private void loadPreludeFile() {
+		File preludeFile = null;
+		if (org.joogie.Options.v().getPreludeFileName()!=null) {
+			preludeFile = new File(org.joogie.Options.v().getPreludeFileName());
+		} else {
+			try {
+				InputStream filename = Main.class.getResourceAsStream("/res/java_lang.bpl");
+				filename.read();
+				filename.close();
+				Log.error("---------- PRELUDE FOUND -----------" );
+			} catch (Exception e1) {				
+				preludeFile = null;
+				throw new RuntimeException("Prelude file not available. Something failed during the build!");
+			}
+		}
+		if (preludeFile!=null) {
+			//TODO;
+			Log.error("---------- PRELUDE FOUND -----------" );
+		}
+	}
 
 	private SootPrelude() {
 		BoogieType bool = GlobalsCache.v().getPf().getBoolType();
@@ -153,38 +183,51 @@ public class SootPrelude {
 
 		// functions to represent Java/Soot array types
 		{
-          IdentifierExpression[] in = {
-              GlobalsCache.v().getPf()
-              .mkIdentifierExpression(loc, getJavaClassType(), "t", false, false, false) };
-          IdentifierExpression out =
-              GlobalsCache.v().getPf()
-              .mkIdentifierExpression(loc, getJavaClassType(), "$ret", false, false, false);
-          
-		  this.arrayTypeConstructor =
-		    GlobalsCache.v().getPf()
-            .mkFunctionDeclaration(loc, "$arrayType", in, out);
-		  
-		  this.intArrayConstructor = GlobalsCache.v().getPf()
-            .mkIdentifierExpression(loc, getJavaClassType(), "$intArrayType",
-                    false, true, false);
-		    
-          this.byteArrayConstructor = GlobalsCache.v().getPf()
-          .mkIdentifierExpression(loc, getJavaClassType(), "$byteArrayType",
-                  false, true, false);
-          
-          this.charArrayConstructor = GlobalsCache.v().getPf()
-          .mkIdentifierExpression(loc, getJavaClassType(), "$charArrayType",
-                  false, true, false);
-          
-          this.longArrayConstructor = GlobalsCache.v().getPf()
-          .mkIdentifierExpression(loc, getJavaClassType(), "$longArrayType",
-                  false, true, false);
-          
-          this.boolArrayConstructor = GlobalsCache.v().getPf()
-            .mkIdentifierExpression(loc, getJavaClassType(), "$boolArrayType",
-                  false, true, false);
+			IdentifierExpression[] in = { GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(), "t",
+							false, false, false) };
+			IdentifierExpression out = GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(), "$ret",
+							false, false, false);
+
+			this.arrayTypeConstructor = GlobalsCache.v().getPf()
+					.mkFunctionDeclaration(loc, "$arrayType", in, out);
+
+			this.intArrayConstructor = GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(),
+							"$intArrayType", false, true, false);
+
+			this.byteArrayConstructor = GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(),
+							"$byteArrayType", false, true, false);
+
+			this.charArrayConstructor = GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(),
+							"$charArrayType", false, true, false);
+
+			this.longArrayConstructor = GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(),
+							"$longArrayType", false, true, false);
+
+			this.boolArrayConstructor = GlobalsCache
+					.v()
+					.getPf()
+					.mkIdentifierExpression(loc, getJavaClassType(),
+							"$boolArrayType", false, true, false);
 		}
-		
+
 		// the following creates the heap variables for arrays:
 		// each array is represented by one variable of type "ref" on the $heap.
 		// this variable refers to the actual array on the array heap of
@@ -251,15 +294,15 @@ public class SootPrelude {
 				.mkIdentifierExpression(loc, arrsizeheapidx, "$arrSizeHeap",
 						false, true, false);
 
-		//private IdentifierExpression stringSizeHeapVariable;
+		// private IdentifierExpression stringSizeHeapVariable;
 		BoogieType stringsizeheapidx = GlobalsCache.v().getPf()
 				.getArrayType(refarridx, integer);
 		this.stringSizeHeapVariable = GlobalsCache
 				.v()
 				.getPf()
-				.mkIdentifierExpression(loc, stringsizeheapidx, "$stringSizeHeap",
-						false, true, false);
-		
+				.mkIdentifierExpression(loc, stringsizeheapidx,
+						"$stringSizeHeap", false, true, false);
+
 		// make int2bool
 		{
 			IdentifierExpression x = GlobalsCache
@@ -674,7 +717,9 @@ public class SootPrelude {
 			this.bitOr = GlobalsCache.v().getPf()
 					.mkFunctionDeclaration(loc, "$bitOr", in, outParam, null);
 		}
-		
+
+		//now load the prelude file.
+		loadPreludeFile();
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();
@@ -752,30 +797,30 @@ public class SootPrelude {
 		return fieldClassVariable;
 	}
 
-    public FunctionDeclaration getArrayTypeConstructor() {
-      return arrayTypeConstructor;
-    }
-	
-    public IdentifierExpression getIntArrayConstructor() {
-      return intArrayConstructor;
-    }
-    
-    public IdentifierExpression getByteArrayConstructor() {
-      return byteArrayConstructor;
-    }
-    
-    public IdentifierExpression getCharArrayConstructor() {
-      return charArrayConstructor;
-    }
-    
-    public IdentifierExpression getLongArrayConstructor() {
-      return longArrayConstructor;
-    }
-    
-    public IdentifierExpression getBoolArrayConstructor() {
-      return boolArrayConstructor;
-    }
-    
+	public FunctionDeclaration getArrayTypeConstructor() {
+		return arrayTypeConstructor;
+	}
+
+	public IdentifierExpression getIntArrayConstructor() {
+		return intArrayConstructor;
+	}
+
+	public IdentifierExpression getByteArrayConstructor() {
+		return byteArrayConstructor;
+	}
+
+	public IdentifierExpression getCharArrayConstructor() {
+		return charArrayConstructor;
+	}
+
+	public IdentifierExpression getLongArrayConstructor() {
+		return longArrayConstructor;
+	}
+
+	public IdentifierExpression getBoolArrayConstructor() {
+		return boolArrayConstructor;
+	}
+
 	public IdentifierExpression getIntArrHeapVariable() {
 		return this.intArrHeapVariable;
 	}
@@ -794,8 +839,8 @@ public class SootPrelude {
 
 	public IdentifierExpression getStringSizeHeapVariable() {
 		return this.stringSizeHeapVariable;
-	}	
-	
+	}
+
 	public IdentifierExpression getArrSizeHeapVariable() {
 		return this.arrSizeHeapVariable;
 	}
@@ -949,5 +994,5 @@ public class SootPrelude {
 		return GlobalsCache.v().getPf()
 				.mkFunctionApplication(left.getLocation(), operator, args);
 	}
-	
+
 }

@@ -15,6 +15,7 @@
         <property name="bin" value="bin" />
         <property name="lib" value="lib" />
         <property name="src" value="src" />
+		<property name="res" value="res" />
 
         <!-- =================================
           target: default
@@ -40,9 +41,11 @@
                 </javac>
 
                 <copy todir="${bin}">
+                		<fileset dir="${src}" includes="**/*.bpl" />
                         <fileset dir="${src}" includes="**/*.png" />
                         <fileset dir="${src}" includes="**/*.properties" />
                 </copy>
+        	
         </target>
 
         <!-- - - - - - - - - - - - - - - - - - 
@@ -56,8 +59,10 @@
                 <mkdir dir="${dist}" />
 
                 <jar destfile="${dist}/jar2bpl.jar">
-                        <fileset dir="${bin}" includes="**/*" />     
+                        <fileset dir="${bin}" includes="**/*" />
+
                 		<zipgroupfileset dir="${lib}" />
+                		
                         <manifest>
                                 <attribute name="Main-Class" value="org.joogie.Main" />
                                 <attribute name="Class-Path" value="log4j-1.2.16.jar soot-2.5.0.jar boogieamp.jar args4j-2.0.18.jar" />

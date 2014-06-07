@@ -44,7 +44,6 @@ public class Main {
 			// parse command-line arguments
 			parser.parseArgument(args);
 			runConsoleMode();
-
 		} catch (CmdLineException e) {
 			Log.error(e.getMessage());
 			Log.error("java -jar joogie.jar [options...] arguments...");

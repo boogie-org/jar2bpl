@@ -29,7 +29,9 @@ import org.kohsuke.args4j.Option;
 public class Options {
 
 	/**
-	 * JAR file
+	 * Use other runtime exception encoding.
+	 * Default encodes RuntimeExceptions as assertions, 
+	 * -err encodes them by creating actual exception. 
 	 */
 	@Option(name = "-err", usage = "Use exception error model", required = false)
 	private boolean exceptionErrorModel;
@@ -37,6 +39,9 @@ public class Options {
 		return exceptionErrorModel;
 	}
 	
+
+	@Option(name = "-prelude", usage = "Use custom prelude instead of the built-in one.")
+	private String preludeFileName=null;
 	
 	/**
 	 * JAR file
@@ -141,7 +146,18 @@ public class Options {
 	public void setClasspath(String classpath) {
 		this.classpath = classpath;
 	}
-
+	
+	/**
+	 * Uses a user provided prelude file instead of the built in one.
+	 * 
+	 * @param preludeFileName
+	 *            optional alternative prelude file
+	 */	
+	public String getPreludeFileName() {
+		return preludeFileName;
+	}
+	
+	
 	/**
 	 * Option object
 	 */

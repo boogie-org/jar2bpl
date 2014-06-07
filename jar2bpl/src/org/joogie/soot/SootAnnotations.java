@@ -6,6 +6,8 @@ package org.joogie.soot;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.joogie.util.TranslationHelpers;
+
 import soot.SootField;
 import soot.SootMethod;
 import soot.tagkit.AnnotationTag;
@@ -88,6 +90,10 @@ public class SootAnnotations {
 	
 	
 	public static boolean inHackedListOfMethodsThatReturnNonNullValues(SootMethod m) {
+		if (m.getSignature().contains("<java.lang.")) {
+			//Log.error(m.getSignature() + "   " + TranslationHelpers.getQualifiedName(m));
+		}
+		
 		if (m.getSignature().contains("<java.lang.String")) {
 			if (m.getSignature().contains("toUpperCase")) return true;
 			if (m.getSignature().contains("substring")) return true;
