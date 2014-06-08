@@ -19,18 +19,12 @@
 
 package org.joogie.soot;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashMap;
 
 import org.joogie.GlobalsCache;
-import org.joogie.Main;
 import org.joogie.util.TranslationHelpers;
 
 import util.Log;
@@ -109,25 +103,32 @@ public class SootPrelude {
 
 	private String fieldTypeName = "Field";
 
-	private void loadPreludeFile() {
-		File preludeFile = null;
+	
+	
+	private void loadPreludeFile() {		
 		if (org.joogie.Options.v().getPreludeFileName()!=null) {
-			preludeFile = new File(org.joogie.Options.v().getPreludeFileName());
-		} else {
 			try {
-				InputStream filename = Main.class.getResourceAsStream("/res/java_lang.bpl");
-				filename.read();
-				filename.close();
-				Log.error("---------- PRELUDE FOUND -----------" );
-			} catch (Exception e1) {				
-				preludeFile = null;
-				throw new RuntimeException("Prelude file not available. Something failed during the build!");
-			}
+				Log.info("Loading user prelude: "+ org.joogie.Options.v().getPreludeFileName());
+				GlobalsCache.v().getPf().importBoogieFile(org.joogie.Options.v().getPreludeFileName());
+			} catch (Exception e) {
+				throw new RuntimeException("Loading prelude failed: "+e.toString());
+			}			
+		} else {
+			//loadPreludeFromResources("/res/basic_prelude.bpl");
+			loadPreludeFromResources("/res/java_lang.bpl");
 		}
-		if (preludeFile!=null) {
-			//TODO;
+	}
+	
+	private void loadPreludeFromResources(String name) {
+		try {
+			InputStream stream = SootPrelude.class.getResourceAsStream(name);			
+			GlobalsCache.v().getPf().importBoogieFile(name, stream);
+			stream.close();
 			Log.error("---------- PRELUDE FOUND -----------" );
+		} catch (Exception e1) {							
+			throw new RuntimeException("Prelude file not available. Something failed during the build!");
 		}
+		
 	}
 
 	private SootPrelude() {
@@ -720,6 +721,7 @@ public class SootPrelude {
 
 		//now load the prelude file.
 		loadPreludeFile();
+		
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();

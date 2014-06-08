@@ -59,14 +59,14 @@
                 <mkdir dir="${dist}" />
 
                 <jar destfile="${dist}/jar2bpl.jar">
-                        <fileset dir="${bin}" includes="**/*" />
-
                 		<zipgroupfileset dir="${lib}" />
                 		
                         <manifest>
                                 <attribute name="Main-Class" value="org.joogie.Main" />
-                                <attribute name="Class-Path" value="log4j-1.2.16.jar soot-2.5.0.jar boogieamp.jar args4j-2.0.18.jar" />
+                                <attribute name="Class-Path" value="boogieamp.jar soot-2.5.0.jar  args4j-2.0.18.jar log4j-1.2.16.jar" />
                         </manifest>
+                	
+                    	<fileset dir="${bin}" includes="**/*" />
                 </jar>
         </target>
 
