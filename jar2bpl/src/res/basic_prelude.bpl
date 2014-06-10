@@ -1,21 +1,24 @@
-type wurst;
 
-/*
 type ref;
 type javaType;
-const unique $null : ref;
-
 
 type Field $GenericType__0;
-var $heap : <$GenericType__0>[ref,Field $GenericType__0]$GenericType__0;
+type $heap_type = <$GenericType__0>[ref,Field $GenericType__0]$GenericType__0;
 
+var $heap : $heap_type;
+
+
+const unique $null : ref;
 //$type is used to store the type of a java object on the heap.
 //E.g., String s will have $heap[s,$type]==string
 const unique $type : Field javaType;
 //$heap[s,$alloc] is true if s is properly allocated
 const unique $alloc : Field bool ;
 
+function $arrayType(t:javaType) returns ($ret:javaType);
 
+var $intArrayType : javaType;
+var $charArrayType : javaType;
 var $boolArrayType : javaType;
 var $byteArrayType : javaType;
 var $longArrayType : javaType;
@@ -27,11 +30,19 @@ var $arrSizeHeap : [ref]int;
 var $stringSizeHeap : [ref]int;
 
 
+type boolArrHeap_type = [ref][int]bool;
+var $boolArrHeap : boolArrHeap_type;
 
-var $boolArrHeap : [ref][int]bool;
-var $refArrHeap : [ref][int]ref;
-var $realArrHeap : [ref][int]int;
-var $intArrHeap : [ref][int]int;
+type refArrHeap_type = [ref][int]ref;
+var $refArrHeap : refArrHeap_type;
+
+//note that reals in bytecode are currently treated as ints
+type realArrHeap_type = [ref][int]int;
+var $realArrHeap : realArrHeap_type;
+
+
+type intArrHeap_type = [ref][int]int;
+var $intArrHeap : intArrHeap_type;
 
 
 //helper functions to cast between types.
@@ -41,11 +52,6 @@ function $intToReal(x:int) returns ($ret:real);
 function $intToBool(x:int) returns ($ret:bool) { (if x == 0 then false else true) }
 function $refToBool(x:ref) returns ($ret:bool) { (if x == $null then false else true) }
 function $boolToInt(x:bool) returns ($ret:int) { (if x == true then 1 else 0) }
-
-
-function $arrayType(t:javaType) returns ($ret:javaType);
-var $intArrayType : javaType;
-var $charArrayType : javaType;
 
 function $cmpBool(x:bool, y:bool) returns ($ret:int);
 function $cmpRef(x:ref, y:ref) returns ($ret:int);
@@ -58,7 +64,7 @@ function $shlInt(x:int, y:int) returns ($ret:int);
 function $ushrInt(x:int, y:int) returns ($ret:int);
 function $shrInt(x:int, y:int) returns ($ret:int);
 
-*/
+
 
 
 

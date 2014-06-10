@@ -19,8 +19,6 @@
 
 package org.joogie.soot;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -28,6 +26,8 @@ import org.joogie.GlobalsCache;
 import org.joogie.util.TranslationHelpers;
 
 import util.Log;
+import boogie.ProgramFactory;
+import boogie.declaration.ConstDeclaration;
 import boogie.declaration.FunctionDeclaration;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
@@ -114,7 +114,7 @@ public class SootPrelude {
 				throw new RuntimeException("Loading prelude failed: "+e.toString());
 			}			
 		} else {
-			//loadPreludeFromResources("/res/basic_prelude.bpl");
+			loadPreludeFromResources("/res/basic_prelude.bpl");
 			loadPreludeFromResources("/res/java_lang.bpl");
 		}
 	}
@@ -124,7 +124,7 @@ public class SootPrelude {
 			InputStream stream = SootPrelude.class.getResourceAsStream(name);			
 			GlobalsCache.v().getPf().importBoogieFile(name, stream);
 			stream.close();
-			Log.error("---------- PRELUDE FOUND -----------" );
+			
 		} catch (Exception e1) {							
 			throw new RuntimeException("Prelude file not available. Something failed during the build!");
 		}
@@ -132,103 +132,40 @@ public class SootPrelude {
 	}
 
 	private SootPrelude() {
-		BoogieType bool = GlobalsCache.v().getPf().getBoolType();
-		BoogieType integer = GlobalsCache.v().getPf().getIntType();
-		BoogieType real = GlobalsCache.v().getPf().getRealType();
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		
 		ILocation loc = TranslationHelpers.createDummyLocation();
 
-		this.referenceType = GlobalsCache.v().getPf().getNamedType("ref");
-		this.voidType = GlobalsCache.v().getPf().getNamedType("void");
+		//now load the prelude file.
+		loadPreludeFile();
+		
+		
+		this.referenceType = pf.findTypeByName("ref");
+		this.voidType = pf.findTypeByName("void");
+		this.javaClassType = pf.getNamedType("javaType");
+		this.fieldType = pf.findTypeByName("Field");
+		this.heapType = pf.findTypeByName("$heap_type");
+		
 
-		BoogieType alpha = GlobalsCache.v().getPf().mkPlaceholderType();
-		BoogieType[] params = { alpha };
-		this.fieldType = GlobalsCache.v().getPf()
-				.getNamedType(this.fieldTypeName, params, false);
-		BoogieType[] indexTypes = { this.referenceType, fieldType };
-		this.heapType = GlobalsCache.v().getPf()
-				.getArrayType(indexTypes, alpha);
-
-		this.nullConstant = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, referenceType, "$null", true,
-						true, true);
-		// this is our heap : <a>[ref, Field alpha]alpha
-		this.heapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, heapType, "$heap", false, true,
-						false);
-
-		// create helper fields to store the type of an object and a flag if it
-		// has been created with "new"
-		this.javaClassType = GlobalsCache.v().getPf().getNamedType("javaType");
-		BoogieType[] fallocparams = { bool };
-		this.fieldAllocVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(
-						loc,
-						GlobalsCache.v().getPf()
-								.mkSubstituteType(this.fieldType, fallocparams),
-						"$alloc", true, true, true);
-		BoogieType[] fclassparams = { this.javaClassType };
-		this.fieldClassVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(
-						loc,
-						GlobalsCache.v().getPf()
-								.mkSubstituteType(this.fieldType, fclassparams),
-						"$type", true, true, true);
+		this.nullConstant = pf.findGlobalByName("$null");
+		this.heapVariable = pf.findGlobalByName("$heap");
+		this.fieldAllocVariable = pf.findGlobalByName("$alloc");
+		
+		this.fieldClassVariable = pf.findGlobalByName("$type");
 
 		// functions to represent Java/Soot array types
-		{
-			IdentifierExpression[] in = { GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(), "t",
-							false, false, false) };
-			IdentifierExpression out = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(), "$ret",
-							false, false, false);
+		this.arrayTypeConstructor =  pf.findFunctionDeclaration("$arrayType");
 
-			this.arrayTypeConstructor = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$arrayType", in, out);
+		
+		this.intArrayConstructor  = pf.findGlobalByName("$intArrayType");
+		this.byteArrayConstructor  = pf.findGlobalByName("$byteArrayType");
+		this.charArrayConstructor  = pf.findGlobalByName("$charArrayType");
+		this.longArrayConstructor  = pf.findGlobalByName("$longArrayType");
+		this.boolArrayConstructor  = pf.findGlobalByName("$boolArrayType");
+		
+		
 
-			this.intArrayConstructor = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(),
-							"$intArrayType", false, true, false);
-
-			this.byteArrayConstructor = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(),
-							"$byteArrayType", false, true, false);
-
-			this.charArrayConstructor = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(),
-							"$charArrayType", false, true, false);
-
-			this.longArrayConstructor = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(),
-							"$longArrayType", false, true, false);
-
-			this.boolArrayConstructor = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, getJavaClassType(),
-							"$boolArrayType", false, true, false);
-		}
-
+		
 		// the following creates the heap variables for arrays:
 		// each array is represented by one variable of type "ref" on the $heap.
 		// this variable refers to the actual array on the array heap of
@@ -237,491 +174,43 @@ public class SootPrelude {
 		// a[x] = 3 translates to a variable a : ref and the read access whould
 		// be
 		// $intArrHeap[a][x] := 3
-		BoogieType[] intarridx = { integer };
-		BoogieType[] refarridx = { this.referenceType };
-		// int array
-		this.intArrType = GlobalsCache.v().getPf()
-				.getArrayType(intarridx, GlobalsCache.v().getPf().getIntType());
-		BoogieType intarrheapidx = GlobalsCache.v().getPf()
-				.getArrayType(refarridx, this.intArrType);
-		this.intArrHeapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, intarrheapidx, "$intArrHeap",
-						false, true, false);
-		// real array
-		// TODO: note that we use Int to abstract Java Float and Double
-		// variables
-		// This is only sound because we use uninterpreted functions to model
-		// operations
-		// on float!
-		this.realArrType = GlobalsCache.v().getPf()
-				.getArrayType(intarridx, GlobalsCache.v().getPf().getIntType());
-		BoogieType realarrheapidx = GlobalsCache.v().getPf()
-				.getArrayType(refarridx, this.realArrType);
-		this.realArrHeapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, realarrheapidx, "$realArrHeap",
-						false, true, false);
-		// bool array
-		this.boolArrType = GlobalsCache
-				.v()
-				.getPf()
-				.getArrayType(intarridx, GlobalsCache.v().getPf().getBoolType());
-		BoogieType boolarrheapidx = GlobalsCache.v().getPf()
-				.getArrayType(refarridx, this.boolArrType);
-		this.boolArrHeapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, boolarrheapidx, "$boolArrHeap",
-						false, true, false);
-		// ref array
-		this.refArrType = GlobalsCache.v().getPf()
-				.getArrayType(intarridx, this.referenceType);
-		BoogieType refarrheapidx = GlobalsCache.v().getPf()
-				.getArrayType(refarridx, this.refArrType);
-		this.refArrHeapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, refarrheapidx, "$refArrHeap",
-						false, true, false);
-		// array size heap
-		BoogieType arrsizeheapidx = GlobalsCache.v().getPf()
-				.getArrayType(refarridx, integer);
-		this.arrSizeHeapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, arrsizeheapidx, "$arrSizeHeap",
-						false, true, false);
-
-		// private IdentifierExpression stringSizeHeapVariable;
-		BoogieType stringsizeheapidx = GlobalsCache.v().getPf()
-				.getArrayType(refarridx, integer);
-		this.stringSizeHeapVariable = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(loc, stringsizeheapidx,
-						"$stringSizeHeap", false, true, false);
-
-		// make int2bool
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			Expression xIs0 = GlobalsCache
-					.v()
-					.getPf()
-					.mkBinaryExpression(loc, bool, BinaryOperator.COMPEQ, x,
-							GlobalsCache.v().getPf().mkIntLiteral(loc, "0"));
-			Expression ite = GlobalsCache
-					.v()
-					.getPf()
-					.mkIfThenElseExpression(
-							loc,
-							bool,
-							xIs0,
-							GlobalsCache.v().getPf()
-									.mkBooleanLiteral(loc, false),
-							GlobalsCache.v().getPf()
-									.mkBooleanLiteral(loc, true));
-			IdentifierExpression[] in = { x };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, bool, "$ret", false, false,
-							false);
-			this.int2bool = GlobalsCache
-					.v()
-					.getPf()
-					.mkFunctionDeclaration(loc, "$intToBool", in, outParam, ite);
-		}
-		// make bool2int
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, bool, "x", false, false, false);
-			Expression xIsTrue = GlobalsCache
-					.v()
-					.getPf()
-					.mkBinaryExpression(
-							loc,
-							bool,
-							BinaryOperator.COMPEQ,
-							x,
-							GlobalsCache.v().getPf()
-									.mkBooleanLiteral(loc, true));
-			Expression ite = GlobalsCache
-					.v()
-					.getPf()
-					.mkIfThenElseExpression(loc, integer, xIsTrue,
-							GlobalsCache.v().getPf().mkIntLiteral(loc, "1"),
-							GlobalsCache.v().getPf().mkIntLiteral(loc, "0"));
-			IdentifierExpression[] in = { x };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.bool2int = GlobalsCache
-					.v()
-					.getPf()
-					.mkFunctionDeclaration(loc, "$boolToInt", in, outParam, ite);
-		}
-		// make ref2bool
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, this.referenceType, "x",
-							false, false, false);
-			Expression xIsNull = GlobalsCache
-					.v()
-					.getPf()
-					.mkBinaryExpression(loc, bool, BinaryOperator.COMPEQ, x,
-							this.nullConstant);
-			Expression ite = GlobalsCache
-					.v()
-					.getPf()
-					.mkIfThenElseExpression(
-							loc,
-							bool,
-							xIsNull,
-							GlobalsCache.v().getPf()
-									.mkBooleanLiteral(loc, false),
-							GlobalsCache.v().getPf()
-									.mkBooleanLiteral(loc, true));
-			IdentifierExpression[] in = { x };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, bool, "$ret", false, false,
-							false);
-			this.ref2bool = GlobalsCache
-					.v()
-					.getPf()
-					.mkFunctionDeclaration(loc, "$refToBool", in, outParam, ite);
-		}
-		// make int2real
-		{
-			Log.debug("int2real is still uninterpreted");
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression[] in = { x };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, real, "$ret", false, false,
-							false);
-			this.int2real = GlobalsCache
-					.v()
-					.getPf()
-					.mkFunctionDeclaration(loc, "$intToReal", in, outParam,
-							null);
-		}
-		// make real2int
-		{
-			Log.debug("real2int is still uninterpreted");
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, real, "x", false, false, false);
-			IdentifierExpression[] in = { x };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.real2int = GlobalsCache
-					.v()
-					.getPf()
-					.mkFunctionDeclaration(loc, "$realToInt", in, outParam,
-							null);
-		}
-		// make cmpInt
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			// if (x>y) return 1, if (x<y) return -1, otherwise return 0
-			Expression ite = GlobalsCache
-					.v()
-					.getPf()
-					.mkIfThenElseExpression(
-							loc,
-							bool,
-							GlobalsCache
-									.v()
-									.getPf()
-									.mkBinaryExpression(loc, bool,
-											BinaryOperator.COMPGT, x, y),
-							GlobalsCache.v().getPf().mkIntLiteral(loc, "1"),
-							GlobalsCache
-									.v()
-									.getPf()
-									.mkIfThenElseExpression(
-											loc,
-											bool,
-											GlobalsCache
-													.v()
-													.getPf()
-													.mkBinaryExpression(
-															loc,
-															bool,
-															BinaryOperator.COMPLT,
-															x, y),
-											GlobalsCache.v().getPf()
-													.mkIntLiteral(loc, "-1"),
-											GlobalsCache.v().getPf()
-													.mkIntLiteral(loc, "0")));
-
-			this.cmpInt = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$cmpInt", in, outParam, ite);
-		}
-		// make cmpReal
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, real, "x", false, false, false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, real, "y", false, false, false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			// if (x>y) return 1, if (x<y) return -1, otherwise return 0
-			Expression ite = GlobalsCache
-					.v()
-					.getPf()
-					.mkIfThenElseExpression(
-							loc,
-							bool,
-							GlobalsCache
-									.v()
-									.getPf()
-									.mkBinaryExpression(loc, bool,
-											BinaryOperator.COMPGT, x, y),
-							GlobalsCache.v().getPf().mkIntLiteral(loc, "1"),
-							GlobalsCache
-									.v()
-									.getPf()
-									.mkIfThenElseExpression(
-											loc,
-											bool,
-											GlobalsCache
-													.v()
-													.getPf()
-													.mkBinaryExpression(
-															loc,
-															bool,
-															BinaryOperator.COMPLT,
-															x, y),
-											GlobalsCache.v().getPf()
-													.mkIntLiteral(loc, "-1"),
-											GlobalsCache.v().getPf()
-													.mkIntLiteral(loc, "0")));
-
-			this.cmpReal = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$cmpReal", in, outParam, ite);
-		}
-		// make cmpRef
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, this.referenceType, "x",
-							false, false, false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, this.referenceType, "y",
-							false, false, false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.cmpRef = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$cmpRef", in, outParam, null);
-		}
-
-		// make cmpBool
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, bool, "x", false, false, false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, bool, "y", false, false, false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.cmpBool = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$cmpBool", in, outParam, null);
-		}
-		// make shlInt
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.shlInt = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$shlInt", in, outParam, null);
-		}
-		// make shrInt
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.shrInt = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$shrInt", in, outParam, null);
-		}
-		// make ushrInt
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.ushrInt = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$ushrInt", in, outParam, null);
-		}
-
-		// make xorInt
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.xorInt = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$xorInt", in, outParam, null);
-		}
-
-		// make bitAnd
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.bitAnd = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$bitAnd", in, outParam, null);
-		}
-
-		// make bitAnd
-		{
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
-							false);
-			IdentifierExpression[] in = { x, y };
-			IdentifierExpression outParam = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
-							false);
-			this.bitOr = GlobalsCache.v().getPf()
-					.mkFunctionDeclaration(loc, "$bitOr", in, outParam, null);
-		}
-
-		//now load the prelude file.
-		loadPreludeFile();
+		this.intArrType = pf.findTypeByName("intArrHeap_type");
+		this.refArrType = pf.findTypeByName("reflArrHeap_type");
+		this.realArrType = pf.findTypeByName("realArrHeap_type");
+		this.boolArrType = pf.findTypeByName("boolArrHeap_type");
 		
+		this.intArrHeapVariable  = pf.findGlobalByName("$intArrHeap");
+		this.refArrHeapVariable  = pf.findGlobalByName("$refArrHeap");
+		this.realArrHeapVariable  = pf.findGlobalByName("$realArrHeap");
+		this.boolArrHeapVariable  = pf.findGlobalByName("$boolArrHeap");
+		
+		//an array that stores the size of java arrays.
+
+		//an array that stores the size of java string.
+		this.arrSizeHeapVariable = pf.findGlobalByName("$arrSizeHeap");
+		this.stringSizeHeapVariable = pf.findGlobalByName("$stringSizeHeap");
+
+		
+		this.int2bool = pf.findFunctionDeclaration("$intToBool");
+		this.bool2int = pf.findFunctionDeclaration("$boolToInt");
+		this.ref2bool = pf.findFunctionDeclaration("$refToBool");
+		this.int2real = pf.findFunctionDeclaration("$intToReal");
+		this.real2int = pf.findFunctionDeclaration("$realToInt");
+		
+		this.cmpInt = pf.findFunctionDeclaration("$cmpInt");	
+		this.cmpReal = pf.findFunctionDeclaration("$cmpReal");	
+		this.cmpRef = pf.findFunctionDeclaration("$cmpRef");	
+		this.cmpBool = pf.findFunctionDeclaration("$cmpBool");	
+
+		this.shlInt = pf.findFunctionDeclaration("$shlInt");	
+		this.shrInt = pf.findFunctionDeclaration("$shrInt");	
+		this.ushrInt = pf.findFunctionDeclaration("$ushrInt");	
+		
+		this.xorInt = pf.findFunctionDeclaration("$xorInt");	
+		this.bitAnd = pf.findFunctionDeclaration("$bitAnd");	
+		this.bitOr = pf.findFunctionDeclaration("$bitOr");	
+	
+
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();
@@ -736,7 +225,7 @@ public class SootPrelude {
 	 * @return
 	 */
 	public FunctionDeclaration lookupRealOperator(String op) {
-		if (!this.realOperators.containsKey(op)) {
+		if (!this.realOperators.containsKey(op)) {	
 			ILocation loc = TranslationHelpers.createDummyLocation();
 			BoogieType integer = GlobalsCache.v().getPf().getIntType();
 			IdentifierExpression x = GlobalsCache
@@ -763,7 +252,8 @@ public class SootPrelude {
 							.mkFunctionDeclaration(loc,
 									"$realOp" + op.hashCode(), in, outParam,
 									null));
-		}
+			Log.error("Created function that should be in Prelude: "+ this.realOperators.get(op));
+		}	
 		return this.realOperators.get(op);
 	}
 
@@ -865,14 +355,14 @@ public class SootPrelude {
 
 	public BoogieType getFieldType(BoogieType type) {
 		if (type instanceof ConstructedType) {
-			ConstructedType ctype = (ConstructedType) type;
-			if (ctype.getConstr().getName() == this.fieldTypeName) {
+			ConstructedType ctype = (ConstructedType) type;	
+			if (ctype.getConstr().getName() == this.fieldTypeName) {				
 				if (ctype.getConstr().getParamCount() == 1) {
 					return ctype.getParameter(0);
 				}
 			}
 		}
-		throw new RuntimeException("The type " + type + " is not a Field type.");
+		throw new RuntimeException("The type " + type + " is not a Field type. ");
 	}
 
 	public Expression intToBool(Expression exp) {

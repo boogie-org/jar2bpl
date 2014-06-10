@@ -15,7 +15,6 @@
         <property name="bin" value="bin" />
         <property name="lib" value="lib" />
         <property name="src" value="src" />
-		<property name="res" value="res" />
 
         <!-- =================================
           target: default
@@ -59,14 +58,15 @@
                 <mkdir dir="${dist}" />
 
                 <jar destfile="${dist}/jar2bpl.jar">
-                		<zipgroupfileset dir="${lib}" />
+	                	<fileset dir="${bin}" includes="**/*" />	
+	                	<zipgroupfileset dir="${lib}" />
                 		
                         <manifest>
                                 <attribute name="Main-Class" value="org.joogie.Main" />
                                 <attribute name="Class-Path" value="boogieamp.jar soot-2.5.0.jar  args4j-2.0.18.jar log4j-1.2.16.jar" />
                         </manifest>
                 	
-                    	<fileset dir="${bin}" includes="**/*" />
+                    	
                 </jar>
         </target>
 
