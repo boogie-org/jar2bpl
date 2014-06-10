@@ -114,8 +114,7 @@ public class SootPrelude {
 				throw new RuntimeException("Loading prelude failed: "+e.toString());
 			}			
 		} else {
-			loadPreludeFromResources("/res/basic_prelude.bpl");
-			loadPreludeFromResources("/res/java_lang.bpl");
+			loadPreludeFromResources("/res/basic_prelude.bpl");			
 		}
 	}
 	
@@ -133,8 +132,6 @@ public class SootPrelude {
 
 	private SootPrelude() {
 		ProgramFactory pf = GlobalsCache.v().getPf();
-		
-		ILocation loc = TranslationHelpers.createDummyLocation();
 
 		//now load the prelude file.
 		loadPreludeFile();
@@ -210,7 +207,9 @@ public class SootPrelude {
 		this.bitAnd = pf.findFunctionDeclaration("$bitAnd");	
 		this.bitOr = pf.findFunctionDeclaration("$bitOr");	
 	
-
+		if (org.joogie.Options.v().getPreludeFileName()==null) {
+			loadPreludeFromResources("/res/java_lang.bpl");
+		}
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();

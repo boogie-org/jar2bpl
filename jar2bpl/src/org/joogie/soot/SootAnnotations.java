@@ -6,11 +6,10 @@ package org.joogie.soot;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.joogie.util.TranslationHelpers;
-
 import soot.SootField;
 import soot.SootMethod;
 import soot.tagkit.AnnotationTag;
+import soot.tagkit.SignatureTag;
 import soot.tagkit.Tag;
 import soot.tagkit.VisibilityAnnotationTag;
 import soot.tagkit.VisibilityParameterAnnotationTag;
@@ -36,8 +35,13 @@ public class SootAnnotations {
 					throw new RuntimeException("Bug in parseFieldTags");
 				}
 				annot = parseAnnotations((VisibilityAnnotationTag)t);
+			} else if (t instanceof SignatureTag) {
+				//SignatureTag tag = (SignatureTag)t;
+				//TODO: do we want to do something with that?
+//			} else if (t instanceof CallerSensitive) {	
+//				CallerSensitive tag = (CallerSensitive)t;
 			} else {
-				Log.error("Unimplemented Tag found: "+t);
+				Log.error("Unimplemented Tag found: "+t.getName());
 			}
 		}
 		if (annot == null) annot = new LinkedList<SootAnnotations.Annotation>();
@@ -80,6 +84,12 @@ public class SootAnnotations {
 			if (at.getType().contains("Lorg/eclipse/jdt/annotation/NonNull")) {
 				Log.info("@NonNull found" );
 				annot.add(Annotation.NonNull);
+			} else if (at.getType().contains("Lsun/reflect/CallerSensitive")) {
+				Log.debug("Not sure what to do with this tag. Ignoring it: "+at.getType());
+			} else if (at.getType().contains("Ljava/lang/SafeVarargs")) {
+				//TODO: we could actually check that!
+				Log.debug("Not sure what to do with this tag. Ignoring it: "+at.getType());
+				
 			} else {
 				Log.error("Unhandled Annotation "+at);
 			}
@@ -88,26 +98,5 @@ public class SootAnnotations {
 		}		
 	}
 	
-	
-	public static boolean inHackedListOfMethodsThatReturnNonNullValues(SootMethod m) {
-		if (m.getSignature().contains("<java.lang.")) {
-			//Log.error(m.getSignature() + "   " + TranslationHelpers.getQualifiedName(m));
-		}
-		
-		if (m.getSignature().contains("<java.lang.String")) {
-			if (m.getSignature().contains("toUpperCase")) return true;
-			if (m.getSignature().contains("substring")) return true;
-			if (m.getSignature().contains("subSequence")) return true;
-			if (m.getSignature().contains("trim")) return true;
-			if (m.getSignature().contains("toString")) return true;
-			if (m.getSignature().contains("replace")) return true;
-		}
-		
-		//TODO: Hack
-		if (m.getSignature().contains("toLowerCase")) return true;
-		if (m.getSignature().contains("toString")) return true;
-		
-		return false;
-	}
 	
 }

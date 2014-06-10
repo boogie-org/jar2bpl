@@ -74,10 +74,7 @@ public class SootProcedureInfo {
 
 	private ProcedureDeclaration procedureDeclaration;
 	private Implementation boogieProcedure = null;
-	
-	public boolean nonNullReturn = false; //TODO: hack
-	public boolean exactReturnType = false; //TODO: hack to ensure the return type of String funs
-	
+		
 	
 	public Expression returnTypeVariable = null;
 	
@@ -178,11 +175,8 @@ public class SootProcedureInfo {
 				    annot = SootAnnotations.parseAnnotations((VisibilityAnnotationTag)tag);
 				}
 			    }
-			    if ( (annot!=null && annot.contains(SootAnnotations.Annotation.NonNull))
-				 || SootAnnotations.inHackedListOfMethodsThatReturnNonNullValues(this.sootMethod)
-				 ){
-				this.nonNullReturn = true;
-				this.exactReturnType = SootAnnotations.inHackedListOfMethodsThatReturnNonNullValues(this.sootMethod);
+			    if (annot!=null && annot.contains(SootAnnotations.Annotation.NonNull)) {
+
 				Expression formula = GlobalsCache
 				    .v()
 				    .getPf().mkBinaryExpression(methodLocation, 
@@ -223,6 +217,8 @@ public class SootProcedureInfo {
 				.mkProcedureDeclaration(this.methodLocation, this.cleanName,
 						this.getInParamters(), this.getOutParamters(), spec);
 
+		//TODO: make the exceptional return flag a postcondition instead!
+		
 		// now create the exceptional unit graph, which will be used later to
 		// check
 		// where throw statements can jump to

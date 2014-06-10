@@ -198,9 +198,10 @@ public class SootRunner extends Runner {
 					new SootBodyTransformer()));
 			
 			// Iterator Hack
-			Scene.v().addBasicClass("java.lang.Iterable",SootClass.SIGNATURES);
+			Scene.v().addBasicClass("java.lang.Iterable",SootClass.SIGNATURES);			
 			Scene.v().addBasicClass("java.util.Iterator",SootClass.SIGNATURES);
-
+			Scene.v().addBasicClass("java.lang.reflect.Array",SootClass.SIGNATURES);
+			
 			// Finally, run Soot
 			soot.Main.main(args.toArray(new String[] {}));
 

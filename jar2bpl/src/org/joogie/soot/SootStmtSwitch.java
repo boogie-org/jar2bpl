@@ -227,11 +227,10 @@ public class SootStmtSwitch implements StmtSwitch {
 			this.boogieStatements.add(GlobalsCache.v().setArraySizeStatement(
 					right, sizeexp));
 		} else if (rhs instanceof NewMultiArrayExpr) {
-			// TODO use this.pf.mkAssignmentStatement(loc, this.procInfo.getExceptionVariable(), exceptionvar)
 			NewMultiArrayExpr nmae = (NewMultiArrayExpr) rhs;
 			for (int i = 0; i < nmae.getSizeCount(); i++) {
 				nmae.getSize(i).apply(this.valueswitch);
-				Expression sizeexp = this.valueswitch.getExpression();
+				//Expression sizeexp = this.valueswitch.getExpression();
 				// TODO
 			}
 			right = GlobalsCache.v().makeFreshGlobal(
@@ -263,16 +262,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 
 		translateAssignment(loc, left, right);
-		//If lhs was a field annotated with @NonNull, we have to ensure that it has not been assigned
-		//to null.... maybe this is a hack.
-		if (lhs instanceof FieldRef) {
-			//TODO: this should not be here ... NonNull types should be encoded in Boogie and later be 
-			//checked by the prover or something.
-			LinkedList<SootAnnotations.Annotation> annot = SootAnnotations.parseFieldTags(((FieldRef)lhs).getField());
-			if (annot.contains(SootAnnotations.Annotation.NonNull)) {
-				this.errorModel.createNonNullViolationException(left);
-			}			
-		} 		
+
 	}
 
 	/**
@@ -358,23 +348,6 @@ public class SootStmtSwitch implements StmtSwitch {
 		
 		LinkedList<Statement> stmts = new LinkedList<Statement>();
 		stmts.add(s);
-
-
-		//TODO nonNull return hack!
-		//this should be removed ... this has to be done on the Boogie side!
-		if (calleeInfo.nonNullReturn && lefts.size()>=1) {
-			IdentifierExpression returnTarget = lefts.get(0);
-			stmts.add(this.errorModel.createAssumeNonNull(returnTarget));
-			
-			if (calleeInfo.returnTypeVariable!=null) {
-				Expression ltype = this.valueswitch.getClassTypeFromExpression(returnTarget, false);				
-				stmts.add(GlobalsCache.v().assumeSubType(ltype, calleeInfo.returnTypeVariable));
-				if (calleeInfo.exactReturnType) {
-					stmts.add(GlobalsCache.v().assumeSubType(calleeInfo.returnTypeVariable, ltype));
-				}
-				
-			}			
-		}
 		
 		return stmts;		
 	}
@@ -448,16 +421,20 @@ public class SootStmtSwitch implements StmtSwitch {
 			if (basetype instanceof RefType) {
 				RefType rt = (RefType)basetype;
 				c = rt.getSootClass();
+			} else if (basetype instanceof ArrayType) {
+				//TODO: this needs to be tested.
+				c = Scene.v().loadClass("java.lang.reflect.Array", SootClass.SIGNATURES);
+				
 			} else {
 				this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
-				Log.error("Something wrong in findPossibleCalledMethods: "+ivk);
+				Log.error("Something wrong in findPossibleCalledMethods: Expected RefType but found "+basetype.getClass().toString());
 				return;
 			}
 		} else if (ivk instanceof SpecialInvokeExpr) {
 			//special invoke is only used for constructor calls
 			//TODO inheritance model
 			//don't check if the base is defined for constructor calls
-			//System.err.println("Special Call to : "+iivk.getMethod().getName());
+			//Shystem.err.println("Special Call to : "+iivk.getMethod().getName());
 		} else if (ivk instanceof VirtualInvokeExpr) {
 			VirtualInvokeExpr iivk = (VirtualInvokeExpr) ivk;
 			Type basetype = iivk.getBase().getType();
@@ -465,9 +442,13 @@ public class SootStmtSwitch implements StmtSwitch {
 			if (basetype instanceof RefType) {
 				RefType rt = (RefType)basetype;
 				c = rt.getSootClass();
+			} else if (basetype instanceof ArrayType) {
+				//TODO: this needs to be tested.
+				c = Scene.v().loadClass("java.lang.reflect.Array", SootClass.SIGNATURES);
 			} else {
 				this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
-				Log.error("Something wrong in findPossibleCalledMethods: "+ivk);
+				Log.error("Something wrong in findPossibleCalledMethods: Expected RefType but found "+basetype.getClass().toString());
+				Log.error("Call: " + ivk.toString());
 				return;
 			}
 		}
@@ -488,10 +469,15 @@ public class SootStmtSwitch implements StmtSwitch {
 			//methods can be call depending on the type of c
 			this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
 		}
-		
-				
+	}
 
-		
+	private RefType findRefTypeOfArray(ArrayType at) {
+		if (at.getArrayElementType() instanceof RefType) {
+			return (RefType)at.getArrayElementType();
+		} else if (at.getArrayElementType() instanceof ArrayType) {
+			return findRefTypeOfArray((ArrayType) at.getArrayElementType());
+		}
+		return null;
 	}
 	
 	private void mergeThrowsClauses(List<SootClass> actualclause, List<SootClass> addedclause) {
