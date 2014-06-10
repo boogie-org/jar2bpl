@@ -25,6 +25,7 @@ import java.util.HashMap;
 import org.joogie.GlobalsCache;
 import org.joogie.util.TranslationHelpers;
 
+import typechecker.TypeChecker;
 import util.Log;
 import boogie.ProgramFactory;
 import boogie.declaration.ConstDeclaration;
@@ -210,6 +211,9 @@ public class SootPrelude {
 		if (org.joogie.Options.v().getPreludeFileName()==null) {
 			loadPreludeFromResources("/res/java_lang.bpl");
 		}
+		
+		new TypeChecker(pf.getASTRoot());
+		
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();

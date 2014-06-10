@@ -208,7 +208,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 
 		// cast if necessary. This has to be done because soot treats boolean as
 		// integers
-		if (lhs.getType() != rhs.getType()) {
+		if (lhs.getType() != rhs.getType()) {			
 			rhs = TranslationHelpers.castBoogieTypes(rhs, lhs.getType());
 		}
 
