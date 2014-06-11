@@ -147,9 +147,9 @@ public class TranslationHelpers {
 					.mkIntLiteral(TranslationHelpers.createDummyLocation(), "0");
 		}
 		
-//		throw new RuntimeException("Cannot cast " + expr.toString() + " from: " + expr.getType().getClass().toString()
-//				+ " to " + target.getClass().toString());
-		return expr;
+		throw new RuntimeException("Cannot cast " + expr.toString() + " from: " + expr.getType().getClass().toString()
+				+ " to " + target.getClass().toString());
+		//return expr;
 	}
 
 }

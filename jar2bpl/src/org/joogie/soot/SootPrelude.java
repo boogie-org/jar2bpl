@@ -212,7 +212,7 @@ public class SootPrelude {
 			loadPreludeFromResources("/res/java_lang.bpl");
 		}
 		
-		new TypeChecker(pf.getASTRoot());
+		
 		
 	}
 
