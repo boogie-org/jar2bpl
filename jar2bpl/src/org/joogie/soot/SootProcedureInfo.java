@@ -19,6 +19,7 @@
 
 package org.joogie.soot;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -40,6 +41,8 @@ import soot.tagkit.VisibilityAnnotationTag;
 import soot.toolkits.exceptions.UnitThrowAnalysis;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import util.Log;
+import boogie.ProgramFactory;
+import boogie.ast.VarList;
 import boogie.declaration.Implementation;
 import boogie.declaration.ProcedureDeclaration;
 import boogie.enums.BinaryOperator;
@@ -78,12 +81,41 @@ public class SootProcedureInfo {
 	
 	public Expression returnTypeVariable = null;
 	
+	private LinkedList<IdentifierExpression> idexpFromVarlist(VarList[] vla) {
+		LinkedList<IdentifierExpression> ret = new LinkedList<IdentifierExpression>();
+		for (VarList vl : vla) {
+			for (String name : vl.getIdentifiers()) {
+				ret.add(GlobalsCache.v().getPf().mkIdentifierExpression(vl.getLocation(), 
+						GlobalsCache.v().getPf().boogieTypeFromAstType(vl.getType()), 
+						name, false, false, false) );				
+			}
+		}
+		return ret;
+	}
+	
 	public SootProcedureInfo(SootMethod m) {
+		//Check if this procedure has already been declared in the prelude:
 		this.sootMethod = m;
+		this.cleanName = TranslationHelpers.getQualifiedName(this.sootMethod);		
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		
+		//If the procedure has already been declared in the prelude, use this
+		//information instead.
+		ProcedureDeclaration decl = pf.findProcedureDeclaration(this.cleanName);		
+		if (decl!=null) {
+
+			this.specification = new LinkedList<Specification>(Arrays.asList(decl.getSpecification()));			
+			this.inParameters = new LinkedList<IdentifierExpression>(idexpFromVarlist(decl.getInParams()));
+			this.outParameters = new LinkedList<IdentifierExpression>(idexpFromVarlist(decl.getOutParams()));
+			this.procedureDeclaration = decl;
+			return;
+		}
+		if (this.cleanName.contains("java.lang.Object$java.lang.Object$clone$43")) throw new RuntimeException("This was in the prelude! should not reach this line! "+this.cleanName);
+		
+		
 		this.specification = new LinkedList<Specification>();
 		this.methodLocation = TranslationHelpers
 				.translateLocation(this.sootMethod.getTags());
-		this.cleanName = TranslationHelpers.getQualifiedName(this.sootMethod);
 		this.inParameters = new LinkedList<IdentifierExpression>();
 		this.containingClassVariable = GlobalsCache.v().lookupClassVariable(
 				this.sootMethod.getDeclaringClass());

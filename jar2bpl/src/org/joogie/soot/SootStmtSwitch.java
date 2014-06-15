@@ -471,14 +471,6 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 	}
 
-	private RefType findRefTypeOfArray(ArrayType at) {
-		if (at.getArrayElementType() instanceof RefType) {
-			return (RefType)at.getArrayElementType();
-		} else if (at.getArrayElementType() instanceof ArrayType) {
-			return findRefTypeOfArray((ArrayType) at.getArrayElementType());
-		}
-		return null;
-	}
 	
 	private void mergeThrowsClauses(List<SootClass> actualclause, List<SootClass> addedclause) {
 		for (SootClass sc : addedclause) {
@@ -515,9 +507,8 @@ public class SootStmtSwitch implements StmtSwitch {
         if (ivk.getMethod().getSignature()
                         .contains("<java.lang.System: void exit(int)>")) {
                 Log.info("Surppressing false positive from call to System.exit");
-
-                //TODO: this is wrong for inter-procedural analysis!     
-                enforcePostcondition();
+                //this is not a return statement, it actually ends the application.
+                this.boogieStatements.add(this.pf.mkAssumeStatement(loc, this.pf.mkBooleanLiteral(loc, false)));
                 this.boogieStatements.add(this.pf.mkReturnStatement(loc));
                 return;
         }
@@ -690,13 +681,11 @@ public class SootStmtSwitch implements StmtSwitch {
 							GlobalsCache.v().lookupClassVariable(
 									current)));
 
-			if (GlobalsCache.v().inThrowsClause(current, procInfo)) {
-				enforcePostcondition();
+			if (GlobalsCache.v().inThrowsClause(current, procInfo)) {				
 				transitionStmt = this.pf.mkReturnStatement(loc);
 			} else {
 				//TODO: throw an error if this one is reachable!
 				Log.error("TODO: deal with unexpected assertion: "+current);
-				enforcePostcondition();
 				transitionStmt = this.pf.mkReturnStatement(loc);
 			}				
 			Statement[] thenPart = { transitionStmt };
@@ -707,20 +696,6 @@ public class SootStmtSwitch implements StmtSwitch {
 		
 	}
 	
-	/**
-	 * we use enforcePostcondition to ensure that a postcondition violation fires an exception.
-	 * If we would do it correctly, we would enforce the postcondition only when we replace 
-	 * function calls, but that wouldn't work with our current gradual verification.
-	 */
-	private void enforcePostcondition() {
-		if (this.procInfo == null || this.procInfo.getBoogieProcedure()==null ||
-				this.procInfo.getBoogieProcedure().getSpecification()==null) return;
-        for (Specification spec : this.procInfo.getBoogieProcedure().getSpecification()) {
-        	if (spec instanceof EnsuresSpecification) {
-        		this.errorModel.createPostconditionViolationException(((EnsuresSpecification)spec).getFormula().clone());	
-        	}
-        }		
-	}
 	
 	private Expression getCalleeInstance(InvokeExpr ivk) {
 //		if (ivk instanceof InstanceInvokeExpr) {			
@@ -961,8 +936,7 @@ public class SootStmtSwitch implements StmtSwitch {
 			arg0.getOp().apply(this.valueswitch);
 			Expression rhs = this.valueswitch.getExpression();
 			translateAssignment(loc, lhs, rhs);
-		}
-		enforcePostcondition();
+		}		
 		this.boogieStatements.add(this.pf.mkReturnStatement(loc));
 	}
 
@@ -976,7 +950,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseReturnVoidStmt(ReturnVoidStmt arg0) {
 		injectLabelStatements(arg0);
 		ILocation loc = TranslationHelpers.translateLocation(arg0.getTags());
-		enforcePostcondition();
+	
 		this.boogieStatements.add(this.pf.mkReturnStatement(loc));
 	}
 
@@ -1090,7 +1064,7 @@ public class SootStmtSwitch implements StmtSwitch {
 				this.boogieStatements.add(this.pf.mkGotoStatement(loc, labels[0]));
 			}
 		} else {
-			enforcePostcondition();
+
 			this.boogieStatements.add(this.pf.mkReturnStatement(loc));
 		}
 

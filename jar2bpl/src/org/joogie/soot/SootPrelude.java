@@ -62,7 +62,7 @@ public class SootPrelude {
 	private BoogieType referenceType;
 	private BoogieType voidType;
 	private BoogieType fieldType;
-	private BoogieType heapType;
+
 	private BoogieType javaClassType;
 
 	private BoogieType intArrType;
@@ -142,7 +142,7 @@ public class SootPrelude {
 		this.voidType = pf.findTypeByName("void");
 		this.javaClassType = pf.getNamedType("javaType");
 		this.fieldType = pf.findTypeByName("Field");
-		this.heapType = pf.findTypeByName("$heap_type");
+		//this.heapType = pf.findTypeByName("$heap_type");
 		
 
 		this.nullConstant = pf.findGlobalByName("$null");

@@ -68,7 +68,6 @@ public class SootBodyTransformer extends BodyTransformer {
 			}
 		}
 
-		// add method to report
 		SootMethod sootMethod = arg0.getMethod();
 		Log.debug("METHOD: " + sootMethod);
 		// report.addMethod(sootMethod);
@@ -87,6 +86,9 @@ public class SootBodyTransformer extends BodyTransformer {
 		SootProcedureInfo procInfo = GlobalsCache.v().lookupProcedure(
 				body.getMethod());
 
+		//TOOD: what should we do if the procedure has already been defined 
+		//in the prelude?
+		
 		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
 		Iterator<Unit> stmtIt = tug.iterator();
 
