@@ -25,12 +25,9 @@ import java.util.HashMap;
 import org.joogie.GlobalsCache;
 import org.joogie.util.TranslationHelpers;
 
-import typechecker.TypeChecker;
 import util.Log;
 import boogie.ProgramFactory;
-import boogie.declaration.ConstDeclaration;
 import boogie.declaration.FunctionDeclaration;
-import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
 import boogie.location.ILocation;

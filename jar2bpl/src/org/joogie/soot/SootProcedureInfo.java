@@ -65,7 +65,7 @@ public class SootProcedureInfo {
 	private IdentifierExpression returnVariable;
 	private IdentifierExpression exceptionVariable;
 	private IdentifierExpression exceptionalReturnFlag = null;
-	
+
 	private IdentifierExpression containingClassVariable;
 
 	private ExceptionalUnitGraph exceptionalUnitGraph;
@@ -77,42 +77,48 @@ public class SootProcedureInfo {
 
 	private ProcedureDeclaration procedureDeclaration;
 	private Implementation boogieProcedure = null;
-		
-	
+
 	public Expression returnTypeVariable = null;
-	
+
 	private LinkedList<IdentifierExpression> idexpFromVarlist(VarList[] vla) {
 		LinkedList<IdentifierExpression> ret = new LinkedList<IdentifierExpression>();
+		ProgramFactory pf = GlobalsCache.v().getPf();
 		for (VarList vl : vla) {
 			for (String name : vl.getIdentifiers()) {
-				ret.add(GlobalsCache.v().getPf().mkIdentifierExpression(vl.getLocation(), 
-						GlobalsCache.v().getPf().boogieTypeFromAstType(vl.getType()), 
-						name, false, false, false) );				
+				ret.add(pf.mkIdentifierExpression(vl.getLocation(),
+						pf.boogieTypeFromAstType(vl.getType()), name, false,
+						false, false));
 			}
 		}
 		return ret;
 	}
-	
-	public SootProcedureInfo(SootMethod m) {
-		//Check if this procedure has already been declared in the prelude:
-		this.sootMethod = m;
-		this.cleanName = TranslationHelpers.getQualifiedName(this.sootMethod);		
-		ProgramFactory pf = GlobalsCache.v().getPf();
-		
-		//If the procedure has already been declared in the prelude, use this
-		//information instead.
-		ProcedureDeclaration decl = pf.findProcedureDeclaration(this.cleanName);		
-		if (decl!=null) {
 
-			this.specification = new LinkedList<Specification>(Arrays.asList(decl.getSpecification()));			
-			this.inParameters = new LinkedList<IdentifierExpression>(idexpFromVarlist(decl.getInParams()));
-			this.outParameters = new LinkedList<IdentifierExpression>(idexpFromVarlist(decl.getOutParams()));
+	public SootProcedureInfo(SootMethod m) {
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		// Check if this procedure has already been declared in the prelude:
+		this.sootMethod = m;
+		this.cleanName = TranslationHelpers.getQualifiedName(this.sootMethod);
+
+		// If the procedure has already been declared in the prelude, use this
+		// information instead.
+		ProcedureDeclaration decl = pf.findProcedureDeclaration(this.cleanName);
+		if (decl != null) {
+
+			this.specification = new LinkedList<Specification>(
+					Arrays.asList(decl.getSpecification()));
+			this.inParameters = new LinkedList<IdentifierExpression>(
+					idexpFromVarlist(decl.getInParams()));
+			this.outParameters = new LinkedList<IdentifierExpression>(
+					idexpFromVarlist(decl.getOutParams()));
 			this.procedureDeclaration = decl;
 			return;
 		}
-		if (this.cleanName.contains("java.lang.Object$java.lang.Object$clone$43")) throw new RuntimeException("This was in the prelude! should not reach this line! "+this.cleanName);
-		
-		
+		if (this.cleanName
+				.contains("java.lang.Object$java.lang.Object$clone$43"))
+			throw new RuntimeException(
+					"This was in the prelude! should not reach this line! "
+							+ this.cleanName);
+
 		this.specification = new LinkedList<Specification>();
 		this.methodLocation = TranslationHelpers
 				.translateLocation(this.sootMethod.getTags());
@@ -120,52 +126,38 @@ public class SootProcedureInfo {
 		this.containingClassVariable = GlobalsCache.v().lookupClassVariable(
 				this.sootMethod.getDeclaringClass());
 
-		
 		if (!this.sootMethod.isStatic()) {
-			this.thisVariable = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(null,
-							SootPrelude.v().getReferenceType(), "$this", false,
-							false, false);
+			this.thisVariable = pf.mkIdentifierExpression(null, SootPrelude.v()
+					.getReferenceType(), "$this", false, false, false);
 			this.inParameters.add(this.thisVariable);
 		} else {
 			this.thisVariable = null;
 		}
-		
-		//collect the annotations
-		LinkedList<LinkedList<SootAnnotations.Annotation>> pannot = SootAnnotations.parseParameterAnnotations(this.sootMethod);
-		
+
+		// collect the annotations
+		LinkedList<LinkedList<SootAnnotations.Annotation>> pannot = SootAnnotations
+				.parseParameterAnnotations(this.sootMethod);
+
 		for (int i = 0; i < this.sootMethod.getParameterCount(); i++) {
 			BoogieType type = GlobalsCache.v().getBoogieType(
 					this.sootMethod.getParameterType(i));
-						
+
 			String param_name = "$in_parameter__" + i;
-			IdentifierExpression id = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(this.methodLocation, type,
-							param_name, false, false, false);
+			IdentifierExpression id = pf.mkIdentifierExpression(
+					this.methodLocation, type, param_name, false, false, false);
 			this.inParameters.add(id);
 
-			
-			//add precondition if parameter has @NonNull annotation
-			if (pannot.size()!=0) { //may be null if there are no annotations at all
+			// add precondition if parameter has @NonNull annotation
+			if (pannot.size() != 0) { // may be null if there are no annotations
+										// at all
 				LinkedList<SootAnnotations.Annotation> annot = pannot.get(i);
 				if (annot.contains(SootAnnotations.Annotation.NonNull)) {
-					Expression formula = GlobalsCache
-							.v()
-							.getPf().mkBinaryExpression(methodLocation, 
-									GlobalsCache.v().getPf().getBoolType(), 
-									BinaryOperator.COMPNEQ, id, SootPrelude.v().getNullConstant()); 
-					
-					this.specification.add(GlobalsCache
-					.v()
-					.getPf().mkRequiresSpecification(
-							methodLocation, 
-							false, 
-							formula)
-							);
+					Expression formula = pf.mkBinaryExpression(methodLocation,
+							pf.getBoolType(), BinaryOperator.COMPNEQ, id,
+							SootPrelude.v().getNullConstant());
+
+					this.specification.add(pf.mkRequiresSpecification(
+							methodLocation, false, formula));
 				}
 			}
 
@@ -173,55 +165,48 @@ public class SootProcedureInfo {
 
 		this.outParameters = new LinkedList<IdentifierExpression>();
 		if (!(this.sootMethod.getReturnType() instanceof VoidType)) {
-			
+
 			Type returntype = this.sootMethod.getReturnType();
-			BoogieType type = GlobalsCache.v().getBoogieType(
-					returntype);
+			BoogieType type = GlobalsCache.v().getBoogieType(returntype);
 			String param_name = "$return";
-			IdentifierExpression id = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(this.methodLocation, type,
-							param_name, false, false, false);
+			IdentifierExpression id = pf.mkIdentifierExpression(
+					this.methodLocation, type, param_name, false, false, false);
 			this.outParameters.add(id);
 			this.returnVariable = id;
-			
-			//compute the type variable if the method return a reference type
-			//this is used to ensure the type in assume-guarantee reasoning
+
+			// compute the type variable if the method return a reference type
+			// this is used to ensure the type in assume-guarantee reasoning
 			this.returnTypeVariable = null;
 			if (returntype instanceof RefType) {
-				RefType rt = (RefType)returntype;
-				this.returnTypeVariable = GlobalsCache.v().lookupClassVariable(rt.getSootClass());
+				RefType rt = (RefType) returntype;
+				this.returnTypeVariable = GlobalsCache.v().lookupClassVariable(
+						rt.getSootClass());
 			}
-			
+
 			// only makes sense to add non-null annotation for non-prim types
 			if (!(returntype instanceof PrimType)) {
-			    //check if the procedure retrun has @NonNull annotation
-			    LinkedList<SootAnnotations.Annotation> annot = null; 
-			    for (Tag tag : this.sootMethod.getTags()) {
-				if (tag instanceof VisibilityAnnotationTag) {
-				    if (annot!=null) {
-					Log.error("Didn't expect so many tags for procedure! Check that!");
-					break;
-				    }
-				    annot = SootAnnotations.parseAnnotations((VisibilityAnnotationTag)tag);
+				// check if the procedure retrun has @NonNull annotation
+				LinkedList<SootAnnotations.Annotation> annot = null;
+				for (Tag tag : this.sootMethod.getTags()) {
+					if (tag instanceof VisibilityAnnotationTag) {
+						if (annot != null) {
+							Log.error("Didn't expect so many tags for procedure! Check that!");
+							break;
+						}
+						annot = SootAnnotations
+								.parseAnnotations((VisibilityAnnotationTag) tag);
+					}
 				}
-			    }
-			    if (annot!=null && annot.contains(SootAnnotations.Annotation.NonNull)) {
+				if (annot != null
+						&& annot.contains(SootAnnotations.Annotation.NonNull)) {
 
-				Expression formula = GlobalsCache
-				    .v()
-				    .getPf().mkBinaryExpression(methodLocation, 
-								GlobalsCache.v().getPf().getBoolType(), 
-								BinaryOperator.COMPNEQ, this.returnVariable, SootPrelude.v().getNullConstant()); 
-				this.specification.add(GlobalsCache
-						       .v()
-						       .getPf().mkEnsuresSpecification(
-										       methodLocation, 
-										       false, 
-										       formula)
-						       );
-			    }
+					Expression formula = pf.mkBinaryExpression(methodLocation,
+							pf.getBoolType(), BinaryOperator.COMPNEQ,
+							this.returnVariable, SootPrelude.v()
+									.getNullConstant());
+					this.specification.add(pf.mkEnsuresSpecification(
+							methodLocation, false, formula));
+				}
 			}
 		} else {
 			this.returnVariable = null;
@@ -232,54 +217,48 @@ public class SootProcedureInfo {
 		 * procedure.
 		 */
 		String exname = "$exception";
-		IdentifierExpression id = GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression(this.methodLocation,
-						SootPrelude.v().getReferenceType(), exname, false,
-						false, false);
+		IdentifierExpression id = pf.mkIdentifierExpression(
+				this.methodLocation, SootPrelude.v().getReferenceType(),
+				exname, false, false, false);
 		this.outParameters.add(id);
 		this.exceptionVariable = id;
 
-		Specification[] spec = this.specification.toArray(new Specification[this.specification.size()]);
+		Specification[] spec = this.specification
+				.toArray(new Specification[this.specification.size()]);
 
-		this.procedureDeclaration = GlobalsCache
-				.v()
-				.getPf()
-				.mkProcedureDeclaration(this.methodLocation, this.cleanName,
-						this.getInParamters(), this.getOutParamters(), spec);
+		this.procedureDeclaration = pf.mkProcedureDeclaration(
+				this.methodLocation, this.cleanName, this.getInParamters(),
+				this.getOutParamters(), spec);
 
-		//TODO: make the exceptional return flag a postcondition instead!
-		
+		// TODO: make the exceptional return flag a postcondition instead!
+
 		// now create the exceptional unit graph, which will be used later to
 		// check
 		// where throw statements can jump to
 		if (this.sootMethod.hasActiveBody()) {
 			this.exceptionalUnitGraph = new ExceptionalUnitGraph(
 					this.sootMethod.getActiveBody(), UnitThrowAnalysis.v());
-			//if the procedure has a body, create a Boolean local variable that is set
-			//to true if the procedure returns exceptional
-			this.exceptionalReturnFlag = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression(this.methodLocation,
-							GlobalsCache.v().getPf().getBoolType(), "$ex_return", false,
-							false, false);
-			
-			this.fakeLocals.add(this.exceptionalReturnFlag);			
+			// if the procedure has a body, create a Boolean local variable that
+			// is set
+			// to true if the procedure returns exceptional
+			this.exceptionalReturnFlag = pf.mkIdentifierExpression(
+					this.methodLocation, pf.getBoolType(), "$ex_return", false,
+					false, false);
+
+			this.fakeLocals.add(this.exceptionalReturnFlag);
 		} else {
 			this.exceptionalUnitGraph = null;
 		}
 	}
-	
+
 	public IdentifierExpression getExceptionalReturnFlag() {
 		return this.exceptionalReturnFlag;
 	}
-	
+
 	public String getBoogieName() {
 		return cleanName;
 	}
-	
+
 	public List<SootClass> getThrowsClasses() {
 		return this.sootMethod.getExceptions();
 	}

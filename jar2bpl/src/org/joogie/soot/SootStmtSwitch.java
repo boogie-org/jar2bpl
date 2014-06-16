@@ -31,7 +31,6 @@ import org.joogie.errormodel.AssertionErrorModel;
 import org.joogie.errormodel.ExceptionErrorModel;
 import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
-import org.joogie.util.Util;
 
 import soot.ArrayType;
 import soot.RefType;
@@ -46,7 +45,6 @@ import soot.jimple.BreakpointStmt;
 import soot.jimple.CaughtExceptionRef;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.ExitMonitorStmt;
-import soot.jimple.FieldRef;
 import soot.jimple.GotoStmt;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
@@ -77,7 +75,6 @@ import boogie.expression.ArrayAccessExpression;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
 import boogie.location.ILocation;
-import boogie.specification.EnsuresSpecification;
 import boogie.specification.RequiresSpecification;
 import boogie.specification.Specification;
 import boogie.statement.Statement;
@@ -90,12 +87,14 @@ public class SootStmtSwitch implements StmtSwitch {
 	private SootProcedureInfo procInfo;
 	private SootValueSwitch valueswitch;
 	private ProgramFactory pf;
-	private Stmt currentStatement = null; //needed to identify throw targets of expressions
+	private Stmt currentStatement = null; // needed to identify throw targets of
+											// expressions
 	private AbstractErrorModel errorModel;
-	
-	//used to track Java string constants
-	//HashMap<StringConstant, Expression> stringConstantMap = new HashMap<StringConstant, Expression>();
-	
+
+	// used to track Java string constants
+	// HashMap<StringConstant, Expression> stringConstantMap = new
+	// HashMap<StringConstant, Expression>();
+
 	public SootStmtSwitch(SootProcedureInfo pinfo) {
 		this.procInfo = pinfo;
 		this.pf = GlobalsCache.v().getPf();
@@ -117,7 +116,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	public AbstractErrorModel getErrorModel() {
 		return this.errorModel;
 	}
-	
+
 	private LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
 
 	/**
@@ -133,7 +132,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	public Stmt getCurrentStatement() {
 		return this.currentStatement;
 	}
-	
+
 	private void injectLabelStatements(Stmt arg0) {
 		this.currentStatement = arg0;
 		ILocation loc = TranslationHelpers.translateLocation(arg0.getTags());
@@ -155,58 +154,68 @@ public class SootStmtSwitch implements StmtSwitch {
 		translateAssignment(loc, arg0.getLeftOp(), arg0.getRightOp(), arg0);
 	}
 
-	
-	
-	public IdentifierExpression createAllocatedVariable(ILocation loc, Type sootType) {
+	public IdentifierExpression createAllocatedVariable(ILocation loc,
+			Type sootType) {
 		// create fresh local variable for "right"
-		IdentifierExpression newexpr = this.procInfo.createLocalVariable(SootPrelude.v().getReferenceType()); 
+		IdentifierExpression newexpr = this.procInfo
+				.createLocalVariable(SootPrelude.v().getReferenceType());
 		// havoc right
 		this.boogieStatements.add(this.pf.mkHavocStatement(loc, newexpr));
 		// assume $heap[right, $alloc] == false
 		this.boogieStatements
-				.add(this.pf.mkAssumeStatement(loc, this.pf
-						.mkUnaryExpression(loc, this.pf.getBoolType(),
+				.add(this.pf.mkAssumeStatement(
+						loc,
+						this.pf.mkUnaryExpression(
+								loc,
+								this.pf.getBoolType(),
 								UnaryOperator.LOGICNEG,
-								this.valueswitch.makeHeapAccessExpression(
-										loc, newexpr, SootPrelude.v()
-												.getFieldAllocVariable(), false))));
+								this.valueswitch
+										.makeHeapAccessExpression(
+												loc,
+												newexpr,
+												SootPrelude
+														.v()
+														.getFieldAllocVariable(),
+												false))));
 		// $heap[right, $alloc] := true
-		translateAssignment(loc, this.valueswitch.makeHeapAccessExpression(
-				loc, newexpr, SootPrelude.v().getFieldAllocVariable(), false),
+		translateAssignment(loc, this.valueswitch.makeHeapAccessExpression(loc,
+				newexpr, SootPrelude.v().getFieldAllocVariable(), false),
 				this.pf.mkBooleanLiteral(loc, true));
-		
-		// $heap[right, $type] := ...the appropriate type...		
+
+		// $heap[right, $type] := ...the appropriate type...
 		Expression typeRhs;
 		if (sootType instanceof RefType) {
-		  typeRhs = GlobalsCache.v().lookupClassVariable(((RefType)sootType).getSootClass());
-		  if (typeRhs==null) {
-			  throw new RuntimeException("Not a class variable: "+ ((RefType)sootType).getSootClass());
-		  }
+			typeRhs = GlobalsCache.v().lookupClassVariable(
+					((RefType) sootType).getSootClass());
+			if (typeRhs == null) {
+				throw new RuntimeException("Not a class variable: "
+						+ ((RefType) sootType).getSootClass());
+			}
 		} else if (sootType instanceof ArrayType) {
-		  typeRhs = GlobalsCache.v().lookupArrayType((ArrayType)sootType);
-		  if (typeRhs==null) {
-			  throw new RuntimeException("Not a type: "+ (ArrayType)sootType);
-		  }
-		  
+			typeRhs = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
+			if (typeRhs == null) {
+				throw new RuntimeException("Not a type: "
+						+ (ArrayType) sootType);
+			}
+
 		} else {
-		  throw new RuntimeException("Translation of Array Access failed!");
+			throw new RuntimeException("Translation of Array Access failed!");
 		}
-		
-		this.boogieStatements.add(this.pf.mkAssumeStatement(loc, 
-				this.pf.mkBinaryExpression(loc, this.pf.getBoolType(), BinaryOperator.COMPNEQ, newexpr, 
-						SootPrelude.v().getNullConstant())));
-		
-		translateAssignment(
-				loc,
+
+		this.boogieStatements.add(this.pf.mkAssumeStatement(loc, this.pf
+				.mkBinaryExpression(loc, this.pf.getBoolType(),
+						BinaryOperator.COMPNEQ, newexpr, SootPrelude.v()
+								.getNullConstant())));
+
+		translateAssignment(loc,
 				this.valueswitch.getClassTypeFromExpression(newexpr, false),
 				typeRhs);
-		return newexpr;		
+		return newexpr;
 	}
-	
-	
+
 	private void translateAssignment(ILocation loc, Value lhs, Value rhs,
-			Unit statement) {		
-		
+			Unit statement) {
+
 		if (rhs instanceof InvokeExpr) {
 			InvokeExpr ivk = (InvokeExpr) rhs;
 			translateInvokeAssignment(loc, lhs, ivk, statement);
@@ -217,10 +226,10 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		Expression right;
 		if (rhs instanceof NewExpr) {
-			right = createAllocatedVariable(loc,((NewExpr) rhs).getBaseType());
+			right = createAllocatedVariable(loc, ((NewExpr) rhs).getBaseType());
 		} else if (rhs instanceof NewArrayExpr) {
 			NewArrayExpr nae = (NewArrayExpr) rhs;
-            right = createAllocatedVariable(loc,nae.getType());
+			right = createAllocatedVariable(loc, nae.getType());
 			nae.getSize().apply(this.valueswitch);
 			Expression sizeexp = this.valueswitch.getExpression();
 			// add the size expression.
@@ -230,32 +239,28 @@ public class SootStmtSwitch implements StmtSwitch {
 			NewMultiArrayExpr nmae = (NewMultiArrayExpr) rhs;
 			for (int i = 0; i < nmae.getSizeCount(); i++) {
 				nmae.getSize(i).apply(this.valueswitch);
-				//Expression sizeexp = this.valueswitch.getExpression();
+				// Expression sizeexp = this.valueswitch.getExpression();
 				// TODO
 			}
 			right = GlobalsCache.v().makeFreshGlobal(
 					SootPrelude.v().getReferenceType(), true, true);
 		} else if (rhs instanceof StringConstant) {
-			StringConstant str = (StringConstant)rhs;	
-	
-			//if (!this.stringConstantMap.containsKey(str)) {
-				//this.stringConstantMap.put(str, GlobalsCache.createDummyExpression(SootPrelude.v().getReferenceType()));				
-			//}
-			//TODO: ensure that the dummy var is of appropriate type.
-			
-			//right = this.stringConstantMap.get(str);
+			StringConstant str = (StringConstant) rhs;
+
+			// right = this.stringConstantMap.get(str);
 			right = createAllocatedVariable(loc, rhs.getType());
-			
-			Expression[] indices = {right};
-			//assign the size of the string to the appropriate field in the
-			//$stringSizeHeapVariable array.
-			translateAssignment(loc,
-					SootPrelude.v().getStringSizeHeapVariable(),
-					this.pf.mkArrayStoreExpression(loc, SootPrelude.v().getStringSizeHeapVariable().getType(), 
-							SootPrelude.v().getStringSizeHeapVariable(), indices, 
-							this.pf.mkIntLiteral(loc, (new Integer(str.value.length())).toString())
-							)
-					);
+
+			Expression[] indices = { right };
+			// assign the size of the string to the appropriate field in the
+			// $stringSizeHeapVariable array.
+			translateAssignment(loc, SootPrelude.v()
+					.getStringSizeHeapVariable(),
+					this.pf.mkArrayStoreExpression(loc, SootPrelude.v()
+							.getStringSizeHeapVariable().getType(), SootPrelude
+							.v().getStringSizeHeapVariable(), indices, this.pf
+							.mkIntLiteral(loc,
+									(new Integer(str.value.length()))
+											.toString())));
 		} else {
 			rhs.apply(this.valueswitch);
 			right = this.valueswitch.getExpression();
@@ -279,7 +284,7 @@ public class SootStmtSwitch implements StmtSwitch {
 			this.boogieStatements.add(this.pf.mkAssignmentStatement(loc,
 					(IdentifierExpression) left,
 					TranslationHelpers.castBoogieTypes(right, left.getType())));
-		} else if (left instanceof ArrayAccessExpression) {			
+		} else if (left instanceof ArrayAccessExpression) {
 			ArrayAccessExpression aae = (ArrayAccessExpression) left;
 			Expression arraystore = this.pf.mkArrayStoreExpression(loc, aae
 					.getArray().getType(), aae.getArray(), aae.getIndices(),
@@ -291,25 +296,30 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 	}
 
-	
-	
 	/**
 	 * create a CfgCallStatement
-	 * @param m the procedure to be called
-	 * @param throwsclauses a list that contains where the possible exceptions of m a added to. this is needed later.
-	 * @param lefts the left hand side of the call that receives the return values
+	 * 
+	 * @param m
+	 *            the procedure to be called
+	 * @param throwsclauses
+	 *            a list that contains where the possible exceptions of m a
+	 *            added to. this is needed later.
+	 * @param lefts
+	 *            the left hand side of the call that receives the return values
 	 */
-	private LinkedList<Statement> createCallStatement(ILocation loc, SootMethod m, List<SootClass> throwsclauses, List<IdentifierExpression> lefts, Expression[] args) {
-		//we have to clone the lefts because we may add thing to it here.
+	private LinkedList<Statement> createCallStatement(ILocation loc,
+			SootMethod m, List<SootClass> throwsclauses,
+			List<IdentifierExpression> lefts, Expression[] args) {
+		// we have to clone the lefts because we may add thing to it here.
 		List<IdentifierExpression> lefts_clone = new LinkedList<IdentifierExpression>();
 		for (IdentifierExpression ide : lefts) {
 			lefts_clone.add(ide);
 		}
-		
+
 		SootProcedureInfo calleeInfo = GlobalsCache.v().lookupProcedure(m);
-		
+
 		mergeThrowsClauses(throwsclauses, calleeInfo.getThrowsClasses());
-		
+
 		if (calleeInfo.getReturnVariable() != null && lefts_clone.size() == 0) {
 			lefts_clone.add(this.procInfo.createLocalVariable(calleeInfo
 					.getReturnVariable().getType()));
@@ -319,201 +329,193 @@ public class SootStmtSwitch implements StmtSwitch {
 		 */
 		if (calleeInfo.getExceptionVariable() != null) {
 			lefts_clone.add(this.procInfo.getExceptionVariable());
-		}		
+		}
 
 		HashMap<String, Expression> substitutes = new HashMap<String, Expression>();
-		for (int i=0; i<calleeInfo.getProcedureDeclaration().getInParams().length; i++) {
+		for (int i = 0; i < calleeInfo.getProcedureDeclaration().getInParams().length; i++) {
 			VarList vl = calleeInfo.getProcedureDeclaration().getInParams()[i];
 			Expression arg = args[i];
-			if (vl.getIdentifiers().length!=1) {
+			if (vl.getIdentifiers().length != 1) {
 				throw new RuntimeException("That aint right!");
 			}
-			substitutes.put(vl.getIdentifiers()[0], arg);			
+			substitutes.put(vl.getIdentifiers()[0], arg);
 		}
-		
-		for (Specification spec : calleeInfo.getProcedureDeclaration().getSpecification()) {
+
+		for (Specification spec : calleeInfo.getProcedureDeclaration()
+				.getSpecification()) {
 			if (spec instanceof RequiresSpecification) {
-				this.errorModel.createPreconditionViolationException(
-						((RequiresSpecification)spec)
-							.getFormula()
-							.substitute(substitutes)
-						);
+				this.errorModel
+						.createPreconditionViolationException(((RequiresSpecification) spec)
+								.getFormula().substitute(substitutes));
 			}
 		}
-		
-		
-		Statement s = this.pf.mkCallStatement(loc, false,
-				lefts_clone.toArray(new IdentifierExpression[lefts_clone.size()]),
+
+		Statement s = this.pf.mkCallStatement(loc, false, lefts_clone
+				.toArray(new IdentifierExpression[lefts_clone.size()]),
 				calleeInfo.getBoogieName(), args);
-		
+
 		LinkedList<Statement> stmts = new LinkedList<Statement>();
 		stmts.add(s);
-		
-		return stmts;		
+
+		return stmts;
 	}
 
-	
-	private boolean findPossibleCalledMethods(ILocation loc, SootMethod m, SootClass c, List<SootClass> throwsclauses, List<IdentifierExpression> lefts, Expression[] args) {
-				
-		//first find all possible subtypes of c
-		Collection possibleClasses = null;		
+	/**
+	 * For a given call lefts = c.m(args), this function checks if there are
+	 * subclasses of "c" which overloads "m" with another procedure "m*". If so,
+	 * we add something like... if (c instanceof C*) call lefts := m*(c, args)
+	 * 
+	 * @param loc
+	 * @param m
+	 *            (virtual) SootMethod
+	 * @param c
+	 *            the SootClass for which the method was called
+	 * @param throwsclauses
+	 * @param lefts
+	 * @param args
+	 * @return true if "m" is overloaded and statements have been created, and
+	 *         "false" otherwise.
+	 */
+	private boolean createGuradedCallToVirtualMethods(ILocation loc,
+			SootMethod m, SootClass c, List<SootClass> throwsclauses,
+			List<IdentifierExpression> lefts, Expression[] args) {
+
+		// first find all possible subtypes of c
+		@SuppressWarnings("rawtypes")
+		Collection possibleClasses = null;
 		if (c.isInterface()) {
-			possibleClasses = Scene.v().getFastHierarchy().getAllImplementersOfInterface(c);
+			possibleClasses = Scene.v().getFastHierarchy()
+					.getAllImplementersOfInterface(c);
 		} else {
 			possibleClasses = Scene.v().getFastHierarchy().getSubclassesOf(c);
 		}
-		
-		boolean mayBeVirtual = possibleClasses != null && !possibleClasses.isEmpty(); 
-		
+
+		boolean mayBeVirtual = possibleClasses != null
+				&& !possibleClasses.isEmpty();
+
 		boolean possiblyOverloaded = false;
-		//iterate recursively over the subtypes of c
-		
+		// iterate recursively over the subtypes of c
+
 		if (mayBeVirtual) {
 			for (Object o : possibleClasses) {
-				SootClass child = (SootClass)o;
-				//check if at least one subtype implements this function
-				possiblyOverloaded = 
-						possiblyOverloaded || findPossibleCalledMethods(loc, m, child, throwsclauses, lefts, args);
+				SootClass child = (SootClass) o;
+				// check if at least one subtype implements this function
+				possiblyOverloaded = possiblyOverloaded
+						|| createGuradedCallToVirtualMethods(loc, m, child,
+								throwsclauses, lefts, args);
 			}
 		}
-		
-		if (!m.isAbstract() && !m.isStatic() ) {
-			
-			//System.err.println("Method: "+m.getName() + "\t"+c.getName() );
-			
-			//arg[0] always stores the $this pointer for the call.
-			//I.e., for a.foo() arg[0] contains "a"
+
+		if (!m.isAbstract() && !m.isStatic()) {
+			// arg[0] always stores the $this pointer for the call.
+			// I.e., for a.foo() arg[0] contains "a"
 			// this.valueswitch.getExprssionJavaClass(args[0]) then returns the
-			//type variable for "a".
-			Expression typeOfBase = this.valueswitch.getClassTypeFromExpression(args[0], false);
-			Expression typeOfCurrentMethod = GlobalsCache.v().lookupClassVariable(c);		
-			
-			List<Statement> tmp = createCallStatement(loc, m, throwsclauses, lefts, args);
-			
+			// type variable for "a".
+			Expression typeOfBase = this.valueswitch
+					.getClassTypeFromExpression(args[0], false);
+			Expression typeOfCurrentMethod = GlobalsCache.v()
+					.lookupClassVariable(c);
+
+			List<Statement> tmp = createCallStatement(loc, m, throwsclauses,
+					lefts, args);
+
 			Statement[] call = tmp.toArray(new Statement[tmp.size()]);
-			Statement ite = this.pf.mkIfStatement(loc, 
-					GlobalsCache.v().sameTypeExpression(typeOfBase, typeOfCurrentMethod), 
-					call,
+			Statement ite = this.pf.mkIfStatement(loc, GlobalsCache.v()
+					.sameTypeExpression(typeOfBase, typeOfCurrentMethod), call,
 					new Statement[0]);
 			this.boogieStatements.add(ite);
 			return true;
-		} else {
-			//System.err.println("Sig: "+m.getSignature() + "\t "+c.getName()+ "abstract "+m.isAbstract() + ", static "+m.isStatic() + ", virtual "+mayBeVirtual );
-		}
-		
-		
+		} 
 		return possiblyOverloaded;
 	}
-	/**
-	 * TODO: this one is not finished
-	 * @param ivk
-	 */
-	private void findPossibleCalledMethods(ILocation loc, InvokeExpr ivk, List<SootClass> throwsclauses, List<IdentifierExpression> lefts, Expression[] args) {
-		SootClass c = null;
-		
-		//TODO: combine with getCalleeInstance once this works
-		if (ivk instanceof InterfaceInvokeExpr) {
-			//TODO: error model
-			//inheritance model
-			InterfaceInvokeExpr iivk = (InterfaceInvokeExpr) ivk;
-			Type basetype = iivk.getBase().getType();
-						
-			if (basetype instanceof RefType) {
-				RefType rt = (RefType)basetype;
-				c = rt.getSootClass();
-			} else if (basetype instanceof ArrayType) {
-				//TODO: this needs to be tested.
-				c = Scene.v().loadClass("java.lang.reflect.Array", SootClass.SIGNATURES);
+
+	private void mergeThrowsClauses(List<SootClass> actualclause,
+			List<SootClass> addedclause) {
 				
-			} else {
-				this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
-				Log.error("Something wrong in findPossibleCalledMethods: Expected RefType but found "+basetype.getClass().toString());
-				return;
+		for (SootClass sc : addedclause) {
+			// TODO: if actual clause contains sc or a supertype of sc, continue
+			// else add sc to actual clause.
+			LinkedList<SootClass> superclasses = new LinkedList<SootClass>();
+			SootClass tmp = sc;
+			while (tmp!=null) {
+				superclasses.add(tmp);
+				try {
+					if (tmp.getName().equals("java.lang.Object")) {						
+						tmp = null;						
+					} else {
+						tmp = tmp.getSuperclass();
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(tmp.getName() + " - " + e.toString());					
+				}
 			}
-		} else if (ivk instanceof SpecialInvokeExpr) {
-			//special invoke is only used for constructor calls
-			//TODO inheritance model
-			//don't check if the base is defined for constructor calls
-			//Shystem.err.println("Special Call to : "+iivk.getMethod().getName());
-		} else if (ivk instanceof VirtualInvokeExpr) {
-			VirtualInvokeExpr iivk = (VirtualInvokeExpr) ivk;
-			Type basetype = iivk.getBase().getType();
 			
-			if (basetype instanceof RefType) {
-				RefType rt = (RefType)basetype;
-				c = rt.getSootClass();
-			} else if (basetype instanceof ArrayType) {
-				//TODO: this needs to be tested.
-				c = Scene.v().loadClass("java.lang.reflect.Array", SootClass.SIGNATURES);
-			} else {
-				this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
-				Log.error("Something wrong in findPossibleCalledMethods: Expected RefType but found "+basetype.getClass().toString());
-				Log.error("Call: " + ivk.toString());
-				return;
+			boolean known = false;
+			for (SootClass c : actualclause) {
+				if (superclasses.contains(c)) {
+					known = true;
+					break;
+				}
+				
 			}
-		}
-		
-		if (c!=null) {
-			//System.err.println("Call to "+c.getName()+" :: "+ivk);
-			if (!findPossibleCalledMethods(loc, ivk.getMethod(), c, throwsclauses, lefts, args) ) {
-				//if we cannot find any possible called method we just use the one in ivk.getMethod
-				//which might be abstract
-				//System.err.println("Warning: no suitable declared procedure for "+ ivk.getMethod().getName());
-				this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
-			} else {
-				//System.err.println("Good! found stuff for "+ ivk.getMethod().getName());
-			}
-			//System.err.println("*******************");
-		} else {
-			//the procedure is static so we call it without checking if other
-			//methods can be call depending on the type of c
-			this.boogieStatements.addAll(createCallStatement(loc, ivk.getMethod(), throwsclauses, lefts, args));
-		}
+			if (!known) actualclause.add(sc);
+		}		
 	}
 
 	
-	private void mergeThrowsClauses(List<SootClass> actualclause, List<SootClass> addedclause) {
-		for (SootClass sc : addedclause) {
-			//TODO: if actual clause contains sc or a supertype of sc, continue
-			//else add sc to actual clause.
+	private boolean specialCaseInvoke(ILocation loc, Value lhs,
+			InvokeExpr ivk) {
+
+		// java.lang.String.length is treated as a special case:
+		if (ivk.getMethod().getSignature()
+				.contains("<java.lang.String: int length()>")
+				&& lhs != null) {
+			if (ivk instanceof SpecialInvokeExpr) {
+				((SpecialInvokeExpr) ivk).getBase().apply(this.valueswitch);
+			} else if (ivk instanceof VirtualInvokeExpr) {
+				((VirtualInvokeExpr) ivk).getBase().apply(this.valueswitch);
+			} else {
+				throw new RuntimeException("Bad usage of String.length?");
+			}
+			Expression[] indices = { this.valueswitch.getExpression() };
+			Expression right = this.pf.mkArrayAccessExpression(loc, this.pf
+					.getIntType(), SootPrelude.v().getStringSizeHeapVariable(),
+					indices);
+
+			lhs.apply(this.valueswitch);
+			Expression left = this.valueswitch.getExpression();
+			this.translateAssignment(loc, left, right);
+			return true;
 		}
+
+		if (ivk.getMethod().getSignature()
+				.contains("<java.lang.System: void exit(int)>")) {
+			Log.info("Surppressing false positive from call to System.exit");
+			// this is not a return statement, it actually ends the application.
+			this.boogieStatements.add(this.pf.mkAssumeStatement(loc,
+					this.pf.mkBooleanLiteral(loc, false)));
+			this.boogieStatements.add(this.pf.mkReturnStatement(loc));
+			return true;
+		}
+		return false;
 	}
 	
-	
+	/**
+	 * Translates a jimple assignment that has an invoke on the right-hand side.
+	 * We distinguish 2 special cases: String.length and System.exit. If the
+	 * "ivk" is neither of them, this procedure translated the "lhs" and the
+	 * call arguments and then calls
+	 * 
+	 * @param loc
+	 * @param lhs
+	 * @param ivk
+	 * @param statement
+	 */
 	private void translateInvokeAssignment(ILocation loc, Value lhs,
 			InvokeExpr ivk, Unit statement) {
+		//if the call is treated as a special case, return here.
+		if (specialCaseInvoke(loc, lhs, ivk)) return;
 
-        // java.lang.String.length is treated as a special case:
-        if (ivk.getMethod().getSignature()
-                        .contains("<java.lang.String: int length()>")
-                && lhs!=null) {
-                if (ivk instanceof SpecialInvokeExpr) {
-                        ((SpecialInvokeExpr) ivk).getBase().apply(this.valueswitch);                            
-                } else if (ivk instanceof VirtualInvokeExpr) {
-                        ((VirtualInvokeExpr) ivk).getBase().apply(this.valueswitch);                            
-                } else {
-                	throw new RuntimeException("Bad usage of String.length?");
-                }
-                Expression[] indices = { this.valueswitch.getExpression() };
-                Expression right = this.pf.mkArrayAccessExpression(loc, this.pf.getIntType(), 
-                		SootPrelude.v().getStringSizeHeapVariable(), indices); 
-
-                lhs.apply(this.valueswitch);
-                Expression left = this.valueswitch.getExpression();
-                this.translateAssignment(loc, left, right);
-                return;
-        }
-
-        if (ivk.getMethod().getSignature()
-                        .contains("<java.lang.System: void exit(int)>")) {
-                Log.info("Surppressing false positive from call to System.exit");
-                //this is not a return statement, it actually ends the application.
-                this.boogieStatements.add(this.pf.mkAssumeStatement(loc, this.pf.mkBooleanLiteral(loc, false)));
-                this.boogieStatements.add(this.pf.mkReturnStatement(loc));
-                return;
-        }
-        		
-		
 		LinkedList<IdentifierExpression> lefts = new LinkedList<IdentifierExpression>();
 		IdentifierExpression stubbedvar = null;
 		Expression left = null;
@@ -523,7 +525,7 @@ public class SootStmtSwitch implements StmtSwitch {
 			if (left instanceof IdentifierExpression) {
 				lefts.add((IdentifierExpression) left);
 			} else {
-				/**
+				/*
 				 * boogie doesn't allow you to put an array access as left hand
 				 * side for a function call. So, if this happens, we add a fake
 				 * local and assign it back after the call statement.
@@ -533,13 +535,12 @@ public class SootStmtSwitch implements StmtSwitch {
 			}
 		}
 
-		//TODO: change that to the combination of the throw-clauses
-		//of all possible calles
+		// TODO: change that to the combination of the throw-clauses
+		// of all possible calles
 		List<SootClass> maxThrowSet = new LinkedList<SootClass>();
 
-		
 		SootMethod m = ivk.getMethod();
-		
+
 		int offset = (m.isStatic()) ? 0 : 1;
 		Expression[] args = new Expression[ivk.getArgs().size() + offset];
 		if (offset != 0) {
@@ -549,18 +550,73 @@ public class SootStmtSwitch implements StmtSwitch {
 			ivk.getArg(i).apply(this.valueswitch);
 			args[i + offset] = this.valueswitch.getExpression();
 		}
-		/*
-		 * In Boogie the left hand side of a call must have the same number of
-		 * variables as the out params of the called procedure. If this is not
-		 * the case, we inject dummy locals.
-		 */
+
+		SootClass c = null;
+		if (!m.isStatic()) {
+			// TODO: combine with getCalleeInstance once this works
+			if (ivk instanceof InterfaceInvokeExpr) {
+				// TODO: error model
+				// inheritance model
+				InterfaceInvokeExpr iivk = (InterfaceInvokeExpr) ivk;
+				Type basetype = iivk.getBase().getType();
+	
+				if (basetype instanceof RefType) {
+					RefType rt = (RefType) basetype;
+					c = rt.getSootClass();
+				} else if (basetype instanceof ArrayType) {
+					c = Scene.v().loadClass("java.lang.reflect.Array",
+							SootClass.SIGNATURES); // TODO: this needs to be tested.
+				} else {
+					throw new RuntimeException("Something wrong in translateInvokeAssignment: Expected RefType but found "
+							+ basetype.getClass().toString());				
+				}
+			} else if (ivk instanceof SpecialInvokeExpr) {
+				// special invoke is only used for constructor calls
+				// TODO inheritance model
+				// don't check if the base is defined for constructor calls
+				// Shystem.err.println("Special Call to : "+iivk.getMethod().getName());
+			} else if (ivk instanceof VirtualInvokeExpr) {
+				VirtualInvokeExpr iivk = (VirtualInvokeExpr) ivk;
+				Type basetype = iivk.getBase().getType();
+	
+				if (basetype instanceof RefType) {
+					RefType rt = (RefType) basetype;
+					c = rt.getSootClass();
+				} else if (basetype instanceof ArrayType) {
+					// TODO: this needs to be tested.
+					c = Scene.v().loadClass("java.lang.reflect.Array",
+							SootClass.SIGNATURES);
+				} else {
+					this.boogieStatements.addAll(createCallStatement(loc,
+							ivk.getMethod(), maxThrowSet, lefts, args));
+					Log.error("Something wrong in findPossibleCalledMethods: Expected RefType but found "
+							+ basetype.getClass().toString());				
+					return;
+				}
+			} else {
+				Log.error("Unhandeled invoke type: " + ivk.getType().getClass() + " "+ivk.getMethod().toString());
+			}
+		}
 		
-		findPossibleCalledMethods(loc, ivk, maxThrowSet, lefts, args);
-				
-		//now check if the procedure returned exceptional
-		//and jump to the appropriate location 
+		if (c != null) {
+			if (!createGuradedCallToVirtualMethods(loc, ivk.getMethod(), c,
+					maxThrowSet, lefts, args)) {
+				// if we cannot find any possible called method we just use the
+				// one in ivk.getMethod
+				// which might be abstract
+				this.boogieStatements.addAll(createCallStatement(loc,
+						ivk.getMethod(), maxThrowSet, lefts, args));
+			} 
+		} else {
+			// the procedure is static so we call it without checking if other
+			// methods can be call depending on the type of c
+			this.boogieStatements.addAll(createCallStatement(loc,
+					ivk.getMethod(), maxThrowSet, lefts, args));
+		}
+		// now check if the procedure returned exceptional
+		// and jump to the appropriate location
 		translateCalleeExceptions(loc, maxThrowSet, statement);
-		
+
 		/*
 		 * if the left-hand side was an array access and we introduced a helper
 		 * variable, we create and assignment here that assigns this variable to
@@ -572,151 +628,159 @@ public class SootStmtSwitch implements StmtSwitch {
 	}
 
 	/**
-	 * (Only used after procedure calls) 
-	 * Inserts a switch case to check if the exception variable has been set to
-	 * any of the elements in maxThrowSet or any other exception that "statement"
-	 * may throw according to the Unit Graph.
-	 * If so, we add either add a jump to the appropriate handler or return. 
+	 * (Only used after procedure calls) Inserts a switch case to check if the
+	 * exception variable has been set to any of the elements in maxThrowSet or
+	 * any other exception that "statement" may throw according to the Unit
+	 * Graph. If so, we add either add a jump to the appropriate handler or
+	 * return.
+	 * 
 	 * @param loc
 	 * @param maxThrowSet
 	 * @param statement
 	 */
-	private void translateCalleeExceptions(ILocation loc, List<SootClass> maxThrowSet, Unit statement) {
-		//keep track of the caught exceptions so that we can add the uncaught ones later
+	private void translateCalleeExceptions(ILocation loc,
+			List<SootClass> maxThrowSet, Unit statement) {
+		// keep track of the caught exceptions so that we can add the uncaught
+		// ones later
 		HashSet<SootClass> caughtExceptions = new HashSet<SootClass>();
-		//now collect all exceptions that are in the exceptional unit graph
-		//and their associated traps
+		// now collect all exceptions that are in the exceptional unit graph
+		// and their associated traps
 		if (this.procInfo.getExceptionalUnitGraph()
 				.getExceptionalSuccsOf(statement).size() != 0) {
 			for (ExceptionDest dest : this.procInfo.getExceptionalUnitGraph()
 					.getExceptionDests(statement)) {
-				if (dest.getTrap()!=null && dest.getTrap().getException()!=null) {
-					caughtExceptions.add(dest.getTrap().getException());					
-					Statement transitionStmt;					
-					Expression condition = this.pf.mkBinaryExpression(loc, this.pf
-							.getBoolType(), BinaryOperator.COMPNEQ, this.procInfo
-							.getExceptionVariable(), SootPrelude.v()
-							.getNullConstant());
-						//the exception is caught somewhere in this procedure
-						transitionStmt = this.pf.mkGotoStatement(
-								loc,
-								GlobalsCache.v().getUnitLabel(
-										(Stmt) dest.getTrap().getHandlerUnit()));
-						// add a conjunct to check if that the type of the exception
-						// is <: than the one caught
-						// by the catch block
-						condition = this.pf.mkBinaryExpression(loc, this.pf
-								.getBoolType(), BinaryOperator.LOGICAND, condition,
-								this.pf.mkBinaryExpression(
-										loc,
-										this.pf.getBoolType(),
-										BinaryOperator.COMPPO,
-										this.valueswitch.getClassTypeFromExpression(
-												this.procInfo
-														.getExceptionVariable(),
-												false),
-										GlobalsCache.v().lookupClassVariable(
-												dest.getTrap().getException())));				
-						Statement[] thenPart = { transitionStmt };
-						Statement[] elsePart = {};
-						this.boogieStatements.add(this.pf.mkIfStatement(loc, condition,
-								thenPart, elsePart));
-				} else {					
-					//Log.error("NO CATCH FOR "+ dest);
+				if (dest.getTrap() != null
+						&& dest.getTrap().getException() != null) {
+					caughtExceptions.add(dest.getTrap().getException());
+					Statement transitionStmt;
+					Expression condition = this.pf.mkBinaryExpression(loc,
+							this.pf.getBoolType(), BinaryOperator.COMPNEQ,
+							this.procInfo.getExceptionVariable(), SootPrelude
+									.v().getNullConstant());
+					// the exception is caught somewhere in this procedure
+					transitionStmt = this.pf.mkGotoStatement(
+							loc,
+							GlobalsCache.v().getUnitLabel(
+									(Stmt) dest.getTrap().getHandlerUnit()));
+					// add a conjunct to check if that the type of the exception
+					// is <: than the one caught
+					// by the catch block
+					condition = this.pf
+							.mkBinaryExpression(
+									loc,
+									this.pf.getBoolType(),
+									BinaryOperator.LOGICAND,
+									condition,
+									this.pf.mkBinaryExpression(
+											loc,
+											this.pf.getBoolType(),
+											BinaryOperator.COMPPO,
+											this.valueswitch
+													.getClassTypeFromExpression(
+															this.procInfo
+																	.getExceptionVariable(),
+															false),
+											GlobalsCache
+													.v()
+													.lookupClassVariable(
+															dest.getTrap()
+																	.getException())));
+					Statement[] thenPart = { transitionStmt };
+					Statement[] elsePart = {};
+					this.boogieStatements.add(this.pf.mkIfStatement(loc,
+							condition, thenPart, elsePart));
+				} else {
+					// Log.error("NO CATCH FOR "+ dest);
 				}
 			}
 		}
-		//now create a list of all exceptions that are thrown by the callee
-		//but not caught by the procedure
+		// now create a list of all exceptions that are thrown by the callee
+		// but not caught by the procedure
 		HashSet<SootClass> uncaughtException = new HashSet<SootClass>();
 		for (SootClass sc : maxThrowSet) {
 			boolean caught = false;
 			for (SootClass other : caughtExceptions) {
 				if (GlobalsCache.v().isSubTypeOrEqual(sc, other)) {
-					caught = true; break;
+					caught = true;
+					break;
 				}
 			}
-			if (!caught && !uncaughtException.contains(sc)) {				
+			if (!caught && !uncaughtException.contains(sc)) {
 				uncaughtException.add(sc);
-			}			
+			}
 		}
-		//now always pick the uncaught exception which has
-		//no subclass in the hashset, create a conditional choice,
-		//and remove it. This ordering is necessary, otherwise,
-		//we might create dead code.
-		LinkedList<SootClass> todo = new LinkedList<SootClass>(uncaughtException); 
-		while(!todo.isEmpty()) {
+		// now always pick the uncaught exception which has
+		// no subclass in the hashset, create a conditional choice,
+		// and remove it. This ordering is necessary, otherwise,
+		// we might create dead code.
+		LinkedList<SootClass> todo = new LinkedList<SootClass>(
+				uncaughtException);
+		while (!todo.isEmpty()) {
 			SootClass current = todo.removeFirst();
 			boolean good = true;
 			for (SootClass other : todo) {
-				if (current==other) {
+				if (current == other) {
 					throw new RuntimeException("can't be");
 				}
 				if (GlobalsCache.v().isSubTypeOrEqual(other, current)) {
-					good = false; break;
+					good = false;
+					break;
 				}
 			}
 			if (!good) {
-				todo.addLast(current); continue;
+				todo.addLast(current);
+				continue;
 			}
-			Statement transitionStmt;					
+			Statement transitionStmt;
 			Expression condition = this.pf.mkBinaryExpression(loc, this.pf
 					.getBoolType(), BinaryOperator.COMPNEQ, this.procInfo
-					.getExceptionVariable(), SootPrelude.v()
-					.getNullConstant());
-			
+					.getExceptionVariable(), SootPrelude.v().getNullConstant());
+
 			// add a conjunct to check if that the type of the exception
 			// is <: than the one caught
 			// by the catch block
-			condition = this.pf.mkBinaryExpression(loc, this.pf
-					.getBoolType(), BinaryOperator.LOGICAND, condition,
-					this.pf.mkBinaryExpression(
-							loc,
-							this.pf.getBoolType(),
-							BinaryOperator.COMPPO,
-							this.valueswitch.getClassTypeFromExpression(
-									this.procInfo
-											.getExceptionVariable(),
-									false),
-							GlobalsCache.v().lookupClassVariable(
-									current)));
+			condition = this.pf.mkBinaryExpression(loc, this.pf.getBoolType(),
+					BinaryOperator.LOGICAND, condition,
+					this.pf.mkBinaryExpression(loc, this.pf.getBoolType(),
+							BinaryOperator.COMPPO, this.valueswitch
+									.getClassTypeFromExpression(this.procInfo
+											.getExceptionVariable(), false),
+							GlobalsCache.v().lookupClassVariable(current)));
 
 			if (GlobalsCache.v().inThrowsClause(current, procInfo)) {				
 				transitionStmt = this.pf.mkReturnStatement(loc);
-			} else {
-				//TODO: throw an error if this one is reachable!
-				Log.error("TODO: deal with unexpected assertion: "+current);
+			} else {				
+				Log.error("The exception: " + current + " is not handeled and treated as RuntimeException.");
 				transitionStmt = this.pf.mkReturnStatement(loc);
-			}				
+			}
 			Statement[] thenPart = { transitionStmt };
 			Statement[] elsePart = {};
 			this.boogieStatements.add(this.pf.mkIfStatement(loc, condition,
-					thenPart, elsePart));						
+					thenPart, elsePart));
 		}
-		
+
 	}
-	
-	
+
 	private Expression getCalleeInstance(InvokeExpr ivk) {
-//		if (ivk instanceof InstanceInvokeExpr) {			
-//			InstanceInvokeExpr iivk = (InstanceInvokeExpr) ivk;
-//			iivk.getBase().apply(this.valueswitch);
-//			Expression base = this.valueswitch.getExpression();
-//			
-//			return base;
-//		} else 
+		// if (ivk instanceof InstanceInvokeExpr) {
+		// InstanceInvokeExpr iivk = (InstanceInvokeExpr) ivk;
+		// iivk.getBase().apply(this.valueswitch);
+		// Expression base = this.valueswitch.getExpression();
+		//
+		// return base;
+		// } else
 		if (ivk instanceof InterfaceInvokeExpr) {
-			//TODO: error model
-			//inheritance model
+			// TODO: error model
+			// inheritance model
 			InterfaceInvokeExpr iivk = (InterfaceInvokeExpr) ivk;
 			iivk.getBase().apply(this.valueswitch);
 			Expression base = this.valueswitch.getExpression();
 			this.errorModel.createNonNullGuard(base);
 			return base;
 		} else if (ivk instanceof SpecialInvokeExpr) {
-			//special invoke is only used for constructor calls
-			//TODO inheritance model
-			//don't check if the base is defined for constructor calls
+			// special invoke is only used for constructor calls
+			// TODO inheritance model
+			// don't check if the base is defined for constructor calls
 			SpecialInvokeExpr iivk = (SpecialInvokeExpr) ivk;
 			iivk.getBase().apply(this.valueswitch);
 			return this.valueswitch.getExpression();
@@ -724,9 +788,9 @@ public class SootStmtSwitch implements StmtSwitch {
 			VirtualInvokeExpr iivk = (VirtualInvokeExpr) ivk;
 			iivk.getBase().apply(this.valueswitch);
 			Expression base = this.valueswitch.getExpression();
-			//TODO: maybe we want to check that base != this ... 
-			//but this is hard in Jimple
-			this.errorModel.createNonNullGuard(base);			
+			// TODO: maybe we want to check that base != this ...
+			// but this is hard in Jimple
+			this.errorModel.createNonNullGuard(base);
 			return base;
 		}
 		throw new RuntimeException(
@@ -755,7 +819,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseEnterMonitorStmt(EnterMonitorStmt arg0) {
 		injectLabelStatements(arg0);
-		Log.info("Joogie does not translate EnterMonitor");		
+		Log.info("Joogie does not translate EnterMonitor");
 	}
 
 	/*
@@ -891,8 +955,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		if (ifstatement != null) {
 			this.boogieStatements.add(ifstatement);
 		} else {
-			Log.info("Warning: Found empty switch statement (or only default case).");			 
-			for (int i=0; i<elseblock.length; i++) {
+			Log.info("Warning: Found empty switch statement (or only default case).");
+			for (int i = 0; i < elseblock.length; i++) {
 				this.boogieStatements.add(elseblock[i]);
 			}
 		}
@@ -906,8 +970,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseNopStmt(NopStmt arg0) {
 		injectLabelStatements(arg0);
-		//Log.error("NopStmt: " + arg0.toString());
-		//assert (false);
+		// Log.error("NopStmt: " + arg0.toString());
+		// assert (false);
 	}
 
 	/*
@@ -919,7 +983,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseRetStmt(RetStmt arg0) {
 		injectLabelStatements(arg0);
 		Log.error("This is deprecated: " + arg0.toString());
-		throw new RuntimeException("caseRetStmt is not implemented. Contact developers!");
+		throw new RuntimeException(
+				"caseRetStmt is not implemented. Contact developers!");
 	}
 
 	/*
@@ -930,13 +995,14 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseReturnStmt(ReturnStmt arg0) {
 		injectLabelStatements(arg0);
+		Log.info("Warning: Ret bytecode instructions are old and therefore not tested.");
 		ILocation loc = TranslationHelpers.translateLocation(arg0.getTags());
 		if (this.procInfo.getReturnVariable() != null) {
 			Expression lhs = this.procInfo.getReturnVariable();
 			arg0.getOp().apply(this.valueswitch);
 			Expression rhs = this.valueswitch.getExpression();
 			translateAssignment(loc, lhs, rhs);
-		}		
+		}
 		this.boogieStatements.add(this.pf.mkReturnStatement(loc));
 	}
 
@@ -950,7 +1016,6 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseReturnVoidStmt(ReturnVoidStmt arg0) {
 		injectLabelStatements(arg0);
 		ILocation loc = TranslationHelpers.translateLocation(arg0.getTags());
-	
 		this.boogieStatements.add(this.pf.mkReturnStatement(loc));
 	}
 
@@ -970,7 +1035,7 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		arg0.getKey().apply(this.valueswitch);
 		Expression key = this.valueswitch.getExpression();
-		int counter=0;
+		int counter = 0;
 		for (int i = arg0.getLowIndex(); i <= arg0.getHighIndex(); i++) {
 			ILocation loc = TranslationHelpers.translateLocation(arg0
 					.getTarget(counter).getTags());
@@ -978,8 +1043,10 @@ public class SootStmtSwitch implements StmtSwitch {
 					this.pf.getBoolType(), BinaryOperator.COMPEQ, key,
 					this.pf.mkIntLiteral(loc, Integer.toString(i)));
 			cases.add(cond);
-			Statement[] gototarget = { this.pf.mkGotoStatement(loc,
-					GlobalsCache.v().getUnitLabel((Stmt) arg0.getTarget(counter))) };
+			Statement[] gototarget = { this.pf.mkGotoStatement(
+					loc,
+					GlobalsCache.v().getUnitLabel(
+							(Stmt) arg0.getTarget(counter))) };
 			targets.add(gototarget);
 			counter++;
 		}
@@ -1011,57 +1078,72 @@ public class SootStmtSwitch implements StmtSwitch {
 		// Note that this only works because soot moves the "new" statement
 		// to a new local variable.
 		this.translateAssignment(loc, this.procInfo.getExceptionVariable(),
-				right);		
+				right);
 		// Add a goto statement to the exceptional successors.
 		List<Unit> exc_succ = procInfo.getExceptionalUnitGraph()
 				.getExceptionalSuccsOf((Unit) arg0);
-		String[] labels = new String[exc_succ.size()]; 
+		String[] labels = new String[exc_succ.size()];
 		if (exc_succ.size() > 0) {
 			for (int i = 0; i < exc_succ.size(); i++) {
 				labels[i] = GlobalsCache.v().getUnitLabel(
 						(Stmt) exc_succ.get(i));
 			}
-			if (exc_succ.size()> 1) {
-//				StringBuilder sb = new StringBuilder();
-//				sb.append("Throw statement may jump to more than one location: "+this.procInfo.getBoogieName() + ":"+this.currentStatement+"\n");
-//				sb.append("Line "+loc.getStartLine()+"\n");
-//				sb.append(arg0.getOp()+"\n");
-				
+			if (exc_succ.size() > 1) {
+				// StringBuilder sb = new StringBuilder();
+				// sb.append("Throw statement may jump to more than one location: "+this.procInfo.getBoogieName()
+				// + ":"+this.currentStatement+"\n");
+				// sb.append("Line "+loc.getStartLine()+"\n");
+				// sb.append(arg0.getOp()+"\n");
 
 				for (int i = 0; i < exc_succ.size(); i++) {
 					Unit u = exc_succ.get(i);
-					//sb.append("Line "+Util.findLineNumber(u.getTags())+ ": "+u+"\n");
+					// sb.append("Line "+Util.findLineNumber(u.getTags())+
+					// ": "+u+"\n");
 
 					if (u instanceof IdentityStmt) {
-						//sb.append("IdentityStmt ");
-						IdentityStmt istmt = (IdentityStmt)u;
-						if (istmt.getRightOp() instanceof CaughtExceptionRef) {														
-							//sb.append("... catches exception! " + istmt.getLeftOp().getType()+"\n");							
-							Type caughttype = istmt.getLeftOp().getType();							
+						// sb.append("IdentityStmt ");
+						IdentityStmt istmt = (IdentityStmt) u;
+						if (istmt.getRightOp() instanceof CaughtExceptionRef) {
+							// sb.append("... catches exception! " +
+							// istmt.getLeftOp().getType()+"\n");
+							Type caughttype = istmt.getLeftOp().getType();
 							if (!(caughttype instanceof RefType)) {
-								throw new RuntimeException("Bug in translation of ThrowStmt!");
-							}							
-							RefType caught = (RefType)caughttype;
-							Expression cond = GlobalsCache.v().compareTypeExpressions(
-									this.valueswitch.getClassTypeFromExpression(right, false), 
-									GlobalsCache.v().lookupClassVariable(caught.getSootClass()));
-							Statement[] thenPart = new Statement[] { this.pf.mkGotoStatement(loc, labels[i]) };
-							Statement ifstmt = this.pf.mkIfStatement(loc, cond, thenPart, new Statement[0]);
-							//sb.append("created choice: "+ifstmt+"\n");
-							this.boogieStatements.add(ifstmt);							
+								throw new RuntimeException(
+										"Bug in translation of ThrowStmt!");
+							}
+							RefType caught = (RefType) caughttype;
+							Expression cond = GlobalsCache
+									.v()
+									.compareTypeExpressions(
+											this.valueswitch.getClassTypeFromExpression(
+													right, false),
+											GlobalsCache
+													.v()
+													.lookupClassVariable(
+															caught.getSootClass()));
+							Statement[] thenPart = new Statement[] { this.pf
+									.mkGotoStatement(loc, labels[i]) };
+							Statement ifstmt = this.pf.mkIfStatement(loc, cond,
+									thenPart, new Statement[0]);
+							// sb.append("created choice: "+ifstmt+"\n");
+							this.boogieStatements.add(ifstmt);
 						} else {
-							throw new RuntimeException("Bug in translation of ThrowStmt!");
+							throw new RuntimeException(
+									"Bug in translation of ThrowStmt!");
 						}
 					} else {
-						throw new RuntimeException("Bug in translation of ThrowStmt!");
+						throw new RuntimeException(
+								"Bug in translation of ThrowStmt!");
 					}
 				}
-				//throw new RuntimeException(sb.toString());
-				//Log.error(sb);
-				//Make sure that the execution does not continue after the throw statement
-				this.boogieStatements.add(this.pf.mkReturnStatement(loc));				
-			} else {
-				this.boogieStatements.add(this.pf.mkGotoStatement(loc, labels[0]));
+				// throw new RuntimeException(sb.toString());
+				// Log.error(sb);
+				// Make sure that the execution does not continue after the
+				// throw statement				
+				this.boogieStatements.add(this.pf.mkReturnStatement(loc));
+			} else {				
+				this.boogieStatements.add(this.pf.mkGotoStatement(loc,
+						labels[0]));
 			}
 		} else {
 
@@ -1069,7 +1151,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 

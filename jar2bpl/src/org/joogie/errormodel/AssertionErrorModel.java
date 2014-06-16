@@ -42,6 +42,7 @@ public class AssertionErrorModel extends AbstractErrorModel {
 		} else {
 			//assertion = this.pf.mkAssertStatement(loc,this.pf.mkBooleanLiteral(loc, false));
 			//TODO:
+			System.err.println("unguarded exception " + exception);
 			assertion = this.pf.mkReturnStatement(loc);
 		}		
 		this.stmtSwitch.addGuardStatement(assertion);		
