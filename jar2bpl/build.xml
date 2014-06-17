@@ -1,71 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- ======================================================================
-     Nov 23, 2011 01:00:00 PM
-
-     gravy
-     Gravy translates Java bytecode to Boogie
-
-     arlt
-     ====================================================================== -->
-<project name="jar2bpl" default="default">
-
-        <property name="jar2bpl" location="jar2bpl" />        
-        <property name="dist" location="dist" />
-
-        <property name="bin" value="bin" />
-        <property name="lib" value="lib" />
-        <property name="src" value="src" />
-
-        <!-- =================================
-          target: default
-         ================================= -->
-        <target name="default" description="default" depends="dist">
-
-        </target>
-
-        <!-- - - - - - - - - - - - - - - - - - 
-          target: compile
-         - - - - - - - - - - - - - - - - - -->
-        <target name="compile">
-                <delete includeEmptyDirs="true" quiet="true">
-                        <fileset dir="${bin}" />
-                </delete>
-                
-                <mkdir dir="${bin}" />
-
-                <javac srcdir="${src}" destdir="${bin}" includeAntRuntime="false"  debug="on">
-                        <classpath>
-                                <fileset dir="${lib}" includes="**/*.jar" />
-                        </classpath>
-                </javac>
-
-                <copy todir="${bin}">
-                		<fileset dir="${src}" includes="**/*.bpl" />
-                        <fileset dir="${src}" includes="**/*.png" />
-                        <fileset dir="${src}" includes="**/*.properties" />
-                </copy>
-        	
-        </target>
-
-        <!-- - - - - - - - - - - - - - - - - - 
-          target: dist
-         - - - - - - - - - - - - - - - - - -->
-        <target name="dist" depends="compile">
-                <delete includeEmptyDirs="true" quiet="true">
-                        <fileset dir="${dist}" />
-                </delete>
-
-                <mkdir dir="${dist}" />
-
-                <jar destfile="${dist}/jar2bpl.jar">                		
-                        <manifest>
-                                <attribute name="Main-Class" value="org.joogie.Main" />
-                                <attribute name="Class-Path" value="java-cup-12.jar boogieamp.jar soot-2.5.0.jar  args4j-2.0.18.jar log4j-1.2.16.jar" />
-                        </manifest>
-                	
-	                	<fileset dir="${bin}" includes="**/*" />	
-	                	<zipgroupfileset dir="${lib}" />
-                </jar>
-        </target>
-
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project jar2bpl">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="/Users/schaef/git/jar2bpl/jar2bpl/dist/jar2bpl2.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="org.joogie.Main"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="/Users/schaef/git/jar2bpl/jar2bpl/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="/Users/schaef/git/jar2bpl/jar2bpl/lib/log4j-1.2.16.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="/Users/schaef/git/jar2bpl/jar2bpl/lib/boogieamp.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="/Users/schaef/git/jar2bpl/jar2bpl/lib/args4j-2.0.18.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="/Users/schaef/git/jar2bpl/jar2bpl/lib/soot-2.5.0.jar"/>
+        </jar>
+    </target>
 </project>
