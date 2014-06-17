@@ -34,7 +34,7 @@ public class Options {
 	 * -err encodes them by creating actual exception. 
 	 */
 	@Option(name = "-err", usage = "Use exception error model", required = false)
-	private boolean exceptionErrorModel;
+	private boolean exceptionErrorModel=false;
 	public boolean isExceptionErrorModel() {
 		return exceptionErrorModel;
 	}

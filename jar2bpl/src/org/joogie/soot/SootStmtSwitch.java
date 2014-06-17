@@ -99,8 +99,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		this.procInfo = pinfo;
 		this.pf = GlobalsCache.v().getPf();
 		this.valueswitch = new SootValueSwitch(this.procInfo, this);
-		if (!org.joogie.Options.v().isExceptionErrorModel()) {
-			this.errorModel = new ExceptionErrorModel(this.procInfo, this);
+		if (org.joogie.Options.v().isExceptionErrorModel()) {			
+			this.errorModel = new ExceptionErrorModel(this.procInfo, this);			
 		} else {
 			this.errorModel = new AssertionErrorModel(this.procInfo, this);
 		}
