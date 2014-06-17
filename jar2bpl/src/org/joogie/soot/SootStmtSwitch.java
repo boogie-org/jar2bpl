@@ -66,6 +66,7 @@ import soot.jimple.StringConstant;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
 import soot.jimple.VirtualInvokeExpr;
+import soot.options.Options;
 import soot.toolkits.graph.ExceptionalUnitGraph.ExceptionDest;
 import boogie.ProgramFactory;
 import boogie.ast.VarList;
@@ -99,8 +100,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		this.procInfo = pinfo;
 		this.pf = GlobalsCache.v().getPf();
 		this.valueswitch = new SootValueSwitch(this.procInfo, this);
-		if (org.joogie.Options.v().isExceptionErrorModel()) {			
-			this.errorModel = new ExceptionErrorModel(this.procInfo, this);			
+		if (org.joogie.Options.v().isExceptionErrorModel()) {
+			this.errorModel = new ExceptionErrorModel(this.procInfo, this);
 		} else {
 			this.errorModel = new AssertionErrorModel(this.procInfo, this);
 		}
@@ -241,6 +242,7 @@ public class SootStmtSwitch implements StmtSwitch {
 				nmae.getSize(i).apply(this.valueswitch);
 				// Expression sizeexp = this.valueswitch.getExpression();
 				// TODO
+				Log.error("Mulit-arrays are not implemented!");
 			}
 			right = GlobalsCache.v().makeFreshGlobal(
 					SootPrelude.v().getReferenceType(), true, true);
@@ -425,46 +427,50 @@ public class SootStmtSwitch implements StmtSwitch {
 					new Statement[0]);
 			this.boogieStatements.add(ite);
 			return true;
-		} 
+		}
 		return possiblyOverloaded;
 	}
 
+	/**
+	 * if actual clause contains sc or a supertype of sc, continue
+	 * else add sc to actual clause.
+	 * @param actualclause
+	 * @param addedclause
+	 */
 	private void mergeThrowsClauses(List<SootClass> actualclause,
 			List<SootClass> addedclause) {
-				
+
 		for (SootClass sc : addedclause) {
-			// TODO: if actual clause contains sc or a supertype of sc, continue
-			// else add sc to actual clause.
 			LinkedList<SootClass> superclasses = new LinkedList<SootClass>();
 			SootClass tmp = sc;
-			while (tmp!=null) {
+			while (tmp != null) {
 				superclasses.add(tmp);
 				try {
-					if (tmp.getName().equals("java.lang.Object")) {						
-						tmp = null;						
+					if (tmp.getName().equals("java.lang.Object")) {
+						tmp = null;
 					} else {
 						tmp = tmp.getSuperclass();
 					}
 				} catch (Exception e) {
-					throw new RuntimeException(tmp.getName() + " - " + e.toString());					
+					throw new RuntimeException(tmp.getName() + " - "
+							+ e.toString());
 				}
 			}
-			
+
 			boolean known = false;
 			for (SootClass c : actualclause) {
 				if (superclasses.contains(c)) {
 					known = true;
 					break;
 				}
-				
+
 			}
-			if (!known) actualclause.add(sc);
-		}		
+			if (!known)
+				actualclause.add(sc);
+		}
 	}
 
-	
-	private boolean specialCaseInvoke(ILocation loc, Value lhs,
-			InvokeExpr ivk) {
+	private boolean specialCaseInvoke(ILocation loc, Value lhs, InvokeExpr ivk) {
 
 		// java.lang.String.length is treated as a special case:
 		if (ivk.getMethod().getSignature()
@@ -499,7 +505,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Translates a jimple assignment that has an invoke on the right-hand side.
 	 * We distinguish 2 special cases: String.length and System.exit. If the
@@ -513,8 +519,9 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	private void translateInvokeAssignment(ILocation loc, Value lhs,
 			InvokeExpr ivk, Unit statement) {
-		//if the call is treated as a special case, return here.
-		if (specialCaseInvoke(loc, lhs, ivk)) return;
+		// if the call is treated as a special case, return here.
+		if (specialCaseInvoke(loc, lhs, ivk))
+			return;
 
 		LinkedList<IdentifierExpression> lefts = new LinkedList<IdentifierExpression>();
 		IdentifierExpression stubbedvar = null;
@@ -535,8 +542,7 @@ public class SootStmtSwitch implements StmtSwitch {
 			}
 		}
 
-		// TODO: change that to the combination of the throw-clauses
-		// of all possible calles
+
 		List<SootClass> maxThrowSet = new LinkedList<SootClass>();
 
 		SootMethod m = ivk.getMethod();
@@ -553,22 +559,22 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		SootClass c = null;
 		if (!m.isStatic()) {
-			// TODO: combine with getCalleeInstance once this works
+
 			if (ivk instanceof InterfaceInvokeExpr) {
-				// TODO: error model
-				// inheritance model
+
 				InterfaceInvokeExpr iivk = (InterfaceInvokeExpr) ivk;
 				Type basetype = iivk.getBase().getType();
-	
+
 				if (basetype instanceof RefType) {
 					RefType rt = (RefType) basetype;
 					c = rt.getSootClass();
 				} else if (basetype instanceof ArrayType) {
 					c = Scene.v().loadClass("java.lang.reflect.Array",
-							SootClass.SIGNATURES); // TODO: this needs to be tested.
+							SootClass.SIGNATURES); 
 				} else {
-					throw new RuntimeException("Something wrong in translateInvokeAssignment: Expected RefType but found "
-							+ basetype.getClass().toString());				
+					throw new RuntimeException(
+							"Something wrong in translateInvokeAssignment: Expected RefType or ArrayType but found "
+									+ basetype.getClass().toString());
 				}
 			} else if (ivk instanceof SpecialInvokeExpr) {
 				// special invoke is only used for constructor calls
@@ -578,35 +584,32 @@ public class SootStmtSwitch implements StmtSwitch {
 			} else if (ivk instanceof VirtualInvokeExpr) {
 				VirtualInvokeExpr iivk = (VirtualInvokeExpr) ivk;
 				Type basetype = iivk.getBase().getType();
-	
+
 				if (basetype instanceof RefType) {
 					RefType rt = (RefType) basetype;
 					c = rt.getSootClass();
 				} else if (basetype instanceof ArrayType) {
-					// TODO: this needs to be tested.
 					c = Scene.v().loadClass("java.lang.reflect.Array",
 							SootClass.SIGNATURES);
 				} else {
-					this.boogieStatements.addAll(createCallStatement(loc,
-							ivk.getMethod(), maxThrowSet, lefts, args));
-					Log.error("Something wrong in findPossibleCalledMethods: Expected RefType but found "
-							+ basetype.getClass().toString());				
-					return;
+					throw new RuntimeException(
+							"Something wrong in translateInvokeAssignment: Expected RefType or ArrayType but found "
+									+ basetype.getClass().toString());
 				}
 			} else {
-				Log.error("Unhandeled invoke type: " + ivk.getType().getClass() + " "+ivk.getMethod().toString());
+				Log.error("Unhandeled invoke type: " + ivk.getType().getClass()
+						+ " " + ivk.getMethod().toString());
 			}
 		}
-		
+
 		if (c != null) {
 			if (!createGuradedCallToVirtualMethods(loc, ivk.getMethod(), c,
 					maxThrowSet, lefts, args)) {
 				// if we cannot find any possible called method we just use the
-				// one in ivk.getMethod
-				// which might be abstract
+				// one in ivk.getMethod which might be abstract
 				this.boogieStatements.addAll(createCallStatement(loc,
 						ivk.getMethod(), maxThrowSet, lefts, args));
-			} 
+			}
 		} else {
 			// the procedure is static so we call it without checking if other
 			// methods can be call depending on the type of c
@@ -731,32 +734,37 @@ public class SootStmtSwitch implements StmtSwitch {
 				todo.addLast(current);
 				continue;
 			}
-			Statement transitionStmt;
-			Expression condition = this.pf.mkBinaryExpression(loc, this.pf
-					.getBoolType(), BinaryOperator.COMPNEQ, this.procInfo
-					.getExceptionVariable(), SootPrelude.v().getNullConstant());
-
-			// add a conjunct to check if that the type of the exception
-			// is <: than the one caught
-			// by the catch block
-			condition = this.pf.mkBinaryExpression(loc, this.pf.getBoolType(),
-					BinaryOperator.LOGICAND, condition,
-					this.pf.mkBinaryExpression(loc, this.pf.getBoolType(),
-							BinaryOperator.COMPPO, this.valueswitch
-									.getClassTypeFromExpression(this.procInfo
-											.getExceptionVariable(), false),
-							GlobalsCache.v().lookupClassVariable(current)));
-
-			if (GlobalsCache.v().inThrowsClause(current, procInfo)) {				
-				transitionStmt = this.pf.mkReturnStatement(loc);
-			} else {				
-				Log.error("The exception: " + current + " is not handeled and treated as RuntimeException.");
-				transitionStmt = this.pf.mkReturnStatement(loc);
+			
+			if (GlobalsCache.v().inThrowsClause(current, procInfo) || org.joogie.Options.v().isRuntimeExceptionReturns()) {
+			
+				Statement transitionStmt;
+				Expression condition = this.pf.mkBinaryExpression(loc, this.pf
+						.getBoolType(), BinaryOperator.COMPNEQ, this.procInfo
+						.getExceptionVariable(), SootPrelude.v().getNullConstant());
+	
+				// add a conjunct to check if that the type of the exception
+				// is <: than the one caught
+				// by the catch block
+				condition = this.pf.mkBinaryExpression(loc, this.pf.getBoolType(),
+						BinaryOperator.LOGICAND, condition,
+						this.pf.mkBinaryExpression(loc, this.pf.getBoolType(),
+								BinaryOperator.COMPPO, this.valueswitch
+										.getClassTypeFromExpression(this.procInfo
+												.getExceptionVariable(), false),
+								GlobalsCache.v().lookupClassVariable(current)));
+	
+				
+					transitionStmt = this.pf.mkReturnStatement(loc);
+				Statement[] thenPart = { transitionStmt };
+				Statement[] elsePart = {};
+				this.boogieStatements.add(this.pf.mkIfStatement(loc, condition,
+						thenPart, elsePart));
+			
+			} else {
+				Log.debug("The exception: " + current
+						+ " is not handeled and treated as RuntimeException.");	
 			}
-			Statement[] thenPart = { transitionStmt };
-			Statement[] elsePart = {};
-			this.boogieStatements.add(this.pf.mkIfStatement(loc, condition,
-					thenPart, elsePart));
+			
 		}
 
 	}
@@ -770,8 +778,6 @@ public class SootStmtSwitch implements StmtSwitch {
 		// return base;
 		// } else
 		if (ivk instanceof InterfaceInvokeExpr) {
-			// TODO: error model
-			// inheritance model
 			InterfaceInvokeExpr iivk = (InterfaceInvokeExpr) ivk;
 			iivk.getBase().apply(this.valueswitch);
 			Expression base = this.valueswitch.getExpression();
@@ -779,8 +785,6 @@ public class SootStmtSwitch implements StmtSwitch {
 			return base;
 		} else if (ivk instanceof SpecialInvokeExpr) {
 			// special invoke is only used for constructor calls
-			// TODO inheritance model
-			// don't check if the base is defined for constructor calls
 			SpecialInvokeExpr iivk = (SpecialInvokeExpr) ivk;
 			iivk.getBase().apply(this.valueswitch);
 			return this.valueswitch.getExpression();
@@ -788,8 +792,6 @@ public class SootStmtSwitch implements StmtSwitch {
 			VirtualInvokeExpr iivk = (VirtualInvokeExpr) ivk;
 			iivk.getBase().apply(this.valueswitch);
 			Expression base = this.valueswitch.getExpression();
-			// TODO: maybe we want to check that base != this ...
-			// but this is hard in Jimple
 			this.errorModel.createNonNullGuard(base);
 			return base;
 		}
@@ -995,7 +997,6 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseReturnStmt(ReturnStmt arg0) {
 		injectLabelStatements(arg0);
-		Log.info("Warning: Ret bytecode instructions are old and therefore not tested.");
 		ILocation loc = TranslationHelpers.translateLocation(arg0.getTags());
 		if (this.procInfo.getReturnVariable() != null) {
 			Expression lhs = this.procInfo.getReturnVariable();
@@ -1139,9 +1140,9 @@ public class SootStmtSwitch implements StmtSwitch {
 				// throw new RuntimeException(sb.toString());
 				// Log.error(sb);
 				// Make sure that the execution does not continue after the
-				// throw statement				
+				// throw statement
 				this.boogieStatements.add(this.pf.mkReturnStatement(loc));
-			} else {				
+			} else {
 				this.boogieStatements.add(this.pf.mkGotoStatement(loc,
 						labels[0]));
 			}

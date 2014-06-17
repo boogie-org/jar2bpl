@@ -325,21 +325,6 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		arg0.getOp().apply(this);
 		Expression exp = this.getExpression();
 
-//        System.out.println("Cast " + arg0.getOp().getType() + " to " + arg0.getCastType());
-
-		/*
-		if (exp == SootPrelude.v().getNullConstant()) {
-			// TODO: what shall we do if someone tries to cast Null?
-			if (arg0.getOp() instanceof NullConstant) {
-				Log.error("No idea how to cast Null");
-			} else {
-				Log.error("WARNING: this should not be null!");
-
-			}
-			this.expressionStack.push(exp);
-			return;
-		}*/
-
 		// if the jimple types are the same, just return the expression
 		if (arg0.getOp().getType() == arg0.getCastType()) {
 			this.expressionStack.push(exp);
@@ -800,7 +785,9 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			// exception
 			// assume $heap[$exception,$type] <: arg0.getType()
 			
-			//TODO: do we have to check if this.procInfo.getExceptionVariable() is null?
+			//ensure that $exception is not null.
+			this.stmtSwitch.getErrorModel().createNonNullViolationException(this.procInfo.getExceptionVariable());
+			
 			Expression typefield = this.getClassTypeFromExpression(this.procInfo.getExceptionVariable(), false);
 			this.stmtSwitch
 					.addGuardStatement(GlobalsCache.v().assumeSubType(
@@ -836,9 +823,9 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		Expression base = this.getExpression();
 		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
 		
-		//TODO: we are checking if this is a @NonNull field
+		//We are checking if this is a @NonNull field
 		//if so, we add an assume to ensure that it actually is
-		//not null here. May be better ways to do this.		
+		//not null here. 		
 		checkFieldAnnotations(this.makeHeapAccessExpression(loc, base,
 				field, false), arg0);
 		

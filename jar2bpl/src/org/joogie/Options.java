@@ -38,6 +38,13 @@ public class Options {
 	public boolean isExceptionErrorModel() {
 		return exceptionErrorModel;
 	}
+
+	@Option(name = "-rtr", usage = "Also ensure on caller side that procedure calls do not throw runtime exceptions", required = false)
+	private boolean runtimeExceptionReturns=false;
+	public boolean isRuntimeExceptionReturns() {
+		return runtimeExceptionReturns;
+	}
+	
 	
 
 	@Option(name = "-prelude", usage = "Use custom prelude instead of the built-in one.")
