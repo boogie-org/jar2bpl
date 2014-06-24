@@ -42,6 +42,7 @@ import soot.toolkits.exceptions.UnitThrowAnalysis;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import util.Log;
 import boogie.ProgramFactory;
+import boogie.ast.Attribute;
 import boogie.ast.VarList;
 import boogie.declaration.Implementation;
 import boogie.declaration.ProcedureDeclaration;
@@ -72,7 +73,6 @@ public class SootProcedureInfo {
 
 	private IdentifierExpression thisVariable;
 	private SootMethod sootMethod;
-	private ILocation methodLocation;
 	private String cleanName;
 
 	private ProcedureDeclaration procedureDeclaration;
@@ -85,7 +85,7 @@ public class SootProcedureInfo {
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		for (VarList vl : vla) {
 			for (String name : vl.getIdentifiers()) {
-				ret.add(pf.mkIdentifierExpression(vl.getLocation(),
+				ret.add(pf.mkIdentifierExpression(
 						pf.boogieTypeFromAstType(vl.getType()), name, false,
 						false, false));
 			}
@@ -95,6 +95,10 @@ public class SootProcedureInfo {
 
 	public SootProcedureInfo(SootMethod m) {
 		ProgramFactory pf = GlobalsCache.v().getPf();
+
+		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(m
+				.getTags());
+
 		// Check if this procedure has already been declared in the prelude:
 		this.sootMethod = m;
 		this.cleanName = TranslationHelpers.getQualifiedName(this.sootMethod);
@@ -120,14 +124,12 @@ public class SootProcedureInfo {
 							+ this.cleanName);
 
 		this.specification = new LinkedList<Specification>();
-		this.methodLocation = TranslationHelpers
-				.translateLocation(this.sootMethod.getTags());
 		this.inParameters = new LinkedList<IdentifierExpression>();
 		this.containingClassVariable = GlobalsCache.v().lookupClassVariable(
 				this.sootMethod.getDeclaringClass());
 
 		if (!this.sootMethod.isStatic()) {
-			this.thisVariable = pf.mkIdentifierExpression(null, SootPrelude.v()
+			this.thisVariable = pf.mkIdentifierExpression(SootPrelude.v()
 					.getReferenceType(), "$this", false, false, false);
 			this.inParameters.add(this.thisVariable);
 		} else {
@@ -143,8 +145,8 @@ public class SootProcedureInfo {
 					this.sootMethod.getParameterType(i));
 
 			String param_name = "$in_parameter__" + i;
-			IdentifierExpression id = pf.mkIdentifierExpression(
-					this.methodLocation, type, param_name, false, false, false);
+			IdentifierExpression id = pf.mkIdentifierExpression(type,
+					param_name, false, false, false);
 			this.inParameters.add(id);
 
 			// add precondition if parameter has @NonNull annotation
@@ -152,12 +154,12 @@ public class SootProcedureInfo {
 										// at all
 				LinkedList<SootAnnotations.Annotation> annot = pannot.get(i);
 				if (annot.contains(SootAnnotations.Annotation.NonNull)) {
-					Expression formula = pf.mkBinaryExpression(methodLocation,
+					Expression formula = pf.mkBinaryExpression(
 							pf.getBoolType(), BinaryOperator.COMPNEQ, id,
 							SootPrelude.v().getNullConstant());
 
 					this.specification.add(pf.mkRequiresSpecification(
-							methodLocation, false, formula));
+							attributes, false, formula));
 				}
 			}
 
@@ -169,8 +171,8 @@ public class SootProcedureInfo {
 			Type returntype = this.sootMethod.getReturnType();
 			BoogieType type = GlobalsCache.v().getBoogieType(returntype);
 			String param_name = "$return";
-			IdentifierExpression id = pf.mkIdentifierExpression(
-					this.methodLocation, type, param_name, false, false, false);
+			IdentifierExpression id = pf.mkIdentifierExpression(type,
+					param_name, false, false, false);
 			this.outParameters.add(id);
 			this.returnVariable = id;
 
@@ -200,12 +202,12 @@ public class SootProcedureInfo {
 				if (annot != null
 						&& annot.contains(SootAnnotations.Annotation.NonNull)) {
 
-					Expression formula = pf.mkBinaryExpression(methodLocation,
+					Expression formula = pf.mkBinaryExpression(
 							pf.getBoolType(), BinaryOperator.COMPNEQ,
 							this.returnVariable, SootPrelude.v()
 									.getNullConstant());
 					this.specification.add(pf.mkEnsuresSpecification(
-							methodLocation, false, formula));
+							attributes, false, formula));
 				}
 			}
 		} else {
@@ -217,18 +219,16 @@ public class SootProcedureInfo {
 		 * procedure.
 		 */
 		String exname = "$exception";
-		IdentifierExpression id = pf.mkIdentifierExpression(
-				this.methodLocation, SootPrelude.v().getReferenceType(),
-				exname, false, false, false);
+		IdentifierExpression id = pf.mkIdentifierExpression(SootPrelude.v()
+				.getReferenceType(), exname, false, false, false);
 		this.outParameters.add(id);
 		this.exceptionVariable = id;
 
 		Specification[] spec = this.specification
 				.toArray(new Specification[this.specification.size()]);
 
-		this.procedureDeclaration = pf.mkProcedureDeclaration(
-				this.methodLocation, this.cleanName, this.getInParamters(),
-				this.getOutParamters(), spec);
+		this.procedureDeclaration = pf.mkProcedureDeclaration(this.cleanName,
+				this.getInParamters(), this.getOutParamters(), spec);
 
 		// TODO: make the exceptional return flag a postcondition instead!
 
@@ -242,8 +242,7 @@ public class SootProcedureInfo {
 			// is set
 			// to true if the procedure returns exceptional
 			this.exceptionalReturnFlag = pf.mkIdentifierExpression(
-					this.methodLocation, pf.getBoolType(), "$ex_return", false,
-					false, false);
+					pf.getBoolType(), "$ex_return", false, false, false);
 
 			this.fakeLocals.add(this.exceptionalReturnFlag);
 		} else {
@@ -306,13 +305,12 @@ public class SootProcedureInfo {
 
 	public IdentifierExpression lookupLocalVariable(Local local) {
 		if (!this.localVariable.containsKey(local)) {
-			ILocation loc = TranslationHelpers.createDummyLocation();
 			BoogieType type = GlobalsCache.v().getBoogieType(local.getType());
 			String cleanname = TranslationHelpers.getQualifiedName(local);
 			IdentifierExpression id = GlobalsCache
 					.v()
 					.getPf()
-					.mkIdentifierExpression(loc, type, cleanname, false, false,
+					.mkIdentifierExpression(type, cleanname, false, false,
 							false);
 			this.localVariable.put(local, id);
 		}
@@ -323,11 +321,10 @@ public class SootProcedureInfo {
 	private HashSet<IdentifierExpression> fakeLocals = new HashSet<IdentifierExpression>();
 
 	public IdentifierExpression createLocalVariable(BoogieType type) {
-		ILocation loc = TranslationHelpers.createDummyLocation();
 		IdentifierExpression id = GlobalsCache
 				.v()
 				.getPf()
-				.mkIdentifierExpression(loc, type,
+				.mkIdentifierExpression(type,
 						"$fakelocal_" + (fakeLocalCount++), false, false, false);
 		this.fakeLocals.add(id);
 		return id;

@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 
 import org.joogie.GlobalsCache;
-import org.joogie.soot.SootPrelude;
 import org.joogie.soot.SootProcedureInfo;
 import org.joogie.soot.SootStmtSwitch;
 import org.joogie.util.TranslationHelpers;
@@ -18,9 +17,9 @@ import org.joogie.util.TranslationHelpers;
 import soot.SootClass;
 import soot.jimple.Stmt;
 import util.Log;
+import boogie.ast.Attribute;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
-import boogie.location.ILocation;
 import boogie.statement.IfStatement;
 import boogie.statement.Statement;
 
@@ -67,32 +66,31 @@ public class ExceptionErrorModel extends AbstractErrorModel {
 		this.createGuardedException(guard, exception, false);
 	}
 		
-	protected void createGuardedException(Expression guard, SootClass exception, boolean expected) {
-		ILocation loc = TranslationHelpers.translateLocation(this.stmtSwitch.getCurrentStatement().getTags());
+	protected void createGuardedException(Expression guard, SootClass exception, boolean expected) {		
 		if (guard!=null) {
 			SootStmtSwitch elsestmts = new SootStmtSwitch(this.procInfo); 				
-			IdentifierExpression exceptionvar = elsestmts.createAllocatedVariable(loc, exception.getType());
-			Statement transferStatement = this.pf.mkReturnStatement(loc);
+			IdentifierExpression exceptionvar = elsestmts.createAllocatedVariable( exception.getType());
+			Statement transferStatement = this.pf.mkReturnStatement();
 			//collect the create statements
 			LinkedList<Statement> elseblock = elsestmts.popAll();
 			//create the transfer command
 			//"goto" if this exception is caught somewhere
 			//"return" otherwise.
-			Statement assign = this.pf.mkAssignmentStatement(loc, this.procInfo.getExceptionVariable(), exceptionvar);			
+			Statement assign = this.pf.mkAssignmentStatement( this.procInfo.getExceptionVariable(), exceptionvar);			
 			elseblock.add(assign);			
 
 			//this one is only needed to have a statement that we can track in the then part of the exception handling.
 			//!! use an identity statement to make sure that no execution is altered here.
-			Statement assign_then = this.pf.mkAssignmentStatement(loc, this.procInfo.getExceptionVariable(), this.procInfo.getExceptionVariable());			
+			Statement assign_then = this.pf.mkAssignmentStatement(this.procInfo.getExceptionVariable(), this.procInfo.getExceptionVariable());			
 			/*
 			 * add the exception to exceptionWitnesses and safetyWitnesses only if we
 			 * do not expect it (i.e., it is not caught or in the throws clause).
 			 */
 			if (!expected) {
 				elseblock.add(
-						GlobalsCache.v().getPf().mkAssignmentStatement(loc, 
+						GlobalsCache.v().getPf().mkAssignmentStatement( 
 								procInfo.getExceptionalReturnFlag(), 
-								GlobalsCache.v().getPf().mkBooleanLiteral(loc, true))
+								GlobalsCache.v().getPf().mkBooleanLiteral(true))
 					);
 
 				//store all statements that are created for throwing an exception
@@ -110,12 +108,12 @@ public class ExceptionErrorModel extends AbstractErrorModel {
 			Statement[] elsePart = elseblock.toArray(new Statement[elseblock.size()]);
 			
 			
-			IfStatement ifstmt = (IfStatement) this.pf.mkIfStatement(loc, guard, thenPart, elsePart);
+			IfStatement ifstmt = (IfStatement) this.pf.mkIfStatement(guard, thenPart, elsePart);
 			this.createdIfStatements.add(ifstmt);
 			this.stmtSwitch.addGuardStatement(ifstmt);
 		} else {
 			Log.error("TODO: unguarded exceptions are not really implemented");
-			this.stmtSwitch.addGuardStatement(this.pf.mkReturnStatement(loc));
+			this.stmtSwitch.addGuardStatement(this.pf.mkReturnStatement());
 		}
 	}
 	

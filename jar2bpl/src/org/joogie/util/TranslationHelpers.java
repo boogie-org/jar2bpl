@@ -31,8 +31,10 @@ import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.StaticFieldRef;
 import soot.tagkit.LineNumberTag;
+import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
 import soot.tagkit.Tag;
+import boogie.ast.Attribute;
 import boogie.expression.Expression;
 import boogie.location.ILocation;
 import boogie.type.BoogieType;
@@ -59,6 +61,48 @@ public class TranslationHelpers {
 			}
 		}
 		return new SootLocation(lineNumber);
+	}
+
+	public static Attribute[] javaLocation2Attribute(List<Tag> list) {
+		//if the taglist is empty return no location	
+		int startln, endln, startcol, endcol;
+		String filename;
+
+		startln = -1;
+		endln = -1;
+		startcol = -1;
+		endcol = -1;
+		filename = null;
+
+		for (Tag tag : list) {
+			if (tag instanceof LineNumberTag) {
+				startln = ((LineNumberTag) tag).getLineNumber();
+				break;
+			} else if (tag instanceof SourceLnNamePosTag) {
+				startln = ((SourceLnNamePosTag) tag).startLn();
+				endln = ((SourceLnNamePosTag) tag).endLn();
+				filename = ((SourceLnNamePosTag) tag).getFileName();
+				startcol = ((SourceLnNamePosTag) tag).startPos();
+				endcol = ((SourceLnNamePosTag) tag).endPos();
+				break;
+			} else if (tag instanceof SourceFileTag) {
+				filename = ((SourceFileTag)tag).getSourceFile();
+				break;
+			} else {
+				//Log.debug(tag.getClass().toString() + " "+tag.toString());
+			}
+		}
+
+		if (filename==null) {
+			return new Attribute[0];
+		}
+
+		
+		Attribute[] res = { GlobalsCache
+				.v()
+				.getPf()
+				.mkLocationAttribute(filename, startln, endln, startcol, endcol) };
+		return res;
 	}
 
 	public static String getQualifiedName(SootClass c) {
@@ -134,22 +178,16 @@ public class TranslationHelpers {
 			return SootPrelude.v().refToBool(expr);
 		} else if (expr == SootPrelude.v().getNullConstant()
 				&& target == GlobalsCache.v().getPf().getRealType()) {
-			return GlobalsCache
-					.v()
-					.getPf()
-					.mkRealLiteral(TranslationHelpers.createDummyLocation(),
-							"0.0");
+			return GlobalsCache.v().getPf().mkRealLiteral("0.0");
 		} else if (expr == SootPrelude.v().getNullConstant()
 				&& target == GlobalsCache.v().getPf().getIntType()) {
-			return GlobalsCache
-					.v()
-					.getPf()
-					.mkIntLiteral(TranslationHelpers.createDummyLocation(), "0");
+			return GlobalsCache.v().getPf().mkIntLiteral("0");
 		}
-		
-		throw new RuntimeException("Cannot cast " + expr.toString() + " from: " + expr.getType().getClass().toString()
-				+ " to " + target.getClass().toString());
-		//return expr;
+
+		throw new RuntimeException("Cannot cast " + expr.toString() + " from: "
+				+ expr.getType().getClass().toString() + " to "
+				+ target.getClass().toString());
+		// return expr;
 	}
 
 }

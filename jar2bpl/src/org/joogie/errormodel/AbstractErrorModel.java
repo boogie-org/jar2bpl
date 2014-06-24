@@ -17,6 +17,7 @@ import soot.SootClass;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.ExceptionalUnitGraph.ExceptionDest;
 import boogie.ProgramFactory;
+import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
@@ -81,28 +82,28 @@ public abstract class AbstractErrorModel {
 			}
 		} else {
 			ILocation loc = TranslationHelpers.translateLocation(this.stmtSwitch.getCurrentStatement().getTags());
-			Statement transferStatement = this.pf.mkGotoStatement(loc, transferlabel);
+			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
 			//if the exception is caught, create a goto
 			if (guard!=null) {				
 				SootStmtSwitch elsestmts = new SootStmtSwitch(this.procInfo); 				
-				IdentifierExpression exceptionvar = elsestmts.createAllocatedVariable(loc, exception.getType());				
+				IdentifierExpression exceptionvar = elsestmts.createAllocatedVariable( exception.getType());				
 				//collect the create statements
 				LinkedList<Statement> elseblock = elsestmts.popAll();
 				//create the transfer command
 				//"goto" if this exception is caught somewhere
 				//"return" otherwise.
-				this.pf.mkAssignmentStatement(loc, this.procInfo.getExceptionVariable(), exceptionvar);
+				this.pf.mkAssignmentStatement( this.procInfo.getExceptionVariable(), exceptionvar);
 				
-				elseblock.add(this.pf.mkAssignmentStatement(loc, 
+				elseblock.add(this.pf.mkAssignmentStatement( 
 								this.procInfo.getExceptionVariable(), exceptionvar));
 				elseblock.add(transferStatement);
 				//this one is only needed to have a statement that we can track in the then part of the exception handling.
 				//!! use an identity statement to make sure that no execution is altered here.
-				Statement assign_then = this.pf.mkAssignmentStatement(loc, this.procInfo.getExceptionVariable(), this.procInfo.getExceptionVariable());			
+				Statement assign_then = this.pf.mkAssignmentStatement( this.procInfo.getExceptionVariable(), this.procInfo.getExceptionVariable());			
 
 				Statement[] elsePart = elseblock.toArray(new Statement[elseblock.size()]); 
 				Statement[] thenPart = {assign_then};		
-				this.stmtSwitch.addGuardStatement(this.pf.mkIfStatement(loc, guard, thenPart, elsePart));					
+				this.stmtSwitch.addGuardStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
 			} else {
 				this.stmtSwitch.addGuardStatement(transferStatement);
 			}
@@ -110,10 +111,10 @@ public abstract class AbstractErrorModel {
 	}
 	
 	public Statement createAssumeNonNull(Expression expr) {
-		Expression guard = this.pf.mkBinaryExpression(expr.getLocation(),
+		Expression guard = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPNEQ, expr,
 				SootPrelude.v().getNullConstant());		
-		return new AssumeStatement(expr.getLocation(),guard);	
+		return this.pf.mkAssumeStatement(new Attribute[0], guard);	
 	}
 	
 	public void createUnguardedException(SootClass exception) {
@@ -121,7 +122,7 @@ public abstract class AbstractErrorModel {
 	}
 	
 	public void createNonNullViolationException(Expression expr) {
-		Expression guard = this.pf.mkBinaryExpression(expr.getLocation(),
+		Expression guard = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPNEQ, expr,
 				SootPrelude.v().getNullConstant());
 		//TODO: it is actually not a java.lang.RuntimeException ... but I don't have anything usefull to report!
@@ -141,31 +142,31 @@ public abstract class AbstractErrorModel {
 	
 	public void createArrayBoundGuard(Expression baseExpression, Expression indexExpression) {
 		ILocation loc = baseExpression.getLocation();
-		Expression upperbound = this.pf.mkBinaryExpression(loc,
+		Expression upperbound = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPLT, indexExpression,
 				GlobalsCache.v().getArraySizeExpression(baseExpression));
 
-		Expression lowerbound = this.pf.mkBinaryExpression(loc,
+		Expression lowerbound = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPGEQ, indexExpression,
-				this.pf.mkIntLiteral(loc, "0"));
+				this.pf.mkIntLiteral( "0"));
 
-		Expression guard = this.pf.mkBinaryExpression(loc,
+		Expression guard = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.LOGICAND, upperbound,
 				lowerbound);
 		createException(guard, Scene.v().loadClass("java.lang.ArrayIndexOutOfBoundsException", SootClass.SIGNATURES));
 	}
 	
 	public void createNonNullGuard(Expression expr) {
-		Expression guard = this.pf.mkBinaryExpression(expr.getLocation(),
+		Expression guard = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPNEQ, expr,
 				SootPrelude.v().getNullConstant());
 		createException(guard, Scene.v().loadClass("java.lang.NullPointerException", SootClass.SIGNATURES));
 	}
 	
 	public void createDivByZeroGuard(Expression expr) {
-		Expression guard = this.pf.mkBinaryExpression(expr.getLocation(),
+		Expression guard = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPNEQ, expr,
-				this.pf.mkIntLiteral(expr.getLocation(), "0"));
+				this.pf.mkIntLiteral( "0"));
 		createException(guard, Scene.v().loadClass("java.lang.ArithmeticException", SootClass.SIGNATURES));
 	}
 	

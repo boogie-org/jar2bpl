@@ -23,14 +23,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 import org.joogie.GlobalsCache;
-import org.joogie.util.TranslationHelpers;
 
 import util.Log;
 import boogie.ProgramFactory;
+import boogie.ast.Attribute;
 import boogie.declaration.FunctionDeclaration;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
-import boogie.location.ILocation;
 import boogie.type.BoogieType;
 import boogie.type.ConstructedType;
 
@@ -226,30 +225,31 @@ public class SootPrelude {
 	 */
 	public FunctionDeclaration lookupRealOperator(String op) {
 		if (!this.realOperators.containsKey(op)) {	
-			ILocation loc = TranslationHelpers.createDummyLocation();
+			Attribute[] attributes = {};
+			
 			BoogieType integer = GlobalsCache.v().getPf().getIntType();
 			IdentifierExpression x = GlobalsCache
 					.v()
 					.getPf()
-					.mkIdentifierExpression(loc, integer, "x", false, false,
+					.mkIdentifierExpression( integer, "x", false, false,
 							false);
 			IdentifierExpression y = GlobalsCache
 					.v()
 					.getPf()
-					.mkIdentifierExpression(loc, integer, "y", false, false,
+					.mkIdentifierExpression( integer, "y", false, false,
 							false);
 			IdentifierExpression[] in = { x, y };
 			IdentifierExpression outParam = GlobalsCache
 					.v()
 					.getPf()
-					.mkIdentifierExpression(loc, integer, "$ret", false, false,
+					.mkIdentifierExpression( integer, "$ret", false, false,
 							false);
 			this.realOperators.put(
 					op,
 					GlobalsCache
 							.v()
 							.getPf()
-							.mkFunctionDeclaration(loc,
+							.mkFunctionDeclaration(attributes,
 									"$realOp" + op.hashCode(), in, outParam,
 									null));
 			Log.error("Created function that should be in Prelude: "+ this.realOperators.get(op));
@@ -368,31 +368,31 @@ public class SootPrelude {
 	public Expression intToBool(Expression exp) {
 		Expression args[] = { exp };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(exp.getLocation(), this.int2bool, args);
+				.mkFunctionApplication(this.int2bool, args);
 	}
 
 	public Expression boolToInt(Expression exp) {
 		Expression args[] = { exp };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(exp.getLocation(), this.bool2int, args);
+				.mkFunctionApplication(this.bool2int, args);
 	}
 
 	public Expression refToBool(Expression exp) {
 		Expression args[] = { exp };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(exp.getLocation(), this.ref2bool, args);
+				.mkFunctionApplication(this.ref2bool, args);
 	}
 
 	public Expression intToReal(Expression exp) {
 		Expression args[] = { exp };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(exp.getLocation(), this.int2real, args);
+				.mkFunctionApplication(this.int2real, args);
 	}
 
 	public Expression realToInt(Expression exp) {
 		Expression args[] = { exp };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(exp.getLocation(), this.real2int, args);
+				.mkFunctionApplication(this.real2int, args);
 	}
 
 	public Expression compareExpr(Expression left, Expression right) {
@@ -415,25 +415,25 @@ public class SootPrelude {
 		}
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), operator, args);
+				.mkFunctionApplication(operator, args);
 	}
 
 	public Expression shiftLeft(Expression left, Expression right) {
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), this.shlInt, args);
+				.mkFunctionApplication(this.shlInt, args);
 	}
 
 	public Expression shiftRight(Expression left, Expression right) {
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), this.shrInt, args);
+				.mkFunctionApplication(this.shrInt, args);
 	}
 
 	public Expression uShiftRight(Expression left, Expression right) {
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), this.ushrInt, args);
+				.mkFunctionApplication(this.ushrInt, args);
 	}
 
 	public Expression xorExpr(Expression left, Expression right) {
@@ -450,7 +450,7 @@ public class SootPrelude {
 		}
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), operator, args);
+				.mkFunctionApplication(operator, args);
 	}
 
 	public Expression bitAndExpr(Expression left, Expression right) {
@@ -467,7 +467,7 @@ public class SootPrelude {
 		}
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), operator, args);
+				.mkFunctionApplication(operator, args);
 	}
 
 	public Expression bitOrExpr(Expression left, Expression right) {
@@ -484,7 +484,7 @@ public class SootPrelude {
 		}
 		Expression args[] = { left, right };
 		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(left.getLocation(), operator, args);
+				.mkFunctionApplication(operator, args);
 	}
 
 }

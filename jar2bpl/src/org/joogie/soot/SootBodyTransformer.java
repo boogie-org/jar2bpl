@@ -26,6 +26,7 @@ import java.util.Map;
 import org.joogie.GlobalsCache;
 import org.joogie.Options;
 import org.joogie.util.Log;
+import org.joogie.util.TranslationHelpers;
 
 import soot.Body;
 import soot.BodyTransformer;
@@ -34,9 +35,9 @@ import soot.SootMethod;
 import soot.Unit;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.ExceptionalUnitGraph;
+import boogie.ast.Attribute;
 import boogie.declaration.Implementation;
 import boogie.enums.BinaryOperator;
-import boogie.location.ILocation;
 import boogie.statement.Statement;
 
 /**
@@ -86,6 +87,8 @@ public class SootBodyTransformer extends BodyTransformer {
 		SootProcedureInfo procInfo = GlobalsCache.v().lookupProcedure(
 				body.getMethod());
 
+		
+		
 		//TOOD: what should we do if the procedure has already been defined 
 		//in the prelude?
 		
@@ -106,23 +109,25 @@ public class SootBodyTransformer extends BodyTransformer {
 			
 		}
 
+		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(body.getTags());
+		
 		// TODO add code to initialize the the $type field of all parameters?
+		
 		
 		//initialize the exceptional return flag to false
 		//this flag is only set to true if an unexpected exception is
-		//thrown.
-		ILocation loc = procInfo.getProcedureDeclaration().getLocation();
+		//thrown.		
 		boogieStatements.addFirst(
-			GlobalsCache.v().getPf().mkAssignmentStatement(loc, 
+			GlobalsCache.v().getPf().mkAssignmentStatement( 
 					procInfo.getExceptionalReturnFlag(), 
-					GlobalsCache.v().getPf().mkBooleanLiteral(loc, false))
+					GlobalsCache.v().getPf().mkBooleanLiteral(false))
 					);
 
 		if (procInfo.getThisReference()!=null) {
 			//for non-static procedures we have to assume that .this is non-null
 			boogieStatements.addFirst(
-					GlobalsCache.v().getPf().mkAssumeStatement(loc, 
-								GlobalsCache.v().getPf().mkBinaryExpression(loc, 
+					GlobalsCache.v().getPf().mkAssumeStatement(attributes, 
+								GlobalsCache.v().getPf().mkBinaryExpression( 
 										GlobalsCache.v().getPf().getBoolType(), 
 										BinaryOperator.COMPNEQ, 
 											procInfo.getThisReference(), 

@@ -36,7 +36,6 @@ public class SootAnnotations {
 				}
 				annot = parseAnnotations((VisibilityAnnotationTag)t);
 			} else if (t instanceof SignatureTag) {
-				//SignatureTag tag = (SignatureTag)t;
 				//TODO: do we want to do something with that?
 //			} else if (t instanceof CallerSensitive) {	
 //				CallerSensitive tag = (CallerSensitive)t;

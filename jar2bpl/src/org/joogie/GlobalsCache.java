@@ -46,6 +46,7 @@ import soot.VoidType;
 import soot.jimple.ClassConstant;
 import soot.jimple.Stmt;
 import boogie.ProgramFactory;
+import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
@@ -141,7 +142,7 @@ public class GlobalsCache {
 				btype = this.getBoogieType(field.getType());
 			}
 			this.fieldMap.put(field, pf.mkIdentifierExpression(
-					TranslationHelpers.createDummyLocation(), btype, cleanname,
+					btype, cleanname,
 					false, true, true));
 		}
 		return this.fieldMap.get(field);
@@ -151,8 +152,7 @@ public class GlobalsCache {
 
 	public IdentifierExpression makeFreshGlobal(BoogieType type,
 			boolean isConst, boolean isUnique) {
-		ILocation loc = TranslationHelpers.createDummyLocation();
-		return pf.mkIdentifierExpression(loc, type, "$freshglobal_"
+		return pf.mkIdentifierExpression( type, "$freshglobal_"
 				+ (this.freshglobalcounter++), isConst, true, isUnique);
 	}
 
@@ -184,8 +184,7 @@ public class GlobalsCache {
 	public IdentifierExpression lookupClassVariable(SootClass c) {
 		if (this.classTypeMap.containsKey(c)) {
 			return this.classTypeMap.get(c);
-		}
-		ILocation loc = TranslationHelpers.translateLocation(c.getTags());
+		}		
 		HashSet<IdentifierExpression> parents = new HashSet<IdentifierExpression>();
 		if (c.hasSuperclass()) {
 			parents.add(lookupClassVariable(c.getSuperclass()));
@@ -193,7 +192,9 @@ public class GlobalsCache {
 		for (SootClass interf : c.getInterfaces()) {
 			parents.add(lookupClassVariable(interf));
 		}
-		IdentifierExpression cvar = pf.mkIdentifierExpression(loc, SootPrelude
+		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(c.getTags());
+		
+		IdentifierExpression cvar = pf.mkIdentifierExpression(attributes, SootPrelude
 				.v().getJavaClassType(),
 				TranslationHelpers.getQualifiedName(c), true, true, true,
 				parents.toArray(new IdentifierExpression[parents.size()]));
@@ -232,23 +233,22 @@ public class GlobalsCache {
       }
       
       return
-        pf.mkFunctionApplication(null, SootPrelude.v().getArrayTypeConstructor(),
+        pf.mkFunctionApplication( SootPrelude.v().getArrayTypeConstructor(),
                                  new Expression[] { elementTypeExpr });
     }
 
 	public Statement setArraySizeStatement(Expression arrayvar,
 			Expression arraysize) {
-		ILocation loc = arraysize.getLocation();
 		Expression[] indices = { arrayvar };
-		return pf.mkAssignmentStatement(loc, SootPrelude.v()
-				.getArrSizeHeapVariable(), pf.mkArrayStoreExpression(loc,
+		return pf.mkAssignmentStatement( SootPrelude.v()
+				.getArrSizeHeapVariable(), pf.mkArrayStoreExpression(
 				pf.getIntType(), SootPrelude.v().getArrSizeHeapVariable(),
 				indices, arraysize));
 	}
 
 	public Expression getArraySizeExpression(Expression expression) {
 		Expression[] indices = { expression };
-		return pf.mkArrayAccessExpression(expression.getLocation(),
+		return pf.mkArrayAccessExpression(
 				pf.getIntType(), SootPrelude.v().getArrSizeHeapVariable(),
 				indices);
 	}
@@ -264,7 +264,7 @@ public class GlobalsCache {
 		return GlobalsCache
 			.v()
 			.getPf()
-			.mkBinaryExpression(subtype.getLocation(),
+			.mkBinaryExpression(
 					GlobalsCache.v().getPf().getBoolType(),
 					BinaryOperator.COMPPO, subtype,
 					supertype);
@@ -275,7 +275,7 @@ public class GlobalsCache {
 		return GlobalsCache
 				.v()
 				.getPf()
-				.mkBinaryExpression(typeA.getLocation(), 
+				.mkBinaryExpression( 
 						GlobalsCache.v().getPf().getBoolType(), 
 						BinaryOperator.LOGICAND, 
 						compareTypeExpressions(typeA, typeB), 
@@ -289,11 +289,12 @@ public class GlobalsCache {
 	 * @param supertype
 	 * @return assume subtype <: supertype;
 	 */
-	public Statement assumeSubType(Expression subtype, Expression supertype) {		
+	public Statement assumeSubType(Expression subtype, Expression supertype) {	
+		Attribute[] attributes = {}; 
 		return GlobalsCache
 				.v()
 				.getPf()
-				.mkAssumeStatement(subtype.getLocation(), compareTypeExpressions(subtype, supertype));
+				.mkAssumeStatement(attributes, compareTypeExpressions(subtype, supertype));
 
 	}
 
@@ -312,12 +313,11 @@ public class GlobalsCache {
 	}
 
 	public static Expression createDummyExpression(BoogieType type) {
-		String identifier = "$DUMMYVAR__" + (GlobalsCache.dummyVarIdx++);
-		ILocation loc = TranslationHelpers.createDummyLocation();
+		String identifier = "$DUMMYVAR__" + (GlobalsCache.dummyVarIdx++);	
 		return GlobalsCache
 				.v()
 				.getPf()
-				.mkIdentifierExpression(loc, type, identifier, false, true,
+				.mkIdentifierExpression( type, identifier, false, true,
 						false);
 	}
 

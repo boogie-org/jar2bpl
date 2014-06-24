@@ -115,8 +115,8 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 * soot.jimple.ConstantSwitch#caseClassConstant(soot.jimple.ClassConstant)
 	 */
 	@Override
-	public void caseClassConstant(ClassConstant arg0) {		
-		this.expressionStack.push(GlobalsCache.v().lookupClassConstant(arg0));	
+	public void caseClassConstant(ClassConstant arg0) {
+		this.expressionStack.push(GlobalsCache.v().lookupClassConstant(arg0));
 	}
 
 	/*
@@ -128,7 +128,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	@Override
 	public void caseDoubleConstant(DoubleConstant arg0) {
 		// ILocation loc = TranslationHelpers.createDummyLocation();
-		// expressionStack.push(this.pf.mkRealLiteral(loc,
+		// expressionStack.push(this.pf.mkRealLiteral(
 		// String.valueOf(arg0.value)));
 		this.expressionStack.push(GlobalsCache
 				.createDummyExpression(GlobalsCache.v().getPf().getIntType()));
@@ -143,7 +143,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	@Override
 	public void caseFloatConstant(FloatConstant arg0) {
 		// ILocation loc = TranslationHelpers.createDummyLocation();
-		// expressionStack.push(this.pf.mkRealLiteral(loc, String.valueOf(
+		// expressionStack.push(this.pf.mkRealLiteral(String.valueOf(
 		// (double)(arg0.value))));
 		this.expressionStack.push(GlobalsCache
 				.createDummyExpression(GlobalsCache.v().getPf().getIntType()));
@@ -156,9 +156,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseIntConstant(IntConstant arg0) {
-		ILocation loc = TranslationHelpers.createDummyLocation();
-		expressionStack.push(this.pf.mkIntLiteral(loc,
-				String.valueOf(arg0.value)));
+		expressionStack.push(this.pf.mkIntLiteral(String.valueOf(arg0.value)));
 	}
 
 	/*
@@ -169,9 +167,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseLongConstant(LongConstant arg0) {
-		ILocation loc = TranslationHelpers.createDummyLocation();
-		expressionStack.push(this.pf.mkIntLiteral(loc,
-				String.valueOf(arg0.value)));
+		expressionStack.push(this.pf.mkIntLiteral(String.valueOf(arg0.value)));
 	}
 
 	/*
@@ -208,7 +204,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 
 		// cast if necessary. This has to be done because soot treats boolean as
 		// integers
-		if (lhs.getType() != rhs.getType()) {			
+		if (lhs.getType() != rhs.getType()) {
 			rhs = TranslationHelpers.castBoogieTypes(rhs, lhs.getType());
 		}
 
@@ -217,8 +213,8 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			FunctionDeclaration fun = SootPrelude.v().lookupRealOperator(
 					arg0.getSymbol());
 			Expression[] arguments = { lhs, rhs };
-			this.expressionStack.push(this.pf.mkFunctionApplication(
-					lhs.getLocation(), fun, arguments));
+			this.expressionStack.push(this.pf.mkFunctionApplication(fun,
+					arguments));
 			return;
 		}
 		// if it is not Float or Double, proceed normally.
@@ -238,12 +234,12 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		} else if (op.compareTo("*") == 0) {
 			rettype = left.getType();
 			operator = BinaryOperator.ARITHMUL;
-		} else if (op.compareTo("/") == 0) {	
-			//make sure that "right" is an Integer
-			//then assert that it is different from 0
+		} else if (op.compareTo("/") == 0) {
+			// make sure that "right" is an Integer
+			// then assert that it is different from 0
 			this.stmtSwitch.getErrorModel().createDivByZeroGuard(right);
 			rettype = left.getType();
-			operator = BinaryOperator.ARITHDIV;						
+			operator = BinaryOperator.ARITHDIV;
 		} else if (op.compareTo("%") == 0) {
 			this.stmtSwitch.getErrorModel().createDivByZeroGuard(right);
 			rettype = left.getType();
@@ -291,8 +287,8 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		} else {
 			throw new RuntimeException("UNKNOWN Jimple operator " + op);
 		}
-		this.expressionStack.push(this.pf.mkBinaryExpression(
-				left.getLocation(), rettype, operator, left, right));
+		this.expressionStack.push(this.pf.mkBinaryExpression(rettype, operator,
+				left, right));
 	}
 
 	/*
@@ -330,13 +326,14 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			this.expressionStack.push(exp);
 			return;
 		}
-		
-		BoogieType boogieTargetType = GlobalsCache.v().getBoogieType(arg0.getCastType());
-		
-		////////////////////////////////////////////////////////////////////////
-		if (boogieTargetType == this.pf.getIntType() ||
-		    boogieTargetType == this.pf.getRealType() ||
-		    boogieTargetType == this.pf.getBoolType()) {
+
+		BoogieType boogieTargetType = GlobalsCache.v().getBoogieType(
+				arg0.getCastType());
+
+		// //////////////////////////////////////////////////////////////////////
+		if (boogieTargetType == this.pf.getIntType()
+				|| boogieTargetType == this.pf.getRealType()
+				|| boogieTargetType == this.pf.getBoolType()) {
 			// in that case, exp is also of primitive type
 			// otherwise, java or soot would translate it
 			// into a more complex expression that uses the
@@ -344,67 +341,69 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			this.expressionStack.push(TranslationHelpers.castBoogieTypes(exp,
 					boogieTargetType));
 			return;
-			
-        ////////////////////////////////////////////////////////////////////////
+
+			// //////////////////////////////////////////////////////////////////////
 		} else if (arg0.getCastType() instanceof RefType) {
-		  
-		  final RefType targetType = (RefType)arg0.getCastType();
-		  
-		  if (targetType.getClassName() == "java.lang.Object") {
-		    // should always be ok, nothing to assert
-            this.expressionStack.push(exp);
-		  } else if (arg0.getOp().getType() instanceof RefType) {
-            // Guard that typeof(exp) <: targetType             
-            this.stmtSwitch.getErrorModel().createClassCastGuard(
-                  this.getClassTypeFromExpression(exp, false),
-                  GlobalsCache.v().lookupClassVariable(targetType.getSootClass()));
-            this.expressionStack.push(exp);
-		  } else if (arg0.getOp().getType() instanceof NullType) {
-            // should always be ok, nothing to assert
-            this.expressionStack.push(exp);
-		  } else {
-            /*Log.error*/
-            System.out.println("Don't know how to cast from " +
-                               arg0.getOp().getType() + " to " +
-                               arg0.getCastType());
-            this.expressionStack.push(GlobalsCache.createDummyExpression(boogieTargetType));
-		  }
-		  
-		  return;
-		  
-		////////////////////////////////////////////////////////////////////////
+
+			final RefType targetType = (RefType) arg0.getCastType();
+
+			if (targetType.getClassName() == "java.lang.Object") {
+				// should always be ok, nothing to assert
+				this.expressionStack.push(exp);
+			} else if (arg0.getOp().getType() instanceof RefType) {
+				// Guard that typeof(exp) <: targetType
+				this.stmtSwitch.getErrorModel().createClassCastGuard(
+						this.getClassTypeFromExpression(exp, false),
+						GlobalsCache.v().lookupClassVariable(
+								targetType.getSootClass()));
+				this.expressionStack.push(exp);
+			} else if (arg0.getOp().getType() instanceof NullType) {
+				// should always be ok, nothing to assert
+				this.expressionStack.push(exp);
+			} else {
+				/* Log.error */
+				System.out.println("Don't know how to cast from "
+						+ arg0.getOp().getType() + " to " + arg0.getCastType());
+				this.expressionStack.push(GlobalsCache
+						.createDummyExpression(boogieTargetType));
+			}
+
+			return;
+
+			// //////////////////////////////////////////////////////////////////////
 		} else if (arg0.getCastType() instanceof ArrayType) {
 
-          final ArrayType targetType = (ArrayType)arg0.getCastType();
-          this.stmtSwitch.getErrorModel().createClassCastGuard(
-              this.getClassTypeFromExpression(exp, false),
-              GlobalsCache.v().lookupArrayType(targetType));
-          
-          this.expressionStack.push(exp);
+			final ArrayType targetType = (ArrayType) arg0.getCastType();
+			this.stmtSwitch.getErrorModel().createClassCastGuard(
+					this.getClassTypeFromExpression(exp, false),
+					GlobalsCache.v().lookupArrayType(targetType));
 
-          return;
-          
-        ////////////////////////////////////////////////////////////////////////
-        // old, should be removed at some point
+			this.expressionStack.push(exp);
+
+			return;
+
+			// //////////////////////////////////////////////////////////////////////
+			// old, should be removed at some point
 		} else if (boogieTargetType == SootPrelude.v().getReferenceType()) {
 			// ILocation loc = exp.getLocation();
 			if (arg0.getCastType() instanceof RefType) {
 				RefType rtype = (RefType) arg0.getCastType();
-				// Guard that typeof(exp) <: targetType				
+				// Guard that typeof(exp) <: targetType
 				this.stmtSwitch.getErrorModel().createClassCastGuard(
-								this.getClassTypeFromExpression(exp, false),
-								GlobalsCache.v().lookupClassVariable(
-										rtype.getSootClass()));
+						this.getClassTypeFromExpression(exp, false),
+						GlobalsCache.v().lookupClassVariable(
+								rtype.getSootClass()));
 				this.expressionStack.push(exp);
 				return;
 			} else {
-			  throw new RuntimeException("Cast from " + arg0.getOp().getType() + " to "
-						+ arg0.getCastType() + " not implemented");
+				throw new RuntimeException("Cast from "
+						+ arg0.getOp().getType() + " to " + arg0.getCastType()
+						+ " not implemented");
 			}
 		}
-		
-		throw new RuntimeException("Cast from " + arg0.getOp().getType() + " to "
-				+ arg0.getCastType() + " not implemented");
+
+		throw new RuntimeException("Cast from " + arg0.getOp().getType()
+				+ " to " + arg0.getCastType() + " not implemented");
 	}
 
 	/*
@@ -491,10 +490,9 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			RefType rtype = (RefType) arg0.getCheckType();
 			Expression rhs = GlobalsCache.v().lookupClassVariable(
 					rtype.getSootClass());
-			this.expressionStack
-					.push(this.pf.mkBinaryExpression(rhs.getLocation(),
-							this.pf.getBoolType(), BinaryOperator.COMPPO,
-							this.getClassTypeFromExpression(lhs, false), rhs));
+			this.expressionStack.push(this.pf.mkBinaryExpression(
+					this.pf.getBoolType(), BinaryOperator.COMPPO,
+					this.getClassTypeFromExpression(lhs, false), rhs));
 		} else {
 			Log.error("instanceof for arrays not implemented");
 			this.expressionStack.push(GlobalsCache.createDummyExpression(arg0
@@ -533,8 +531,8 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		arg0.getOp().apply(this);
 		Expression base = this.getExpression();
 		this.stmtSwitch.getErrorModel().createNonNullGuard(base);
-		this.expressionStack.push(GlobalsCache.v().getArraySizeExpression(
-				base));
+		this.expressionStack
+				.push(GlobalsCache.v().getArraySizeExpression(base));
 	}
 
 	/*
@@ -576,11 +574,10 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	public void caseNegExpr(NegExpr arg0) {
 		arg0.getOp().apply(this);
 		Expression e = this.expressionStack.pop();
-		ILocation loc = TranslationHelpers.createDummyLocation();
 		if (e.getType() == this.pf.getIntType()) {
 			e = SootPrelude.v().intToBool(e);
 		}
-		this.expressionStack.push(this.pf.mkUnaryExpression(loc,
+		this.expressionStack.push(this.pf.mkUnaryExpression(
 				this.pf.getBoolType(), UnaryOperator.LOGICNEG, e));
 	}
 
@@ -733,7 +730,6 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseArrayRef(ArrayRef arg0) {
-		ILocation loc = TranslationHelpers.createDummyLocation();
 		BoogieType btype = GlobalsCache.v().getBoogieType(arg0.getType());
 		Expression arrayvar;
 		BoogieType arrtype;
@@ -759,15 +755,16 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		arg0.getIndex().apply(this);
 		Expression indexExpression = this.expressionStack.pop();
 		// guard out-of-bounds exceptions
-		this.stmtSwitch.getErrorModel().createArrayBoundGuard(baseExpression, indexExpression);
+		this.stmtSwitch.getErrorModel().createArrayBoundGuard(baseExpression,
+				indexExpression);
 
 		// construct the expression
 		Expression[] base = { baseExpression };
-		Expression array = this.pf.mkArrayAccessExpression(loc, arrtype,
-				arrayvar, base);
+		Expression array = this.pf.mkArrayAccessExpression(arrtype, arrayvar,
+				base);
 		Expression[] indices = { indexExpression };
-		this.expressionStack.push(this.pf.mkArrayAccessExpression(loc, btype,
-				array, indices));
+		this.expressionStack.push(this.pf.mkArrayAccessExpression(btype, array,
+				indices));
 	}
 
 	/*
@@ -784,11 +781,13 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			// assume that the exception variable now has the type of the caught
 			// exception
 			// assume $heap[$exception,$type] <: arg0.getType()
-			
-			//ensure that $exception is not null.
-			this.stmtSwitch.getErrorModel().createNonNullViolationException(this.procInfo.getExceptionVariable());
-			
-			Expression typefield = this.getClassTypeFromExpression(this.procInfo.getExceptionVariable(), false);
+
+			// ensure that $exception is not null.
+			this.stmtSwitch.getErrorModel().createNonNullViolationException(
+					this.procInfo.getExceptionVariable());
+
+			Expression typefield = this.getClassTypeFromExpression(
+					this.procInfo.getExceptionVariable(), false);
 			this.stmtSwitch
 					.addGuardStatement(GlobalsCache.v().assumeSubType(
 							typefield,
@@ -801,15 +800,16 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				"this case of exception handling has not beend implemented");
 	}
 
-	private void checkFieldAnnotations(Expression expr, FieldRef fr) {		
-		LinkedList<SootAnnotations.Annotation> annot = SootAnnotations.parseFieldTags(fr.getField());
+	private void checkFieldAnnotations(Expression expr, FieldRef fr) {
+		LinkedList<SootAnnotations.Annotation> annot = SootAnnotations
+				.parseFieldTags(fr.getField());
 		if (annot.contains(SootAnnotations.Annotation.NonNull)) {
-			this.stmtSwitch.addGuardStatement(
-					this.stmtSwitch.getErrorModel().createAssumeNonNull(expr) );
-		}			
-		
+			this.stmtSwitch.addGuardStatement(this.stmtSwitch.getErrorModel()
+					.createAssumeNonNull(expr));
+		}
+
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -817,20 +817,19 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 * soot.jimple.RefSwitch#caseInstanceFieldRef(soot.jimple.InstanceFieldRef)
 	 */
 	@Override
-	public void caseInstanceFieldRef(InstanceFieldRef arg0) {	
-		ILocation loc = TranslationHelpers.createDummyLocation();
+	public void caseInstanceFieldRef(InstanceFieldRef arg0) {
 		arg0.getBase().apply(this);
 		Expression base = this.getExpression();
 		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
-		
-		//We are checking if this is a @NonNull field
-		//if so, we add an assume to ensure that it actually is
-		//not null here. 		
-		checkFieldAnnotations(this.makeHeapAccessExpression(loc, base,
-				field, false), arg0);
-		
-		this.expressionStack.push(this.makeHeapAccessExpression(loc, base,
-				field, true));
+
+		// We are checking if this is a @NonNull field
+		// if so, we add an assume to ensure that it actually is
+		// not null here.
+		checkFieldAnnotations(
+				this.makeHeapAccessExpression(base, field, false), arg0);
+
+		this.expressionStack.push(this.makeHeapAccessExpression(base, field,
+				true));
 	}
 
 	/*
@@ -850,11 +849,11 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseStaticFieldRef(StaticFieldRef arg0) {
-		//TODO: we are checking if this is a @NonNull field
-		//if so, we add an assume to ensure that it actually is
-		//not null here. May be better ways to do this.
-		checkFieldAnnotations(GlobalsCache.v().lookupSootField(
-				arg0.getField()), arg0);
+		// TODO: we are checking if this is a @NonNull field
+		// if so, we add an assume to ensure that it actually is
+		// not null here. May be better ways to do this.
+		checkFieldAnnotations(
+				GlobalsCache.v().lookupSootField(arg0.getField()), arg0);
 
 		this.expressionStack.push(GlobalsCache.v().lookupSootField(
 				arg0.getField()));
@@ -876,7 +875,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 * @see soot.jimple.JimpleValueSwitch#caseLocal(soot.Local)
 	 */
 	@Override
-	public void caseLocal(Local arg0) {		
+	public void caseLocal(Local arg0) {
 		this.expressionStack.push(this.procInfo.lookupLocalVariable(arg0));
 	}
 
@@ -891,53 +890,50 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		assert (false);
 	}
 
-
 	/**
 	 * Make a heap access and the necessary assertion
 	 * 
 	 * @param field
 	 * @return
 	 */
-	public Expression makeHeapAccessExpression(ILocation loc, Expression base,
+	public Expression makeHeapAccessExpression(Expression base,
 			Expression field, boolean guarded) {
 		if (guarded) {
-			this.stmtSwitch.getErrorModel().createNonNullGuard(base);			
+			this.stmtSwitch.getErrorModel().createNonNullGuard(base);
 		}
 		// Assemble the $heap[base, field] expression
 		Expression[] indices = { base, field };
-		return pf.mkArrayAccessExpression(loc,
+		return pf.mkArrayAccessExpression(
 				SootPrelude.v().getFieldType(field.getType()), SootPrelude.v()
 						.getHeapVariable(), indices);
 	}
 
 	/**
-	 * gets the field of expr that denotes its Java type
-	 * E.g., let's say we have a variable c of type C. The call 
-	 * getExprssionJavaClass(c) 
-	 * returns
+	 * gets the field of expr that denotes its Java type E.g., let's say we have
+	 * a variable c of type C. The call getExprssionJavaClass(c) returns
 	 * $heap[c, $type] which, in this case, would be C.
+	 * 
 	 * @param expr
 	 * @param guarded
 	 * @return
-	 */	
+	 */
 	public Expression getExprssionJavaClass(Expression expr) {
 		return getClassTypeFromExpression(expr, true);
 	}
 
 	/**
-	 * gets the field of expr that denotes its Java type
-	 * E.g., let's say we have a variable c of type C. The call 
-	 * getExprssionJavaClass(c,false) 
-	 * returns
+	 * gets the field of expr that denotes its Java type E.g., let's say we have
+	 * a variable c of type C. The call getExprssionJavaClass(c,false) returns
 	 * $heap[c, $type] which, in this case, would be C.
+	 * 
 	 * @param expr
 	 * @param guarded
 	 * @return
 	 */
-	public Expression getClassTypeFromExpression(Expression expr, boolean guarded) {
-		return makeHeapAccessExpression(
-				TranslationHelpers.createDummyLocation(), expr, SootPrelude.v()
-						.getFieldClassVariable(), guarded);
-	}	
-	
+	public Expression getClassTypeFromExpression(Expression expr,
+			boolean guarded) {
+		return makeHeapAccessExpression(expr, SootPrelude.v()
+				.getFieldClassVariable(), guarded);
+	}
+
 }

@@ -8,6 +8,7 @@ import org.joogie.soot.SootStmtSwitch;
 import org.joogie.util.TranslationHelpers;
 
 import soot.SootClass;
+import boogie.ast.Attribute;
 import boogie.expression.Expression;
 import boogie.location.ILocation;
 import boogie.statement.Statement;
@@ -34,16 +35,16 @@ public class AssertionErrorModel extends AbstractErrorModel {
 	}
 	
 	public void createdUnExpectedException(Expression guard, SootClass exception) {
-		ILocation loc = TranslationHelpers.translateLocation(this.stmtSwitch.getCurrentStatement().getTags());
+		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags());
 		Statement assertion;
 		if (guard!=null) {
 			//assertion = this.pf.mkAssertStatement(loc,this.pf.mkUnaryExpression(loc, guard.getType(), UnaryOperator.LOGICNEG, guard));
-			assertion = this.pf.mkAssertStatement(loc,guard);
+			assertion = this.pf.mkAssertStatement(attributes,guard);
 		} else {
 			//assertion = this.pf.mkAssertStatement(loc,this.pf.mkBooleanLiteral(loc, false));
 			//TODO:
 			System.err.println("unguarded exception " + exception);
-			assertion = this.pf.mkReturnStatement(loc);
+			assertion = this.pf.mkReturnStatement();
 		}		
 		this.stmtSwitch.addGuardStatement(assertion);		
 	}
