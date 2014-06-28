@@ -155,7 +155,10 @@ public class SootStmtSwitch implements StmtSwitch {
 
 	public IdentifierExpression createAllocatedVariable(Type sootType) {
 		// create fresh local variable for "right"
-		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(this.currentStatement.getTags());
+		Attribute[] attributes = {};
+		if (this.currentStatement!=null) {
+			TranslationHelpers.javaLocation2Attribute(this.currentStatement.getTags());
+		}
 	
 		
 		IdentifierExpression newexpr = this.procInfo
