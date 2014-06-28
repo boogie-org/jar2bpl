@@ -210,6 +210,10 @@ public class SootRunner extends Runner {
 				GlobalsCache.v().getPf().toFile(boogieFile);
 			}
 
+			if (Options.v().getRunTypeChecker()) {
+				GlobalsCache.v().getPf().runTypeChecker();
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

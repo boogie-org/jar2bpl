@@ -45,6 +45,11 @@ public class Options {
 		return runtimeExceptionReturns;
 	}
 	
+	@Option(name = "-tc", usage = "Perfrom type check after translation", required = false)
+	private boolean runTypeChecker=false;
+	public boolean getRunTypeChecker() {
+		return runTypeChecker;
+	}
 	
 
 	@Option(name = "-prelude", usage = "Use custom prelude instead of the built-in one.")
