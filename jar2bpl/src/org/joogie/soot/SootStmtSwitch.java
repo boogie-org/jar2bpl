@@ -75,7 +75,6 @@ import boogie.enums.UnaryOperator;
 import boogie.expression.ArrayAccessExpression;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
-import boogie.location.ILocation;
 import boogie.specification.RequiresSpecification;
 import boogie.specification.Specification;
 import boogie.statement.Statement;
@@ -156,33 +155,26 @@ public class SootStmtSwitch implements StmtSwitch {
 	public IdentifierExpression createAllocatedVariable(Type sootType) {
 		// create fresh local variable for "right"
 		Attribute[] attributes = {};
-		if (this.currentStatement!=null) {
-			TranslationHelpers.javaLocation2Attribute(this.currentStatement.getTags());
+		if (this.currentStatement != null) {
+			TranslationHelpers.javaLocation2Attribute(this.currentStatement
+					.getTags());
 		}
-	
-		
+
 		IdentifierExpression newexpr = this.procInfo
 				.createLocalVariable(SootPrelude.v().getReferenceType());
 		// havoc right
-		this.boogieStatements.add(this.pf.mkHavocStatement(attributes, newexpr));
-		// assume $heap[right, $alloc] == false
 		this.boogieStatements
-				.add(this.pf.mkAssumeStatement(
-						attributes,
-						this.pf.mkUnaryExpression(
-								
-								this.pf.getBoolType(),
-								UnaryOperator.LOGICNEG,
-								this.valueswitch
-										.makeHeapAccessExpression(												
-												newexpr,
-												SootPrelude
-														.v()
-														.getFieldAllocVariable(),
-												false))));
+				.add(this.pf.mkHavocStatement(attributes, newexpr));
+		// assume $heap[right, $alloc] == false
+		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
+				.mkUnaryExpression(
+
+				this.pf.getBoolType(), UnaryOperator.LOGICNEG, this.valueswitch
+						.makeHeapAccessExpression(newexpr, SootPrelude.v()
+								.getFieldAllocVariable(), false))));
 		// $heap[right, $alloc] := true
-		translateAssignment(this.valueswitch.makeHeapAccessExpression(
-				newexpr, SootPrelude.v().getFieldAllocVariable(), false),
+		translateAssignment(this.valueswitch.makeHeapAccessExpression(newexpr,
+				SootPrelude.v().getFieldAllocVariable(), false),
 				this.pf.mkBooleanLiteral(true));
 
 		// $heap[right, $type] := ...the appropriate type...
@@ -216,8 +208,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		return newexpr;
 	}
 
-	private void translateAssignment(Value lhs, Value rhs,
-			Unit statement) {
+	private void translateAssignment(Value lhs, Value rhs, Unit statement) {
 
 		if (rhs instanceof InvokeExpr) {
 			InvokeExpr ivk = (InvokeExpr) rhs;
@@ -257,14 +248,12 @@ public class SootStmtSwitch implements StmtSwitch {
 			Expression[] indices = { right };
 			// assign the size of the string to the appropriate field in the
 			// $stringSizeHeapVariable array.
-			translateAssignment(SootPrelude.v()
-					.getStringSizeHeapVariable(),
+			translateAssignment(SootPrelude.v().getStringSizeHeapVariable(),
 					this.pf.mkArrayStoreExpression(SootPrelude.v()
 							.getStringSizeHeapVariable().getType(), SootPrelude
 							.v().getStringSizeHeapVariable(), indices, this.pf
-							.mkIntLiteral(
-									(new Integer(str.value.length()))
-											.toString())));
+							.mkIntLiteral((new Integer(str.value.length()))
+									.toString())));
 		} else {
 			rhs.apply(this.valueswitch);
 			right = this.valueswitch.getExpression();
@@ -282,8 +271,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @param left
 	 * @param right
 	 */
-	private void translateAssignment(Expression left,
-			Expression right) {
+	private void translateAssignment(Expression left, Expression right) {
 		if (left instanceof IdentifierExpression) {
 			this.boogieStatements.add(this.pf.mkAssignmentStatement(
 					(IdentifierExpression) left,
@@ -311,11 +299,13 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @param lefts
 	 *            the left hand side of the call that receives the return values
 	 */
-	private LinkedList<Statement> createCallStatement(SootMethod m, List<SootClass> throwsclauses,
-			List<IdentifierExpression> lefts, Expression[] args) {
-		
-		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(this.currentStatement.getTags());
-		
+	private LinkedList<Statement> createCallStatement(SootMethod m,
+			List<SootClass> throwsclauses, List<IdentifierExpression> lefts,
+			Expression[] args) {
+
+		Attribute[] attributes = TranslationHelpers
+				.javaLocation2Attribute(this.currentStatement.getTags());
+
 		// we have to clone the lefts because we may add thing to it here.
 		List<IdentifierExpression> lefts_clone = new LinkedList<IdentifierExpression>();
 		for (IdentifierExpression ide : lefts) {
@@ -382,7 +372,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @return true if "m" is overloaded and statements have been created, and
 	 *         "false" otherwise.
 	 */
-	private boolean createGuradedCallToVirtualMethods(SootMethod m, SootClass c, List<SootClass> throwsclauses,
+	private boolean createGuradedCallToVirtualMethods(SootMethod m,
+			SootClass c, List<SootClass> throwsclauses,
 			List<IdentifierExpression> lefts, Expression[] args) {
 
 		// first find all possible subtypes of c
@@ -421,8 +412,8 @@ public class SootStmtSwitch implements StmtSwitch {
 			Expression typeOfCurrentMethod = GlobalsCache.v()
 					.lookupClassVariable(c);
 
-			List<Statement> tmp = createCallStatement(m, throwsclauses,
-					lefts, args);
+			List<Statement> tmp = createCallStatement(m, throwsclauses, lefts,
+					args);
 
 			Statement[] call = tmp.toArray(new Statement[tmp.size()]);
 			Statement ite = this.pf.mkIfStatement(GlobalsCache.v()
@@ -435,8 +426,9 @@ public class SootStmtSwitch implements StmtSwitch {
 	}
 
 	/**
-	 * if actual clause contains sc or a supertype of sc, continue
-	 * else add sc to actual clause.
+	 * if actual clause contains sc or a supertype of sc, continue else add sc
+	 * to actual clause.
+	 * 
 	 * @param actualclause
 	 * @param addedclause
 	 */
@@ -474,7 +466,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	}
 
 	private boolean specialCaseInvoke(Value lhs, InvokeExpr ivk) {
-		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(this.currentStatement.getTags());
+		Attribute[] attributes = TranslationHelpers
+				.javaLocation2Attribute(this.currentStatement.getTags());
 		// java.lang.String.length is treated as a special case:
 		if (ivk.getMethod().getSignature()
 				.contains("<java.lang.String: int length()>")
@@ -520,8 +513,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @param ivk
 	 * @param statement
 	 */
-	private void translateInvokeAssignment(Value lhs,
-			InvokeExpr ivk, Unit statement) {
+	private void translateInvokeAssignment(Value lhs, InvokeExpr ivk,
+			Unit statement) {
 		// if the call is treated as a special case, return here.
 		if (specialCaseInvoke(lhs, ivk))
 			return;
@@ -544,7 +537,6 @@ public class SootStmtSwitch implements StmtSwitch {
 				lefts.add(stubbedvar);
 			}
 		}
-
 
 		List<SootClass> maxThrowSet = new LinkedList<SootClass>();
 
@@ -573,7 +565,7 @@ public class SootStmtSwitch implements StmtSwitch {
 					c = rt.getSootClass();
 				} else if (basetype instanceof ArrayType) {
 					c = Scene.v().loadClass("java.lang.reflect.Array",
-							SootClass.SIGNATURES); 
+							SootClass.SIGNATURES);
 				} else {
 					throw new RuntimeException(
 							"Something wrong in translateInvokeAssignment: Expected RefType or ArrayType but found "
@@ -615,8 +607,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		} else {
 			// the procedure is static so we call it without checking if other
 			// methods can be call depending on the type of c
-			this.boogieStatements.addAll(createCallStatement(
-					ivk.getMethod(), maxThrowSet, lefts, args));
+			this.boogieStatements.addAll(createCallStatement(ivk.getMethod(),
+					maxThrowSet, lefts, args));
 		}
 		// now check if the procedure returned exceptional
 		// and jump to the appropriate location
@@ -643,7 +635,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @param maxThrowSet
 	 * @param statement
 	 */
-	private void translateCalleeExceptions(List<SootClass> maxThrowSet, Unit statement) {
+	private void translateCalleeExceptions(List<SootClass> maxThrowSet,
+			Unit statement) {
 		// keep track of the caught exceptions so that we can add the uncaught
 		// ones later
 		HashSet<SootClass> caughtExceptions = new HashSet<SootClass>();
@@ -657,26 +650,26 @@ public class SootStmtSwitch implements StmtSwitch {
 						&& dest.getTrap().getException() != null) {
 					caughtExceptions.add(dest.getTrap().getException());
 					Statement transitionStmt;
-					Expression condition = this.pf.mkBinaryExpression(
-							this.pf.getBoolType(), BinaryOperator.COMPNEQ,
+					Expression condition = this.pf.mkBinaryExpression(this.pf
+							.getBoolType(), BinaryOperator.COMPNEQ,
 							this.procInfo.getExceptionVariable(), SootPrelude
 									.v().getNullConstant());
 					// the exception is caught somewhere in this procedure
 					transitionStmt = this.pf.mkGotoStatement(
-							
-							GlobalsCache.v().getUnitLabel(
-									(Stmt) dest.getTrap().getHandlerUnit()));
+
+					GlobalsCache.v().getUnitLabel(
+							(Stmt) dest.getTrap().getHandlerUnit()));
 					// add a conjunct to check if that the type of the exception
 					// is <: than the one caught
 					// by the catch block
 					condition = this.pf
 							.mkBinaryExpression(
-									
+
 									this.pf.getBoolType(),
 									BinaryOperator.LOGICAND,
 									condition,
 									this.pf.mkBinaryExpression(
-											
+
 											this.pf.getBoolType(),
 											BinaryOperator.COMPPO,
 											this.valueswitch
@@ -691,8 +684,8 @@ public class SootStmtSwitch implements StmtSwitch {
 																	.getException())));
 					Statement[] thenPart = { transitionStmt };
 					Statement[] elsePart = {};
-					this.boogieStatements.add(this.pf.mkIfStatement(
-							condition, thenPart, elsePart));
+					this.boogieStatements.add(this.pf.mkIfStatement(condition,
+							thenPart, elsePart));
 				} else {
 					// Log.error("NO CATCH FOR "+ dest);
 				}
@@ -735,37 +728,39 @@ public class SootStmtSwitch implements StmtSwitch {
 				todo.addLast(current);
 				continue;
 			}
-			
-			if (GlobalsCache.v().inThrowsClause(current, procInfo) || org.joogie.Options.v().isRuntimeExceptionReturns()) {
-			
+
+			if (GlobalsCache.v().inThrowsClause(current, procInfo)
+					|| org.joogie.Options.v().isRuntimeExceptionReturns()) {
+
 				Statement transitionStmt;
 				Expression condition = this.pf.mkBinaryExpression(this.pf
 						.getBoolType(), BinaryOperator.COMPNEQ, this.procInfo
-						.getExceptionVariable(), SootPrelude.v().getNullConstant());
-	
+						.getExceptionVariable(), SootPrelude.v()
+						.getNullConstant());
+
 				// add a conjunct to check if that the type of the exception
 				// is <: than the one caught
 				// by the catch block
 				condition = this.pf.mkBinaryExpression(this.pf.getBoolType(),
 						BinaryOperator.LOGICAND, condition,
 						this.pf.mkBinaryExpression(this.pf.getBoolType(),
-								BinaryOperator.COMPPO, this.valueswitch
-										.getClassTypeFromExpression(this.procInfo
-												.getExceptionVariable(), false),
-								GlobalsCache.v().lookupClassVariable(current)));
-	
-				
-					transitionStmt = this.pf.mkReturnStatement();
+								BinaryOperator.COMPPO,
+								this.valueswitch.getClassTypeFromExpression(
+										this.procInfo.getExceptionVariable(),
+										false), GlobalsCache.v()
+										.lookupClassVariable(current)));
+
+				transitionStmt = this.pf.mkReturnStatement();
 				Statement[] thenPart = { transitionStmt };
 				Statement[] elsePart = {};
 				this.boogieStatements.add(this.pf.mkIfStatement(condition,
 						thenPart, elsePart));
-			
+
 			} else {
 				Log.debug("The exception: " + current
-						+ " is not handeled and treated as RuntimeException.");	
+						+ " is not handeled and treated as RuntimeException.");
 			}
-			
+
 		}
 
 	}
@@ -907,22 +902,18 @@ public class SootStmtSwitch implements StmtSwitch {
 		Expression key = this.valueswitch.getExpression();
 		for (int i = 0; i < arg0.getTargetCount(); i++) {
 			Expression cond = this.pf.mkBinaryExpression(
-					
-					this.pf.getBoolType(),
-					BinaryOperator.COMPEQ,
-					key,
-					this.pf.mkIntLiteral(
-							Integer.toString(arg0.getLookupValue(i))));
+
+			this.pf.getBoolType(), BinaryOperator.COMPEQ, key, this.pf
+					.mkIntLiteral(Integer.toString(arg0.getLookupValue(i))));
 			cases.add(cond);
-			Statement[] gototarget = { this.pf.mkGotoStatement(
-					GlobalsCache.v().getUnitLabel((Stmt) arg0.getTarget(i))) };
+			Statement[] gototarget = { this.pf.mkGotoStatement(GlobalsCache.v()
+					.getUnitLabel((Stmt) arg0.getTarget(i))) };
 			targets.add(gototarget);
 		}
 		{
 			Statement[] gototarget = { this.pf.mkGotoStatement(
-					
-					GlobalsCache.v().getUnitLabel(
-							(Stmt) arg0.getDefaultTarget())) };
+
+			GlobalsCache.v().getUnitLabel((Stmt) arg0.getDefaultTarget())) };
 			targets.add(gototarget);
 		}
 		translateSwitch(cases, targets);
@@ -942,8 +933,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		int max = cases.size() - 1;
 		for (int i = max; i >= 0; i--) {
 			Statement[] thenblock = targets.get(i);
-			ifstatement = this.pf.mkIfStatement(
-					cases.get(i), thenblock, elseblock);
+			ifstatement = this.pf.mkIfStatement(cases.get(i), thenblock,
+					elseblock);
 			elseblock = new Statement[1];
 			elseblock[0] = ifstatement;
 		}
@@ -1029,22 +1020,20 @@ public class SootStmtSwitch implements StmtSwitch {
 		Expression key = this.valueswitch.getExpression();
 		int counter = 0;
 		for (int i = arg0.getLowIndex(); i <= arg0.getHighIndex(); i++) {
-			Expression cond = this.pf.mkBinaryExpression(
-					this.pf.getBoolType(), BinaryOperator.COMPEQ, key,
+			Expression cond = this.pf.mkBinaryExpression(this.pf.getBoolType(),
+					BinaryOperator.COMPEQ, key,
 					this.pf.mkIntLiteral(Integer.toString(i)));
 			cases.add(cond);
 			Statement[] gototarget = { this.pf.mkGotoStatement(
-					
-					GlobalsCache.v().getUnitLabel(
-							(Stmt) arg0.getTarget(counter))) };
+
+			GlobalsCache.v().getUnitLabel((Stmt) arg0.getTarget(counter))) };
 			targets.add(gototarget);
 			counter++;
 		}
 		{
 			Statement[] gototarget = { this.pf.mkGotoStatement(
-					
-					GlobalsCache.v().getUnitLabel(
-							(Stmt) arg0.getDefaultTarget())) };
+
+			GlobalsCache.v().getUnitLabel((Stmt) arg0.getDefaultTarget())) };
 			targets.add(gototarget);
 		}
 		translateSwitch(cases, targets);
@@ -1064,8 +1053,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		// the current procedure.
 		// Note that this only works because soot moves the "new" statement
 		// to a new local variable.
-		this.translateAssignment(this.procInfo.getExceptionVariable(),
-				right);
+		this.translateAssignment(this.procInfo.getExceptionVariable(), right);
 		// Add a goto statement to the exceptional successors.
 		List<Unit> exc_succ = procInfo.getExceptionalUnitGraph()
 				.getExceptionalSuccsOf((Unit) arg0);
@@ -1129,8 +1117,7 @@ public class SootStmtSwitch implements StmtSwitch {
 				// throw statement
 				this.boogieStatements.add(this.pf.mkReturnStatement());
 			} else {
-				this.boogieStatements.add(this.pf.mkGotoStatement(
-						labels[0]));
+				this.boogieStatements.add(this.pf.mkGotoStatement(labels[0]));
 			}
 		} else {
 
