@@ -207,9 +207,7 @@ public class SootPrelude {
 		if (org.joogie.Options.v().getPreludeFileName()==null) {
 			loadPreludeFromResources("/res/java_lang.bpl");
 		}
-		
-		
-		
+				
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();
@@ -252,7 +250,7 @@ public class SootPrelude {
 							.mkFunctionDeclaration(attributes,
 									"$realOp" + op.hashCode(), in, outParam,
 									null));
-			Log.error("Created function that should be in Prelude: "+ this.realOperators.get(op));
+			Log.error("Created function that should be in Prelude: "+ op);
 		}	
 		return this.realOperators.get(op);
 	}

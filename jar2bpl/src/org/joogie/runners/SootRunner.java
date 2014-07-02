@@ -128,8 +128,8 @@ public class SootRunner extends Runner {
 			// add soot-class-path
 			args.add("-cp");
 			args.add(cp);
-			args.add(classFile);
-
+			args.add(classFile);		
+			
 			// finally, run soot
 			run(args, boogieFile);
 
@@ -138,6 +138,54 @@ public class SootRunner extends Runner {
 		}
 	}
 
+	public void runWithApk(String apkFile, String boogieFile) {
+		try {
+			// command-line arguments for Soot
+			
+			String suffix = apkFile.substring(apkFile.lastIndexOf("/")+1, apkFile.length());
+			
+			List<String> args = new ArrayList<String>();
+			fillSootArgs(args);
+
+			String cp = apkFile;
+			
+			//enforce android
+			args.add("-src-prec");
+			args.add("apk");	
+			//add path to android framework stubs
+			args.add("-android-jars");
+			String android_path = Options.v().getAndroidStubPath();
+			if (android_path==null) {
+				throw new RuntimeException("Need to specify -android-jars when analyzing apk's.");
+			}
+			args.add(android_path);
+			// add soot-class-path
+			args.add("-cp");
+			args.add(cp);
+			
+			//add process-dir
+			
+
+			System.err.println("FILE "+suffix);
+			args.add("-process-dir");
+			args.add(apkFile);
+			
+			System.err.print("ARGS ");
+			for (String s : args) {
+				System.err.print(s + "  ");
+			}
+			System.err.println();
+			
+			
+			// finally, run soot
+			run(args, boogieFile);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+	}
+	
+	
 	/**
 	 * Runs Soot by using a path (e.g., from Joogie)
 	 * 
@@ -165,7 +213,7 @@ public class SootRunner extends Runner {
 			// add soot-class-path
 			args.add("-cp");
 			args.add(cp);
-
+			
 			// add path to be processed
 			args.add("-process-path");
 			args.add(path);
@@ -203,7 +251,7 @@ public class SootRunner extends Runner {
 			Scene.v().addBasicClass("java.lang.reflect.Array",SootClass.SIGNATURES);
 			
 			// Finally, run Soot
-			soot.Main.main(args.toArray(new String[] {}));
+			soot.Main.main(args.toArray(new String[]{}));
 
 			// write boogie program to file
 			if (null != boogieFile && !boogieFile.isEmpty()) {

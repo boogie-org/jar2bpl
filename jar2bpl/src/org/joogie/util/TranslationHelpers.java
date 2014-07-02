@@ -185,7 +185,7 @@ public class TranslationHelpers {
 		}
 
 		throw new RuntimeException("Cannot cast " + expr.toString() + " from: "
-				+ expr.getType().getClass().toString() + " to "
+				+ ((expr.getType()==null)?"null":expr.getType().getClass().toString()) + " to "
 				+ target.getClass().toString());
 		// return expr;
 	}

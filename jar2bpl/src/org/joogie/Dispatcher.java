@@ -100,6 +100,9 @@ public class Dispatcher {
 		if (input.endsWith(".jar")) {
 			// run with JAR file
 			sootRunner.runWithJar(input, output);
+		} else if (input.endsWith(".apk")) {
+			// run with Android file
+			sootRunner.runWithApk(input, output);			
 		} else {
 			File file = new File(input);
 			if (file.isDirectory()) {

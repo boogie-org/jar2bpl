@@ -11,10 +11,13 @@ public class AndroidTest {
 	@Test
 	public void test() {
 		try {
-			
-			String javaFileDir = "regression/android_input/hoozdat.apk";
+			Options.v().setAndroidStubPath("./data");
+			String javaFileDir = "regression/android_input/snake.apk";	
 			Options.v().setClasspath(javaFileDir);
-			String bplFile = "regression/test_output/NullPointerExceptions.bpl";
+			String bplFile = "regression/test_output/android.bpl";
+			
+			
+			
 			// create dispatcher
 			Dispatcher dispatcher = new Dispatcher(javaFileDir,
 					bplFile);

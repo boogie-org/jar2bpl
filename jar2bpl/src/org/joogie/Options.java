@@ -51,7 +51,18 @@ public class Options {
 		return runTypeChecker;
 	}
 	
+	@Option(name = "-android-jars", usage = "Path to the jars that stub the android platform.")
+	private String androidStubPath=null;
+	
+	public String getAndroidStubPath() {
+		return androidStubPath;
+	}
 
+	public void setAndroidStubPath(String path) {
+		this.androidStubPath = path;
+	}
+	
+	
 	@Option(name = "-prelude", usage = "Use custom prelude instead of the built-in one.")
 	private String preludeFileName=null;
 	
