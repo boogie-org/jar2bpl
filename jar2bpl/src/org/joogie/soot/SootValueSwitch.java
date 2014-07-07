@@ -22,7 +22,9 @@ package org.joogie.soot;
 import java.util.LinkedList;
 
 import org.joogie.GlobalsCache;
+import org.joogie.Options;
 import org.joogie.util.Log;
+import org.joogie.util.MhpInfo;
 import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
@@ -84,7 +86,8 @@ import boogie.declaration.FunctionDeclaration;
 import boogie.enums.BinaryOperator;
 import boogie.enums.UnaryOperator;
 import boogie.expression.Expression;
-import boogie.location.ILocation;
+import boogie.expression.IdentifierExpression;
+import boogie.statement.Statement;
 import boogie.type.BoogieType;
 
 /**
@@ -92,6 +95,8 @@ import boogie.type.BoogieType;
  */
 public class SootValueSwitch implements JimpleValueSwitch {
 
+	public boolean isLeftHandSide = false;
+	
 	private SootProcedureInfo procInfo;
 	private SootStmtSwitch stmtSwitch;
 	private ProgramFactory pf;
@@ -197,6 +202,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	}
 
 	private void translateBinOp(BinopExpr arg0) {
+		this.isLeftHandSide=false;
 		arg0.getOp1().apply(this);
 		Expression lhs = this.expressionStack.pop();
 		arg0.getOp2().apply(this);
@@ -318,6 +324,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseCastExpr(CastExpr arg0) {
+		this.isLeftHandSide=false;
 		arg0.getOp().apply(this);
 		Expression exp = this.getExpression();
 
@@ -484,6 +491,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseInstanceOfExpr(InstanceOfExpr arg0) {
+		this.isLeftHandSide=false;
 		arg0.getOp().apply(this);
 		Expression lhs = this.getExpression();
 		if (arg0.getCheckType() instanceof RefType) {
@@ -528,6 +536,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseLengthExpr(LengthExpr arg0) {
+		this.isLeftHandSide=false;
 		arg0.getOp().apply(this);
 		Expression base = this.getExpression();
 		this.stmtSwitch.getErrorModel().createNonNullGuard(base);
@@ -572,6 +581,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseNegExpr(NegExpr arg0) {
+		this.isLeftHandSide=false;
 		arg0.getOp().apply(this);
 		Expression e = this.expressionStack.pop();
 		if (e.getType() == this.pf.getIntType()) {
@@ -750,6 +760,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					+ btype.toString());
 		}
 		// tranlate base and index
+		this.isLeftHandSide=false;
 		arg0.getBase().apply(this);
 		Expression baseExpression = this.expressionStack.pop();
 		arg0.getIndex().apply(this);
@@ -810,6 +821,58 @@ public class SootValueSwitch implements JimpleValueSwitch {
 
 	}
 
+	private boolean checkSharedField(FieldRef ref, Expression field) {
+		if (!Options.v().useSoundThreads()) {
+			return false;
+		} else {
+			if (!this.stmtSwitch.isInMonitor()) {
+				if (MhpInfo.v().getSharedFields(this.procInfo.getSootMethod())
+						.contains(ref.getField())) {
+					// if the field can be modified in another thread, add a
+					// havoc statement before it is used.
+					return true;
+				} else {
+					// do nothing
+				}
+
+			} else {
+				Log.info("Was in monitor ... ");
+			}
+		}
+		return false;
+	}
+
+	private void havocField(Expression field, Expression base) {
+		if (base == null) {
+			// the field is static
+			IdentifierExpression identifier = (IdentifierExpression) field;
+			if (identifier != null) {
+				Statement s = this.pf.mkHavocStatement(TranslationHelpers
+						.javaLocation2Attribute(this.stmtSwitch
+								.getCurrentStatement().getTags()), identifier);
+				this.stmtSwitch.addGuardStatement(s);
+			} else {
+				throw new RuntimeException("Not Implemented");
+			}
+		} else {
+			Expression heapAccess = this.makeHeapAccessExpression(base, field,
+					true);
+			IdentifierExpression havocval = GlobalsCache.v().getHavocGlobal(
+					heapAccess.getType());
+			this.stmtSwitch.addGuardStatement(this.pf.mkHavocStatement(
+					TranslationHelpers.javaLocation2Attribute(this.stmtSwitch
+							.getCurrentStatement().getTags()), havocval));
+			Expression[] indices = { base, field };
+			Expression heapupdate = pf.mkArrayStoreExpression(SootPrelude.v()
+					.getHeapVariable().getType(), SootPrelude.v()
+					.getHeapVariable(), indices, havocval);
+			Statement s = pf.mkAssignmentStatement(SootPrelude.v()
+					.getHeapVariable(), heapupdate);
+			this.stmtSwitch.addGuardStatement(s);
+		}
+
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -818,9 +881,18 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseInstanceFieldRef(InstanceFieldRef arg0) {
+		boolean islhs = this.isLeftHandSide;
+		this.isLeftHandSide=false;
 		arg0.getBase().apply(this);
 		Expression base = this.getExpression();
 		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
+
+		boolean nullCheckNeeded = true;
+		// check if the field may be modified by another thread.
+		if (!islhs && checkSharedField(arg0, field)) {
+			havocField(field, base);
+			nullCheckNeeded = false;
+		}
 
 		// We are checking if this is a @NonNull field
 		// if so, we add an assume to ensure that it actually is
@@ -829,7 +901,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				this.makeHeapAccessExpression(base, field, false), arg0);
 
 		this.expressionStack.push(this.makeHeapAccessExpression(base, field,
-				true));
+				nullCheckNeeded));
 	}
 
 	/*
@@ -854,9 +926,14 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		// not null here. May be better ways to do this.
 		checkFieldAnnotations(
 				GlobalsCache.v().lookupSootField(arg0.getField()), arg0);
-
-		this.expressionStack.push(GlobalsCache.v().lookupSootField(
-				arg0.getField()));
+		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
+		// check if the field may be modified by another thread.
+		// (unless it is a lhs expression. In that case we don't care.
+		if (!this.isLeftHandSide && checkSharedField(arg0, field)) {
+			havocField(field, null);
+		}
+	
+		this.expressionStack.push(field);
 	}
 
 	/*

@@ -45,6 +45,13 @@ public class Options {
 		return runtimeExceptionReturns;
 	}
 	
+	@Option(name = "-threads", usage = "havoc variables that may be modified by other threads.", required = false)
+	private boolean soundThreads=false;
+	public boolean useSoundThreads() {
+		return soundThreads;
+	}
+	
+	
 	@Option(name = "-tc", usage = "Perfrom type check after translation", required = false)
 	private boolean runTypeChecker=false;
 	public boolean getRunTypeChecker() {

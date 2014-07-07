@@ -90,6 +90,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	private Stmt currentStatement = null; // needed to identify throw targets of
 											// expressions
 	private AbstractErrorModel errorModel;
+	private boolean inMonitor = false;
 
 	// used to track Java string constants
 	// HashMap<StringConstant, Expression> stringConstantMap = new
@@ -117,6 +118,10 @@ public class SootStmtSwitch implements StmtSwitch {
 		return this.errorModel;
 	}
 
+	public boolean isInMonitor() {
+		return this.inMonitor;
+	}
+	
 	private LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
 
 	/**
@@ -215,7 +220,9 @@ public class SootStmtSwitch implements StmtSwitch {
 			translateInvokeAssignment(lhs, ivk, statement);
 			return;
 		}
+		this.valueswitch.isLeftHandSide = true;
 		lhs.apply(this.valueswitch);
+		this.valueswitch.isLeftHandSide = false;
 		Expression left = this.valueswitch.getExpression();
 
 		Expression right;
@@ -817,7 +824,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseEnterMonitorStmt(EnterMonitorStmt arg0) {
 		injectLabelStatements(arg0);
-		Log.info("Joogie does not translate EnterMonitor");
+		this.inMonitor = true;
 	}
 
 	/*
@@ -830,7 +837,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseExitMonitorStmt(ExitMonitorStmt arg0) {
 		injectLabelStatements(arg0);
-		Log.info("Joogie does not translate ExitMonitor");
+		this.inMonitor = false;
 	}
 
 	/*

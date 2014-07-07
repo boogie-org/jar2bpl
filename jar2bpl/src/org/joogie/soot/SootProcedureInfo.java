@@ -250,6 +250,10 @@ public class SootProcedureInfo {
 		}
 	}
 
+	public SootMethod getSootMethod() {
+		return this.sootMethod;
+	}
+	
 	public IdentifierExpression getExceptionalReturnFlag() {
 		return this.exceptionalReturnFlag;
 	}

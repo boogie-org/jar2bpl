@@ -156,6 +156,23 @@ public class GlobalsCache {
 				+ (this.freshglobalcounter++), isConst, true, isUnique);
 	}
 
+	
+	private HashMap<BoogieType, IdentifierExpression> havocGloabls = new HashMap<BoogieType, IdentifierExpression>();
+	/**
+	 * Get a special global in case you want to havoc something and need a
+	 * otherwise unused gloabl of the same type.
+	 * @param type
+	 * @return
+	 */
+	public IdentifierExpression getHavocGlobal(BoogieType type) {
+		if (!this.havocGloabls.containsKey(type)) {
+			this.havocGloabls.put(type,  pf.mkIdentifierExpression( type, "$havoc"
+				+ (this.freshglobalcounter++), false, true, false));
+		}
+		return this.havocGloabls.get(type);
+	}
+	
+	
 	public BoogieType getBoogieType(Type type) {
 		BoogieType ret = null;
 		if (type instanceof DoubleType || type instanceof FloatType) {

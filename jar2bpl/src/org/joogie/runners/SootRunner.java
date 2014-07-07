@@ -241,18 +241,54 @@ public class SootRunner extends Runner {
 
 			// reset & init Soot
 			soot.G.reset();
+			
+			//check if we need fullprogram analysis
+			if (Options.v().useSoundThreads()) {
+				args.add("-w");
+
+				
+				args.add("-p");
+				args.add("cg.spark");
+				args.add("enabled:true");
+
+				//enable field RW analysis		
+				args.add("-p");
+				//args.add("jap.fieldrw");
+				args.add("jap.sea");
+				args.add("enabled:true");
+				
+				//enable MayHappenInParallel analysis
+				args.add("-p");
+				args.add("wjtp.mhp");
+				args.add("enabled:true");
+				
+			} else {
+				// Iterator Hack
+				Scene.v().addBasicClass("java.lang.Iterable",SootClass.SIGNATURES);			
+				Scene.v().addBasicClass("java.util.Iterator",SootClass.SIGNATURES);
+				Scene.v().addBasicClass("java.lang.reflect.Array",SootClass.SIGNATURES);
+				
+			}
+			
 			Pack pack = PackManager.v().getPack("jtp");
 			pack.add(new Transform("jtp.BoogieTransform",
 					new SootBodyTransformer()));
 			
-			// Iterator Hack
-			Scene.v().addBasicClass("java.lang.Iterable",SootClass.SIGNATURES);			
-			Scene.v().addBasicClass("java.util.Iterator",SootClass.SIGNATURES);
-			Scene.v().addBasicClass("java.lang.reflect.Array",SootClass.SIGNATURES);
 			
+
 			// Finally, run Soot
 			soot.Main.main(args.toArray(new String[]{}));
 
+			//CallGraph cg = Scene.v().getCallGraph();
+//			StringBuilder sb = new StringBuilder();
+//			sb.append("Entrypoints: \n");
+//			for (SootMethod m : Scene.v().getEntryPoints()) {
+//				sb.append("\t");
+//				sb.append(m.getName());
+//				sb.append("\n");
+//			}
+//			Log.error(sb);
+			
 			// write boogie program to file
 			if (null != boogieFile && !boogieFile.isEmpty()) {
 				GlobalsCache.v().getPf().toFile(boogieFile);
@@ -283,7 +319,7 @@ public class SootRunner extends Runner {
 		args.add("-output-format");
 		args.add("none");
 		args.add("-allow-phantom-refs");
-		// args.add("-w");
+		//args.add("-w");
 		// args.add("use-original-names");
 	}
 
