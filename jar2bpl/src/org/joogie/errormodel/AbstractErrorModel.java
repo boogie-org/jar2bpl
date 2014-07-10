@@ -103,9 +103,9 @@ public abstract class AbstractErrorModel {
 
 				Statement[] elsePart = elseblock.toArray(new Statement[elseblock.size()]); 
 				Statement[] thenPart = {assign_then};		
-				this.stmtSwitch.addGuardStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
+				this.stmtSwitch.addStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
 			} else {
-				this.stmtSwitch.addGuardStatement(transferStatement);
+				this.stmtSwitch.addStatement(transferStatement);
 			}
 		}
 	}

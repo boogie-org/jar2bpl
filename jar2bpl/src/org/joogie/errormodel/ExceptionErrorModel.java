@@ -110,10 +110,10 @@ public class ExceptionErrorModel extends AbstractErrorModel {
 			
 			IfStatement ifstmt = (IfStatement) this.pf.mkIfStatement(guard, thenPart, elsePart);
 			this.createdIfStatements.add(ifstmt);
-			this.stmtSwitch.addGuardStatement(ifstmt);
+			this.stmtSwitch.addStatement(ifstmt);
 		} else {
 			Log.error("TODO: unguarded exceptions are not really implemented");
-			this.stmtSwitch.addGuardStatement(this.pf.mkReturnStatement());
+			this.stmtSwitch.addStatement(this.pf.mkReturnStatement());
 		}
 	}
 	

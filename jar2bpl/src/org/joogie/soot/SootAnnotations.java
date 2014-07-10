@@ -3,13 +3,17 @@
  */
 package org.joogie.soot;
 
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
 import soot.SootField;
 import soot.SootMethod;
 import soot.tagkit.AnnotationTag;
+import soot.tagkit.IntegerConstantValueTag;
 import soot.tagkit.SignatureTag;
+import soot.tagkit.StringConstantValueTag;
 import soot.tagkit.Tag;
 import soot.tagkit.VisibilityAnnotationTag;
 import soot.tagkit.VisibilityParameterAnnotationTag;
@@ -37,8 +41,10 @@ public class SootAnnotations {
 				annot = parseAnnotations((VisibilityAnnotationTag)t);
 			} else if (t instanceof SignatureTag) {
 				//TODO: do we want to do something with that?
-//			} else if (t instanceof CallerSensitive) {	
-//				CallerSensitive tag = (CallerSensitive)t;
+			} else if (t instanceof StringConstantValueTag) {
+				
+			} else if (t instanceof IntegerConstantValueTag) {
+
 			} else {
 				Log.error("Unimplemented Tag found: "+t.getName());
 			}
@@ -94,7 +100,7 @@ public class SootAnnotations {
 			}
 		} else {
 			//no annotation
-		}		
+		}
 	}
 	
 	

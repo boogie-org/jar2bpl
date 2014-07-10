@@ -82,6 +82,7 @@ import soot.jimple.UshrExpr;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.XorExpr;
 import boogie.ProgramFactory;
+import boogie.ast.Attribute;
 import boogie.declaration.FunctionDeclaration;
 import boogie.enums.BinaryOperator;
 import boogie.enums.UnaryOperator;
@@ -132,11 +133,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseDoubleConstant(DoubleConstant arg0) {
-		// ILocation loc = TranslationHelpers.createDummyLocation();
-		// expressionStack.push(this.pf.mkRealLiteral(
-		// String.valueOf(arg0.value)));
-		this.expressionStack.push(GlobalsCache
-				.createDummyExpression(GlobalsCache.v().getPf().getIntType()));
+		this.expressionStack.push(GlobalsCache.v().lookupInternDouble(arg0));
 	}
 
 	/*
@@ -147,11 +144,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseFloatConstant(FloatConstant arg0) {
-		// ILocation loc = TranslationHelpers.createDummyLocation();
-		// expressionStack.push(this.pf.mkRealLiteral(String.valueOf(
-		// (double)(arg0.value))));
-		this.expressionStack.push(GlobalsCache
-				.createDummyExpression(GlobalsCache.v().getPf().getIntType()));
+		this.expressionStack.push(GlobalsCache.v().lookupInternFloat(arg0));
 	}
 
 	/*
@@ -194,11 +187,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseStringConstant(StringConstant arg0) {
-		// This is only called when string constants are used in method
-		// calls
-		// in any other case this is handled in the SootStmtSwitch
-		this.expressionStack.push(GlobalsCache.createDummyExpression(arg0
-				.getType()));
+		this.expressionStack.push(GlobalsCache.v().lookupInternString(arg0));
 	}
 
 	private void translateBinOp(BinopExpr arg0) {
@@ -371,8 +360,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				/* Log.error */
 				System.out.println("Don't know how to cast from "
 						+ arg0.getOp().getType() + " to " + arg0.getCastType());
-				this.expressionStack.push(GlobalsCache
-						.createDummyExpression(boogieTargetType));
+				this.expressionStack.push(createHavocedExpression(GlobalsCache.v().getBoogieType(arg0.getType())));
 			}
 
 			return;
@@ -503,9 +491,21 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					this.getClassTypeFromExpression(lhs, false), rhs));
 		} else {
 			Log.error("instanceof for arrays not implemented");
-			this.expressionStack.push(GlobalsCache.createDummyExpression(arg0
-					.getType()));
+			this.expressionStack.push(createHavocedExpression(GlobalsCache.v().getBoogieType(arg0.getType())));
 		}
+	}
+	
+	/**
+	 * takes a fake global of appropriate type, adds a havoc statement before it and returns
+	 * the identifier expression for it.
+	 * @param t
+	 * @return
+	 */
+	private IdentifierExpression createHavocedExpression(BoogieType t) {
+		Attribute[] arrtibutes = TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags());
+		IdentifierExpression ide = GlobalsCache.v().getHavocGlobal(t);
+		this.stmtSwitch.addStatement(this.pf.mkHavocStatement(arrtibutes, ide));
+		return ide;		
 	}
 
 	/*
@@ -800,7 +800,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			Expression typefield = this.getClassTypeFromExpression(
 					this.procInfo.getExceptionVariable(), false);
 			this.stmtSwitch
-					.addGuardStatement(GlobalsCache.v().assumeSubType(
+					.addStatement(GlobalsCache.v().assumeSubType(
 							typefield,
 							GlobalsCache.v().lookupClassVariable(
 									rtype.getSootClass())));
@@ -815,7 +815,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		LinkedList<SootAnnotations.Annotation> annot = SootAnnotations
 				.parseFieldTags(fr.getField());
 		if (annot.contains(SootAnnotations.Annotation.NonNull)) {
-			this.stmtSwitch.addGuardStatement(this.stmtSwitch.getErrorModel()
+			this.stmtSwitch.addStatement(this.stmtSwitch.getErrorModel()
 					.createAssumeNonNull(expr));
 		}
 
@@ -850,7 +850,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				Statement s = this.pf.mkHavocStatement(TranslationHelpers
 						.javaLocation2Attribute(this.stmtSwitch
 								.getCurrentStatement().getTags()), identifier);
-				this.stmtSwitch.addGuardStatement(s);
+				this.stmtSwitch.addStatement(s);
 			} else {
 				throw new RuntimeException("Not Implemented");
 			}
@@ -859,7 +859,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					true);
 			IdentifierExpression havocval = GlobalsCache.v().getHavocGlobal(
 					heapAccess.getType());
-			this.stmtSwitch.addGuardStatement(this.pf.mkHavocStatement(
+			this.stmtSwitch.addStatement(this.pf.mkHavocStatement(
 					TranslationHelpers.javaLocation2Attribute(this.stmtSwitch
 							.getCurrentStatement().getTags()), havocval));
 			Expression[] indices = { base, field };
@@ -868,7 +868,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					.getHeapVariable(), indices, havocval);
 			Statement s = pf.mkAssignmentStatement(SootPrelude.v()
 					.getHeapVariable(), heapupdate);
-			this.stmtSwitch.addGuardStatement(s);
+			this.stmtSwitch.addStatement(s);
 		}
 
 	}

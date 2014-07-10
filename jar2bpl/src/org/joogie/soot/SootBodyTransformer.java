@@ -87,7 +87,10 @@ public class SootBodyTransformer extends BodyTransformer {
 		SootProcedureInfo procInfo = GlobalsCache.v().lookupProcedure(
 				body.getMethod());
 
-		
+		if (procInfo.getBoogieProcedure()!=null) {
+			Log.info("Procedure "+body.getMethod().getBytecodeSignature()+" already known from Prelude");
+			return;
+		}
 		
 		//TOOD: what should we do if the procedure has already been defined 
 		//in the prelude?

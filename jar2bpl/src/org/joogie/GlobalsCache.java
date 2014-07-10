@@ -44,13 +44,15 @@ import soot.SootMethod;
 import soot.Type;
 import soot.VoidType;
 import soot.jimple.ClassConstant;
+import soot.jimple.DoubleConstant;
+import soot.jimple.FloatConstant;
 import soot.jimple.Stmt;
+import soot.jimple.StringConstant;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
-import boogie.location.ILocation;
 import boogie.statement.Statement;
 import boogie.type.BoogieType;
 
@@ -74,6 +76,11 @@ public class GlobalsCache {
 
 	private HashMap<String, IdentifierExpression> cConstantTypeMap = new HashMap<String, IdentifierExpression>();
 	
+	
+	private HashMap<String, IdentifierExpression> stringInternMap = new HashMap<String, IdentifierExpression>();
+	private HashMap<String, IdentifierExpression> floatInternMap = new HashMap<String, IdentifierExpression>();
+	private HashMap<String, IdentifierExpression> doubleInternMap = new HashMap<String, IdentifierExpression>();
+	
 	private long unitLabelCounter = 0L;
 	private final String blockPrefix = "block";
 
@@ -91,6 +98,11 @@ public class GlobalsCache {
 			GlobalsCache.instance.procedureMap.clear();
 			GlobalsCache.instance.fieldMap.clear();
 			GlobalsCache.instance.unitLabelMap.clear();
+			GlobalsCache.instance.classTypeMap.clear();
+			GlobalsCache.instance.classTypeMap.clear();
+			GlobalsCache.instance.stringInternMap.clear();
+			GlobalsCache.instance.floatInternMap.clear();
+			GlobalsCache.instance.doubleInternMap.clear();
 		}
 		GlobalsCache.instance = null;
 	}
@@ -122,6 +134,30 @@ public class GlobalsCache {
 			this.procedureMap.put(m, procinfo);
 		}
 		return this.procedureMap.get(m);
+	}
+
+	public IdentifierExpression lookupInternString(StringConstant s) {
+		if (!stringInternMap.containsKey(s.value)) {
+			String name = "$StringConst"+stringInternMap.size();
+			stringInternMap.put(s.value, this.pf.mkIdentifierExpression(this.getBoogieType(s.getType()), name, true, true, true));
+		}
+		return stringInternMap.get(s.value);
+	}
+	
+	public IdentifierExpression lookupInternFloat(FloatConstant s) {
+		if (!floatInternMap.containsKey(s.toString())) {
+			String name = "$FloatConst"+floatInternMap.size();
+			floatInternMap.put(s.toString(), this.pf.mkIdentifierExpression(this.getBoogieType(s.getType()), name, true, true, true));
+		}
+		return floatInternMap.get(s.toString());
+	}
+
+	public IdentifierExpression lookupInternDouble(DoubleConstant s) {
+		if (!doubleInternMap.containsKey(s.toString())) {
+			String name = "$DoubleConst"+doubleInternMap.size();
+			doubleInternMap.put(s.toString(), this.pf.mkIdentifierExpression(this.getBoogieType(s.getType()), name, true, true, true));
+		}
+		return doubleInternMap.get(s.toString());
 	}
 
 	/**
@@ -314,32 +350,6 @@ public class GlobalsCache {
 				.mkAssumeStatement(attributes, compareTypeExpressions(subtype, supertype));
 
 	}
-
-	/**
-	 * TODO: this method is used to test the translation. When ever we don't
-	 * know how to translate something, we just create a fresh global variable
-	 * of appropriate type. Place an assert(false) here once things run
-	 * smoothly.
-	 * 
-	 * @param type
-	 * @return fresh global variable.
-	 */
-	public static Expression createDummyExpression(Type type) {
-		BoogieType boogietype = GlobalsCache.v().getBoogieType(type);
-		return createDummyExpression(boogietype);
-	}
-
-	public static Expression createDummyExpression(BoogieType type) {
-		String identifier = "$DUMMYVAR__" + (GlobalsCache.dummyVarIdx++);	
-		return GlobalsCache
-				.v()
-				.getPf()
-				.mkIdentifierExpression( type, identifier, false, true,
-						false);
-	}
-
-	private static long dummyVarIdx = 0L;
-
 		
 	public boolean isSubTypeOrEqual(SootClass sub, SootClass sup) {
 		SootClass c = sub; 
@@ -367,7 +377,8 @@ public class GlobalsCache {
 	
 	public Expression lookupClassConstant(ClassConstant cc) {
 		if (!cConstantTypeMap.containsKey(cc.getValue())) {
-			cConstantTypeMap.put(cc.getValue(), (IdentifierExpression) GlobalsCache.createDummyExpression(cc.getType()));
+			IdentifierExpression ide = this.pf.mkIdentifierExpression(this.getBoogieType(cc.getType()), "CC$"+cc.value, true, true, true);			
+			cConstantTypeMap.put(cc.getValue(), ide);
 		}
 		return cConstantTypeMap.get(cc.getValue());
 	}

@@ -39,6 +39,7 @@ public class Options {
 		return exceptionErrorModel;
 	}
 
+	//TODO: check if this is still needed.
 	@Option(name = "-rtr", usage = "Also ensure on caller side that procedure calls do not throw runtime exceptions", required = false)
 	private boolean runtimeExceptionReturns=false;
 	public boolean isRuntimeExceptionReturns() {
@@ -49,6 +50,17 @@ public class Options {
 	private boolean soundThreads=false;
 	public boolean useSoundThreads() {
 		return soundThreads;
+	}
+
+	@Option(name = "-vcalls", usage = "Use sound translation for abstract and virtual calls.", required = false)
+	private boolean soundCalls=false;
+	public boolean useSoundCalls() {
+		return soundCalls;
+	}
+	
+	
+	public void setSoundThreads(boolean st) {
+		this.soundThreads = st;
 	}
 	
 	

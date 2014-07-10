@@ -46,7 +46,7 @@ public class AssertionErrorModel extends AbstractErrorModel {
 			System.err.println("unguarded exception " + exception);
 			assertion = this.pf.mkReturnStatement();
 		}		
-		this.stmtSwitch.addGuardStatement(assertion);		
+		this.stmtSwitch.addStatement(assertion);		
 	}
 	
 	
