@@ -81,7 +81,7 @@ public abstract class AbstractErrorModel {
 				createdUnExpectedException(guard, exception);
 			}
 		} else {
-			ILocation loc = TranslationHelpers.translateLocation(this.stmtSwitch.getCurrentStatement().getTags());
+			
 			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
 			//if the exception is caught, create a goto
 			if (guard!=null) {				
@@ -92,17 +92,14 @@ public abstract class AbstractErrorModel {
 				//create the transfer command
 				//"goto" if this exception is caught somewhere
 				//"return" otherwise.
-				this.pf.mkAssignmentStatement( this.procInfo.getExceptionVariable(), exceptionvar);
-				
 				elseblock.add(this.pf.mkAssignmentStatement( 
 								this.procInfo.getExceptionVariable(), exceptionvar));
 				elseblock.add(transferStatement);
-				//this one is only needed to have a statement that we can track in the then part of the exception handling.
-				//!! use an identity statement to make sure that no execution is altered here.
-				Statement assign_then = this.pf.mkAssignmentStatement( this.procInfo.getExceptionVariable(), this.procInfo.getExceptionVariable());			
 
+				elseblock.addFirst(this.pf.mkAssertStatement(new Attribute[]{pf.mkNoCodeAttribute()}, pf.mkBooleanLiteral(true)));
+				
 				Statement[] elsePart = elseblock.toArray(new Statement[elseblock.size()]); 
-				Statement[] thenPart = {assign_then};		
+				Statement[] thenPart = {this.pf.mkAssertStatement(TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags()), pf.mkBooleanLiteral(true)) };		
 				this.stmtSwitch.addStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
 			} else {
 				this.stmtSwitch.addStatement(transferStatement);
@@ -140,8 +137,7 @@ public abstract class AbstractErrorModel {
 	}
 	
 	
-	public void createArrayBoundGuard(Expression baseExpression, Expression indexExpression) {
-		ILocation loc = baseExpression.getLocation();
+	public void createArrayBoundGuard(Expression baseExpression, Expression indexExpression) {		
 		Expression upperbound = this.pf.mkBinaryExpression(
 				this.pf.getBoolType(), BinaryOperator.COMPLT, indexExpression,
 				GlobalsCache.v().getArraySizeExpression(baseExpression));

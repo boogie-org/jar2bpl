@@ -377,7 +377,8 @@ public class GlobalsCache {
 	
 	public Expression lookupClassConstant(ClassConstant cc) {
 		if (!cConstantTypeMap.containsKey(cc.getValue())) {
-			IdentifierExpression ide = this.pf.mkIdentifierExpression(this.getBoogieType(cc.getType()), "CC$"+cc.value, true, true, true);			
+			String name = TranslationHelpers.replaceIllegalChars("CC$"+cc.value);			
+			IdentifierExpression ide = this.pf.mkIdentifierExpression(this.getBoogieType(cc.getType()), name, true, true, true);			
 			cConstantTypeMap.put(cc.getValue(), ide);
 		}
 		return cConstantTypeMap.get(cc.getValue());

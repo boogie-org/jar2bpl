@@ -142,11 +142,13 @@ public class TranslationHelpers {
 		return replaceIllegalChars(sb.toString());
 	}
 
-	private static String replaceIllegalChars(String s) {
+	public static String replaceIllegalChars(String s) {
 		String ret = s.replace("<", "$la$");
 		ret = ret.replace(">", "$ra$");
 		ret = ret.replace("[", "$lp$");
 		ret = ret.replace("]", "$rp$");
+		ret = ret.replace("/", "$_$");
+		ret = ret.replace(";", "$");
 		return ret;
 	}
 
