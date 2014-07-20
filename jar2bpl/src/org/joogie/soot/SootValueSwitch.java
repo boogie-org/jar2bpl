@@ -97,7 +97,7 @@ import boogie.type.BoogieType;
 public class SootValueSwitch implements JimpleValueSwitch {
 
 	public boolean isLeftHandSide = false;
-	
+
 	private SootProcedureInfo procInfo;
 	private SootStmtSwitch stmtSwitch;
 	private ProgramFactory pf;
@@ -191,7 +191,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	}
 
 	private void translateBinOp(BinopExpr arg0) {
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getOp1().apply(this);
 		Expression lhs = this.expressionStack.pop();
 		arg0.getOp2().apply(this);
@@ -313,7 +313,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseCastExpr(CastExpr arg0) {
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getOp().apply(this);
 		Expression exp = this.getExpression();
 
@@ -360,7 +360,8 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				/* Log.error */
 				System.out.println("Don't know how to cast from "
 						+ arg0.getOp().getType() + " to " + arg0.getCastType());
-				this.expressionStack.push(createHavocedExpression(GlobalsCache.v().getBoogieType(arg0.getType())));
+				this.expressionStack.push(createHavocedExpression(GlobalsCache
+						.v().getBoogieType(arg0.getType())));
 			}
 
 			return;
@@ -479,7 +480,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseInstanceOfExpr(InstanceOfExpr arg0) {
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getOp().apply(this);
 		Expression lhs = this.getExpression();
 		if (arg0.getCheckType() instanceof RefType) {
@@ -491,21 +492,25 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					this.getClassTypeFromExpression(lhs, false), rhs));
 		} else {
 			Log.error("instanceof for arrays not implemented");
-			this.expressionStack.push(createHavocedExpression(GlobalsCache.v().getBoogieType(arg0.getType())));
+			this.expressionStack.push(createHavocedExpression(GlobalsCache.v()
+					.getBoogieType(arg0.getType())));
 		}
 	}
-	
+
 	/**
-	 * takes a fake global of appropriate type, adds a havoc statement before it and returns
-	 * the identifier expression for it.
+	 * takes a fake global of appropriate type, adds a havoc statement before it
+	 * and returns the identifier expression for it.
+	 * 
 	 * @param t
 	 * @return
 	 */
 	private IdentifierExpression createHavocedExpression(BoogieType t) {
-		Attribute[] arrtibutes = TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags());
+		Attribute[] arrtibutes = TranslationHelpers
+				.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement()
+						.getTags());
 		IdentifierExpression ide = GlobalsCache.v().getHavocGlobal(t);
 		this.stmtSwitch.addStatement(this.pf.mkHavocStatement(arrtibutes, ide));
-		return ide;		
+		return ide;
 	}
 
 	/*
@@ -536,7 +541,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseLengthExpr(LengthExpr arg0) {
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getOp().apply(this);
 		Expression base = this.getExpression();
 		this.stmtSwitch.getErrorModel().createNonNullGuard(base);
@@ -581,7 +586,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseNegExpr(NegExpr arg0) {
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getOp().apply(this);
 		Expression e = this.expressionStack.pop();
 		if (e.getType() == this.pf.getIntType()) {
@@ -760,7 +765,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					+ btype.toString());
 		}
 		// tranlate base and index
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getBase().apply(this);
 		Expression baseExpression = this.expressionStack.pop();
 		arg0.getIndex().apply(this);
@@ -799,11 +804,14 @@ public class SootValueSwitch implements JimpleValueSwitch {
 
 			Expression typefield = this.getClassTypeFromExpression(
 					this.procInfo.getExceptionVariable(), false);
-			this.stmtSwitch
-					.addStatement(GlobalsCache.v().assumeSubType(
+
+			this.stmtSwitch.addStatement(pf.mkAssumeStatement(
+					new Attribute[] { pf.mkNoCodeAttribute() },
+					GlobalsCache.v().compareTypeExpressions(
 							typefield,
 							GlobalsCache.v().lookupClassVariable(
-									rtype.getSootClass())));
+									rtype.getSootClass()))));
+
 			this.expressionStack.push(this.procInfo.getExceptionVariable());
 			return;
 		}
@@ -882,7 +890,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	@Override
 	public void caseInstanceFieldRef(InstanceFieldRef arg0) {
 		boolean islhs = this.isLeftHandSide;
-		this.isLeftHandSide=false;
+		this.isLeftHandSide = false;
 		arg0.getBase().apply(this);
 		Expression base = this.getExpression();
 		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
@@ -932,7 +940,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		if (!this.isLeftHandSide && checkSharedField(arg0, field)) {
 			havocField(field, null);
 		}
-	
+
 		this.expressionStack.push(field);
 	}
 

@@ -335,21 +335,7 @@ public class GlobalsCache {
 						compareTypeExpressions(typeB, typeA));
 	}
 	
-	/**
-	 * creates an assume statement: subtype <: supertype
-	 * 
-	 * @param subtype
-	 * @param supertype
-	 * @return assume subtype <: supertype;
-	 */
-	public Statement assumeSubType(Expression subtype, Expression supertype) {	
-		Attribute[] attributes = {}; 
-		return GlobalsCache
-				.v()
-				.getPf()
-				.mkAssumeStatement(attributes, compareTypeExpressions(subtype, supertype));
 
-	}
 		
 	public boolean isSubTypeOrEqual(SootClass sub, SootClass sup) {
 		SootClass c = sub; 

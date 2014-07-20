@@ -45,10 +45,12 @@ public class SimpleThreads {
 		PrintWriter out = null;
 
 		try {
-		    System.out.println("Entered try statement");
-		    out = new PrintWriter(new FileWriter("OutFile.txt"));
-		    for (int i = 0; i < SIZE; i++) {
-		        out.println("Value at: " + i + " = " + list.get(i));
+//		    for (Integer x : list) {
+//		        x.toString();
+//		    }
+//		    list.size();
+		    for (Integer x : list) {
+		        x.toString();
 		    }
 		} catch (Exception e) {
 			System.err.println(e.toString());
