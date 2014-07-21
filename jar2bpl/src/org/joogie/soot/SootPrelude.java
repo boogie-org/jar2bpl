@@ -28,8 +28,10 @@ import util.Log;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.declaration.FunctionDeclaration;
+import boogie.declaration.ProcedureDeclaration;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
+import boogie.statement.Statement;
 import boogie.type.BoogieType;
 import boogie.type.ConstructedType;
 
@@ -98,68 +100,71 @@ public class SootPrelude {
 
 	private FunctionDeclaration bitAnd, bitOr;
 
+	
+	private ProcedureDeclaration newObject;
+	
+
 	private String fieldTypeName = "Field";
 
-	
-	
-	private void loadPreludeFile() {		
-		if (org.joogie.Options.v().getPreludeFileName()!=null) {
+	private void loadPreludeFile() {
+		if (org.joogie.Options.v().getPreludeFileName() != null) {
 			try {
-				Log.info("Loading user prelude: "+ org.joogie.Options.v().getPreludeFileName());
-				GlobalsCache.v().getPf().importBoogieFile(org.joogie.Options.v().getPreludeFileName());
+				Log.info("Loading user prelude: "
+						+ org.joogie.Options.v().getPreludeFileName());
+				GlobalsCache
+						.v()
+						.getPf()
+						.importBoogieFile(
+								org.joogie.Options.v().getPreludeFileName());
 			} catch (Exception e) {
-				throw new RuntimeException("Loading prelude failed: "+e.toString());
-			}			
+				throw new RuntimeException("Loading prelude failed: "
+						+ e.toString());
+			}
 		} else {
-			loadPreludeFromResources("/res/basic_prelude.bpl");			
+			loadPreludeFromResources("/res/basic_prelude.bpl");
 		}
 	}
-	
+
 	private void loadPreludeFromResources(String name) {
 		try {
-			InputStream stream = SootPrelude.class.getResourceAsStream(name);			
+			InputStream stream = SootPrelude.class.getResourceAsStream(name);
 			GlobalsCache.v().getPf().importBoogieFile(name, stream);
 			stream.close();
-			
-		} catch (Exception e1) {							
-			throw new RuntimeException("Prelude file not available. Something failed during the build!");
+
+		} catch (Exception e1) {
+			throw new RuntimeException(
+					"Prelude file not available. Something failed during the build!");
 		}
-		
+
 	}
 
 	private SootPrelude() {
 		ProgramFactory pf = GlobalsCache.v().getPf();
 
-		//now load the prelude file.
+		// now load the prelude file.
 		loadPreludeFile();
-		
-		
+
 		this.referenceType = pf.findTypeByName("ref");
 		this.voidType = pf.findTypeByName("void");
 		this.javaClassType = pf.getNamedType("javaType");
 		this.fieldType = pf.findTypeByName("Field");
-		//this.heapType = pf.findTypeByName("$heap_type");
-		
+		// this.heapType = pf.findTypeByName("$heap_type");
 
 		this.nullConstant = pf.findGlobalByName("$null");
 		this.heapVariable = pf.findGlobalByName("$heap");
 		this.fieldAllocVariable = pf.findGlobalByName("$alloc");
-		
+
 		this.fieldClassVariable = pf.findGlobalByName("$type");
 
 		// functions to represent Java/Soot array types
-		this.arrayTypeConstructor =  pf.findFunctionDeclaration("$arrayType");
+		this.arrayTypeConstructor = pf.findFunctionDeclaration("$arrayType");
 
-		
-		this.intArrayConstructor  = pf.findGlobalByName("$intArrayType");
-		this.byteArrayConstructor  = pf.findGlobalByName("$byteArrayType");
-		this.charArrayConstructor  = pf.findGlobalByName("$charArrayType");
-		this.longArrayConstructor  = pf.findGlobalByName("$longArrayType");
-		this.boolArrayConstructor  = pf.findGlobalByName("$boolArrayType");
-		
-		
+		this.intArrayConstructor = pf.findGlobalByName("$intArrayType");
+		this.byteArrayConstructor = pf.findGlobalByName("$byteArrayType");
+		this.charArrayConstructor = pf.findGlobalByName("$charArrayType");
+		this.longArrayConstructor = pf.findGlobalByName("$longArrayType");
+		this.boolArrayConstructor = pf.findGlobalByName("$boolArrayType");
 
-		
 		// the following creates the heap variables for arrays:
 		// each array is represented by one variable of type "ref" on the $heap.
 		// this variable refers to the actual array on the array heap of
@@ -172,42 +177,44 @@ public class SootPrelude {
 		this.refArrType = pf.findTypeByName("reflArrHeap_type");
 		this.realArrType = pf.findTypeByName("realArrHeap_type");
 		this.boolArrType = pf.findTypeByName("boolArrHeap_type");
-		
-		this.intArrHeapVariable  = pf.findGlobalByName("$intArrHeap");
-		this.refArrHeapVariable  = pf.findGlobalByName("$refArrHeap");
-		this.realArrHeapVariable  = pf.findGlobalByName("$realArrHeap");
-		this.boolArrHeapVariable  = pf.findGlobalByName("$boolArrHeap");
-		
-		//an array that stores the size of java arrays.
 
-		//an array that stores the size of java string.
+		this.intArrHeapVariable = pf.findGlobalByName("$intArrHeap");
+		this.refArrHeapVariable = pf.findGlobalByName("$refArrHeap");
+		this.realArrHeapVariable = pf.findGlobalByName("$realArrHeap");
+		this.boolArrHeapVariable = pf.findGlobalByName("$boolArrHeap");
+
+		// an array that stores the size of java arrays.
+
+		// an array that stores the size of java string.
 		this.arrSizeHeapVariable = pf.findGlobalByName("$arrSizeHeap");
 		this.stringSizeHeapVariable = pf.findGlobalByName("$stringSizeHeap");
 
-		
 		this.int2bool = pf.findFunctionDeclaration("$intToBool");
 		this.bool2int = pf.findFunctionDeclaration("$boolToInt");
 		this.ref2bool = pf.findFunctionDeclaration("$refToBool");
 		this.int2real = pf.findFunctionDeclaration("$intToReal");
 		this.real2int = pf.findFunctionDeclaration("$realToInt");
-		
-		this.cmpInt = pf.findFunctionDeclaration("$cmpInt");	
-		this.cmpReal = pf.findFunctionDeclaration("$cmpReal");	
-		this.cmpRef = pf.findFunctionDeclaration("$cmpRef");	
-		this.cmpBool = pf.findFunctionDeclaration("$cmpBool");	
 
-		this.shlInt = pf.findFunctionDeclaration("$shlInt");	
-		this.shrInt = pf.findFunctionDeclaration("$shrInt");	
-		this.ushrInt = pf.findFunctionDeclaration("$ushrInt");	
-		
-		this.xorInt = pf.findFunctionDeclaration("$xorInt");	
-		this.bitAnd = pf.findFunctionDeclaration("$bitAnd");	
-		this.bitOr = pf.findFunctionDeclaration("$bitOr");	
-	
-		if (org.joogie.Options.v().getPreludeFileName()==null) {
+		this.cmpInt = pf.findFunctionDeclaration("$cmpInt");
+		this.cmpReal = pf.findFunctionDeclaration("$cmpReal");
+		this.cmpRef = pf.findFunctionDeclaration("$cmpRef");
+		this.cmpBool = pf.findFunctionDeclaration("$cmpBool");
+
+		this.shlInt = pf.findFunctionDeclaration("$shlInt");
+		this.shrInt = pf.findFunctionDeclaration("$shrInt");
+		this.ushrInt = pf.findFunctionDeclaration("$ushrInt");
+
+		this.xorInt = pf.findFunctionDeclaration("$xorInt");
+		this.bitAnd = pf.findFunctionDeclaration("$bitAnd");
+		this.bitOr = pf.findFunctionDeclaration("$bitOr");
+
+
+		this.newObject = pf.findProcedureDeclaration("$new");
+
+		if (org.joogie.Options.v().getPreludeFileName() == null) {
 			loadPreludeFromResources("/res/java_lang.bpl");
 		}
-				
+
 	}
 
 	private HashMap<String, FunctionDeclaration> realOperators = new HashMap<String, FunctionDeclaration>();
@@ -222,25 +229,19 @@ public class SootPrelude {
 	 * @return
 	 */
 	public FunctionDeclaration lookupRealOperator(String op) {
-		if (!this.realOperators.containsKey(op)) {	
+		if (!this.realOperators.containsKey(op)) {
 			Attribute[] attributes = {};
-			
+
 			BoogieType integer = GlobalsCache.v().getPf().getIntType();
-			IdentifierExpression x = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression( integer, "x", false, false,
-							false);
-			IdentifierExpression y = GlobalsCache
-					.v()
-					.getPf()
-					.mkIdentifierExpression( integer, "y", false, false,
-							false);
+			IdentifierExpression x = GlobalsCache.v().getPf()
+					.mkIdentifierExpression(integer, "x", false, false, false);
+			IdentifierExpression y = GlobalsCache.v().getPf()
+					.mkIdentifierExpression(integer, "y", false, false, false);
 			IdentifierExpression[] in = { x, y };
 			IdentifierExpression outParam = GlobalsCache
 					.v()
 					.getPf()
-					.mkIdentifierExpression( integer, "$ret", false, false,
+					.mkIdentifierExpression(integer, "$ret", false, false,
 							false);
 			this.realOperators.put(
 					op,
@@ -250,8 +251,8 @@ public class SootPrelude {
 							.mkFunctionDeclaration(attributes,
 									"$realOp" + op.hashCode(), in, outParam,
 									null));
-			Log.error("Created function that should be in Prelude: "+ op);
-		}	
+			Log.error("Created function that should be in Prelude: " + op);
+		}
 		return this.realOperators.get(op);
 	}
 
@@ -353,14 +354,15 @@ public class SootPrelude {
 
 	public BoogieType getFieldType(BoogieType type) {
 		if (type instanceof ConstructedType) {
-			ConstructedType ctype = (ConstructedType) type;	
-			if (ctype.getConstr().getName() == this.fieldTypeName) {				
+			ConstructedType ctype = (ConstructedType) type;
+			if (ctype.getConstr().getName() == this.fieldTypeName) {
 				if (ctype.getConstr().getParamCount() == 1) {
 					return ctype.getParameter(0);
 				}
 			}
 		}
-		throw new RuntimeException("The type " + type + " is not a Field type. ");
+		throw new RuntimeException("The type " + type
+				+ " is not a Field type. ");
 	}
 
 	public Expression intToBool(Expression exp) {
@@ -412,8 +414,7 @@ public class SootPrelude {
 					+ left.getType());
 		}
 		Expression args[] = { left, right };
-		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(operator, args);
+		return GlobalsCache.v().getPf().mkFunctionApplication(operator, args);
 	}
 
 	public Expression shiftLeft(Expression left, Expression right) {
@@ -447,8 +448,7 @@ public class SootPrelude {
 					+ left.getType());
 		}
 		Expression args[] = { left, right };
-		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(operator, args);
+		return GlobalsCache.v().getPf().mkFunctionApplication(operator, args);
 	}
 
 	public Expression bitAndExpr(Expression left, Expression right) {
@@ -464,8 +464,7 @@ public class SootPrelude {
 					+ left.getType());
 		}
 		Expression args[] = { left, right };
-		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(operator, args);
+		return GlobalsCache.v().getPf().mkFunctionApplication(operator, args);
 	}
 
 	public Expression bitOrExpr(Expression left, Expression right) {
@@ -481,8 +480,16 @@ public class SootPrelude {
 					+ left.getType());
 		}
 		Expression args[] = { left, right };
-		return GlobalsCache.v().getPf()
-				.mkFunctionApplication(operator, args);
+		return GlobalsCache.v().getPf().mkFunctionApplication(operator, args);
 	}
 
+	public Statement newObject(Attribute[] attr, IdentifierExpression var,
+			Expression obj_type) {
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		return pf.mkCallStatement(attr, false,
+				new IdentifierExpression[] { var },
+				this.newObject.getIdentifier(),
+				new Expression[] { obj_type });
+	}
+	
 }

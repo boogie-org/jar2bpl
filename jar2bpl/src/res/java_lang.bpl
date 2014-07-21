@@ -1,13 +1,9 @@
 
-procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref)
-    modifies $heap;
-	{
-        havoc $other;
-        assume !$heap[$other,$alloc];
-        $heap := $heap[$other,$alloc := true];
-        assume $other != $null;
-        $heap := $heap[$other,$type := $heap[$this,$type] ];
-	}
+procedure java.lang.Object$java.lang.Object$clone$43($this:ref) 
+	returns ($other:ref);
+	ensures ($other!=$null);
+	ensures ($heap[$other,$alloc]==true);
+	ensures ($heap[$other,$type] == $heap[$this,$type] );
 
 procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) 
 	returns ($return:int); 

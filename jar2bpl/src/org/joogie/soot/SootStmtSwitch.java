@@ -54,7 +54,6 @@ import soot.jimple.ThrowStmt;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
-import boogie.enums.UnaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
 import boogie.statement.Statement;
@@ -159,49 +158,69 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		IdentifierExpression newexpr = this.procInfo
 				.createLocalVariable(SootPrelude.v().getReferenceType());
-		// havoc right
-		this.boogieStatements
-				.add(this.pf.mkHavocStatement(attributes, newexpr));
-		// assume $heap[right, $alloc] == false
-		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
-				.mkUnaryExpression(
 
-				this.pf.getBoolType(), UnaryOperator.LOGICNEG, this.valueswitch
-						.makeHeapAccessExpression(newexpr, SootPrelude.v()
-								.getFieldAllocVariable(), false))));
-		// $heap[right, $alloc] := true
-		AssignmentTranslation.translateAssignment(this, this.valueswitch.makeHeapAccessExpression(newexpr,
-				SootPrelude.v().getFieldAllocVariable(), false),
-				this.pf.mkBooleanLiteral(true));
-
-		// $heap[right, $type] := ...the appropriate type...
-		Expression typeRhs;
+		Expression obj_type;
 		if (sootType instanceof RefType) {
-			typeRhs = GlobalsCache.v().lookupClassVariable(
+			obj_type = GlobalsCache.v().lookupClassVariable(
 					((RefType) sootType).getSootClass());
-			if (typeRhs == null) {
+			if (obj_type == null) {
 				throw new RuntimeException("Not a class variable: "
 						+ ((RefType) sootType).getSootClass());
 			}
 		} else if (sootType instanceof ArrayType) {
-			typeRhs = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
-			if (typeRhs == null) {
+			obj_type = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
+			if (obj_type == null) {
 				throw new RuntimeException("Not a type: "
 						+ (ArrayType) sootType);
 			}
-
 		} else {
 			throw new RuntimeException("Translation of Array Access failed!");
 		}
-
-		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
-				.mkBinaryExpression(this.pf.getBoolType(),
-						BinaryOperator.COMPNEQ, newexpr, SootPrelude.v()
-								.getNullConstant())));
-
-		AssignmentTranslation.translateAssignment(this, 
-				this.valueswitch.getClassTypeFromExpression(newexpr, false),
-				typeRhs);
+		
+		this.boogieStatements.add(SootPrelude.v().newObject(attributes, newexpr, obj_type));
+//		// havoc right
+//		this.boogieStatements
+//				.add(this.pf.mkHavocStatement(attributes, newexpr));
+//		// assume $heap[right, $alloc] == false
+//		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
+//				.mkUnaryExpression(
+//
+//				this.pf.getBoolType(), UnaryOperator.LOGICNEG, this.valueswitch
+//						.makeHeapAccessExpression(newexpr, SootPrelude.v()
+//								.getFieldAllocVariable(), false))));
+//		// $heap[right, $alloc] := true
+//		AssignmentTranslation.translateAssignment(this, this.valueswitch.makeHeapAccessExpression(newexpr,
+//				SootPrelude.v().getFieldAllocVariable(), false),
+//				this.pf.mkBooleanLiteral(true));
+//
+//		// $heap[right, $type] := ...the appropriate type...
+//		Expression typeRhs;
+//		if (sootType instanceof RefType) {
+//			typeRhs = GlobalsCache.v().lookupClassVariable(
+//					((RefType) sootType).getSootClass());
+//			if (typeRhs == null) {
+//				throw new RuntimeException("Not a class variable: "
+//						+ ((RefType) sootType).getSootClass());
+//			}
+//		} else if (sootType instanceof ArrayType) {
+//			typeRhs = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
+//			if (typeRhs == null) {
+//				throw new RuntimeException("Not a type: "
+//						+ (ArrayType) sootType);
+//			}
+//
+//		} else {
+//			throw new RuntimeException("Translation of Array Access failed!");
+//		}
+//
+//		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
+//				.mkBinaryExpression(this.pf.getBoolType(),
+//						BinaryOperator.COMPNEQ, newexpr, SootPrelude.v()
+//								.getNullConstant())));
+//
+//		AssignmentTranslation.translateAssignment(this, 
+//				this.valueswitch.getClassTypeFromExpression(newexpr, false),
+//				typeRhs);
 		return newexpr;
 	}
 

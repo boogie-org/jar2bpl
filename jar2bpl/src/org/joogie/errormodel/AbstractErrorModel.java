@@ -4,7 +4,6 @@
 package org.joogie.errormodel;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
 import org.joogie.GlobalsCache;
 import org.joogie.soot.SootPrelude;
@@ -20,7 +19,6 @@ import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
 import boogie.statement.Statement;
 
 
@@ -79,27 +77,19 @@ public abstract class AbstractErrorModel {
 				createdUnExpectedException(guard, exception);
 			}
 		} else {
-			
-			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
 			//if the exception is caught, create a goto
+			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
+			//now assign the exception variable to make sure that the catch block 
+			//is feasible when we transfer there.
+			Expression exception_type = GlobalsCache.v().lookupClassVariable(exception);
+			Statement raise = SootPrelude.v().newObject(new Attribute[]{}, this.procInfo.getExceptionVariable(), exception_type);
+			//if the exception is guarded create a conditional choice, otherwise just throw it.
 			if (guard!=null) {				
-				SootStmtSwitch elsestmts = new SootStmtSwitch(this.procInfo); 				
-				IdentifierExpression exceptionvar = elsestmts.createAllocatedVariable( exception.getType());				
-				//collect the create statements
-				LinkedList<Statement> elseblock = elsestmts.popAll();
-				//create the transfer command
-				//"goto" if this exception is caught somewhere
-				//"return" otherwise.
-				elseblock.add(this.pf.mkAssignmentStatement( 
-								this.procInfo.getExceptionVariable(), exceptionvar));
-				elseblock.add(transferStatement);
-
-				elseblock.addFirst(this.pf.mkAssertStatement(new Attribute[]{pf.mkNoCodeAttribute()}, pf.mkBooleanLiteral(true)));
-				
-				Statement[] elsePart = elseblock.toArray(new Statement[elseblock.size()]); 
+				Statement[] elsePart = {this.pf.mkAssertStatement(new Attribute[]{pf.mkNoCodeAttribute()}, pf.mkBooleanLiteral(true)), raise, transferStatement};
 				Statement[] thenPart = {this.pf.mkAssertStatement(TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags()), pf.mkBooleanLiteral(true)) };		
 				this.stmtSwitch.addStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
 			} else {
+				this.stmtSwitch.addStatement(raise);
 				this.stmtSwitch.addStatement(transferStatement);
 			}
 		}

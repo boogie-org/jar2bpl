@@ -64,9 +64,13 @@ function $shlInt(x:int, y:int) returns ($ret:int);
 function $ushrInt(x:int, y:int) returns ($ret:int);
 function $shrInt(x:int, y:int) returns ($ret:int);
 
-
-
-
+//helper function to generate a new object
+procedure $new(obj_type : javaType) 
+	returns ($obj : ref);
+	requires ($heap[$obj,$alloc]==false);	
+	ensures ($obj!=$null);
+	ensures ($heap[$obj,$alloc]==true);
+	ensures ($heap[$obj,$type] == obj_type );
 
 
 
