@@ -21,8 +21,6 @@ import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
-import boogie.location.ILocation;
-import boogie.statement.AssumeStatement;
 import boogie.statement.Statement;
 
 

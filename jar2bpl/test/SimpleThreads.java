@@ -50,10 +50,10 @@ public class SimpleThreads {
 //		    }
 //		    list.size();
 		    for (Integer x : list) {
-		        x.toString();
+		        //x.toString();
 		    }
 		} catch (Exception e) {
-			System.err.println(e.toString());
+			e.printStackTrace();
 		}	
 	}
 	

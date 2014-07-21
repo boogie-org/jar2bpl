@@ -3,8 +3,6 @@
  */
 package org.joogie.soot;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 

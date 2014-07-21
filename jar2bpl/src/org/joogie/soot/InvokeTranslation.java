@@ -137,8 +137,6 @@ public class InvokeTranslation {
 	static private boolean specialCaseInvoke(SootStmtSwitch ss, Value lhs, InvokeExpr ivk) {
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
-		Attribute[] attributes = TranslationHelpers
-				.javaLocation2Attribute(ss.getCurrentStatement().getTags());
 		// java.lang.String.length is treated as a special case:
 		if (ivk.getMethod().getSignature()
 				.contains("<java.lang.String: int length()>")

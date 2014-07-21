@@ -806,7 +806,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					this.procInfo.getExceptionVariable(), false);
 
 			this.stmtSwitch.addStatement(pf.mkAssumeStatement(
-					new Attribute[] { pf.mkNoCodeAttribute() },
+					new Attribute[] { },
 					GlobalsCache.v().compareTypeExpressions(
 							typefield,
 							GlobalsCache.v().lookupClassVariable(

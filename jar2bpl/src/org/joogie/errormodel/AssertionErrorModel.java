@@ -10,7 +10,6 @@ import org.joogie.util.TranslationHelpers;
 import soot.SootClass;
 import boogie.ast.Attribute;
 import boogie.expression.Expression;
-import boogie.location.ILocation;
 import boogie.statement.Statement;
 
 /**

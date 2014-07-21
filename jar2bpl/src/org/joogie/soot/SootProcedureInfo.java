@@ -49,7 +49,6 @@ import boogie.declaration.ProcedureDeclaration;
 import boogie.enums.BinaryOperator;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
-import boogie.location.ILocation;
 import boogie.specification.Specification;
 import boogie.type.BoogieType;
 

@@ -12,12 +12,10 @@ import java.util.Map.Entry;
 import org.joogie.GlobalsCache;
 import org.joogie.soot.SootProcedureInfo;
 import org.joogie.soot.SootStmtSwitch;
-import org.joogie.util.TranslationHelpers;
 
 import soot.SootClass;
 import soot.jimple.Stmt;
 import util.Log;
-import boogie.ast.Attribute;
 import boogie.expression.Expression;
 import boogie.expression.IdentifierExpression;
 import boogie.statement.IfStatement;
