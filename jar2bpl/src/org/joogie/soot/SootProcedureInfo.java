@@ -64,7 +64,6 @@ public class SootProcedureInfo {
 	private LinkedList<Specification> specification;
 	private IdentifierExpression returnVariable;
 	private IdentifierExpression exceptionVariable;
-	private IdentifierExpression exceptionalReturnFlag = null;
 
 	private IdentifierExpression containingClassVariable;
 
@@ -237,13 +236,6 @@ public class SootProcedureInfo {
 		if (this.sootMethod.hasActiveBody()) {
 			this.exceptionalUnitGraph = new ExceptionalUnitGraph(
 					this.sootMethod.getActiveBody(), UnitThrowAnalysis.v());
-			// if the procedure has a body, create a Boolean local variable that
-			// is set
-			// to true if the procedure returns exceptional
-			this.exceptionalReturnFlag = pf.mkIdentifierExpression(
-					pf.getBoolType(), "$ex_return", false, false, false);
-
-			this.fakeLocals.add(this.exceptionalReturnFlag);
 		} else {
 			this.exceptionalUnitGraph = null;
 		}
@@ -253,10 +245,6 @@ public class SootProcedureInfo {
 		return this.sootMethod;
 	}
 	
-	public IdentifierExpression getExceptionalReturnFlag() {
-		return this.exceptionalReturnFlag;
-	}
-
 	public String getBoogieName() {
 		return cleanName;
 	}

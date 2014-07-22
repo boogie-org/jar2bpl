@@ -105,6 +105,7 @@ public class SootBodyTransformer extends BodyTransformer {
 
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
+			
 			SootStmtSwitch bss = new SootStmtSwitch(procInfo);
 			s.apply(bss);
 			LinkedList<Statement> stmts = bss.popAll();
@@ -116,16 +117,6 @@ public class SootBodyTransformer extends BodyTransformer {
 		
 		// TODO add code to initialize the the $type field of all parameters?
 		
-		
-		//initialize the exceptional return flag to false
-		//this flag is only set to true if an unexpected exception is
-		//thrown.		
-		boogieStatements.addFirst(
-			GlobalsCache.v().getPf().mkAssignmentStatement( 
-					procInfo.getExceptionalReturnFlag(), 
-					GlobalsCache.v().getPf().mkBooleanLiteral(false))
-					);
-
 		if (procInfo.getThisReference()!=null) {
 			//for non-static procedures we have to assume that .this is non-null
 			boogieStatements.addFirst(

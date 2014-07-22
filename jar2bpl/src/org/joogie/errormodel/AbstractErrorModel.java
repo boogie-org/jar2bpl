@@ -79,6 +79,7 @@ public abstract class AbstractErrorModel {
 		} else {
 			//if the exception is caught, create a goto
 			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
+			
 			//now assign the exception variable to make sure that the catch block 
 			//is feasible when we transfer there.
 			Expression exception_type = GlobalsCache.v().lookupClassVariable(exception);
@@ -86,7 +87,7 @@ public abstract class AbstractErrorModel {
 			//if the exception is guarded create a conditional choice, otherwise just throw it.
 			if (guard!=null) {				
 				Statement[] elsePart = {this.pf.mkAssertStatement(new Attribute[]{pf.mkNoCodeAttribute()}, pf.mkBooleanLiteral(true)), raise, transferStatement};
-				Statement[] thenPart = {this.pf.mkAssertStatement(TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags()), pf.mkBooleanLiteral(true)) };		
+				Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(this.stmtSwitch.getCurrentStatement().getTags())};		
 				this.stmtSwitch.addStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
 			} else {
 				this.stmtSwitch.addStatement(raise);

@@ -275,9 +275,9 @@ public class InvokeTranslation {
 									.v().getNullConstant());
 					// the exception is caught somewhere in this procedure
 					transitionStmt = pf.mkGotoStatement(
-
 					GlobalsCache.v().getUnitLabel(
 							(Stmt) dest.getTrap().getHandlerUnit()));
+					
 					// add a conjunct to check if that the type of the exception
 					// is <: than the one caught
 					// by the catch block

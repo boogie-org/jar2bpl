@@ -37,6 +37,7 @@ import soot.tagkit.Tag;
 import boogie.ast.Attribute;
 import boogie.expression.Expression;
 import boogie.location.ILocation;
+import boogie.statement.Statement;
 import boogie.type.BoogieType;
 
 /**
@@ -63,8 +64,16 @@ public class TranslationHelpers {
 		return new SootLocation(lineNumber);
 	}
 
+	public static Statement mkLocationAssertion(List<Tag> list) {
+		return GlobalsCache
+				.v()
+				.getPf()
+				.mkAssertStatement(javaLocation2Attribute(list),
+						GlobalsCache.v().getPf().mkBooleanLiteral(true));
+	}
+
 	public static Attribute[] javaLocation2Attribute(List<Tag> list) {
-		//if the taglist is empty return no location	
+		// if the taglist is empty return no location
 		int startln, endln, startcol, endcol;
 		String filename;
 
@@ -86,18 +95,17 @@ public class TranslationHelpers {
 				endcol = ((SourceLnNamePosTag) tag).endPos();
 				break;
 			} else if (tag instanceof SourceFileTag) {
-				filename = ((SourceFileTag)tag).getSourceFile();
+				filename = ((SourceFileTag) tag).getSourceFile();
 				break;
 			} else {
-				//Log.debug(tag.getClass().toString() + " "+tag.toString());
+				// Log.debug(tag.getClass().toString() + " "+tag.toString());
 			}
 		}
 
-		if (filename==null) {
+		if (filename == null) {
 			return new Attribute[0];
 		}
 
-		
 		Attribute[] res = { GlobalsCache
 				.v()
 				.getPf()
@@ -186,8 +194,11 @@ public class TranslationHelpers {
 			return GlobalsCache.v().getPf().mkIntLiteral("0");
 		}
 
-		throw new RuntimeException("Cannot cast " + expr.toString() + " from: "
-				+ ((expr.getType()==null)?"null":expr.getType().getClass().toString()) + " to "
+		throw new RuntimeException("Cannot cast "
+				+ expr.toString()
+				+ " from: "
+				+ ((expr.getType() == null) ? "null" : expr.getType()
+						.getClass().toString()) + " to "
 				+ target.getClass().toString());
 		// return expr;
 	}

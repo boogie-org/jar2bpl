@@ -19,6 +19,7 @@
 
 package org.joogie.soot;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,6 +52,7 @@ import soot.jimple.Stmt;
 import soot.jimple.StmtSwitch;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
+import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.enums.BinaryOperator;
@@ -130,9 +132,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		if (arg0.getBoxesPointingToThis().size() > 0) {
 			String label = GlobalsCache.v()
 					.getUnitLabel(arg0);
-//			if (label.equals("block3")) {
-//				System.err.println(arg0);
-//			}
+
 			this.boogieStatements.add(this.pf.mkLabel(label));
 		}
 	}
@@ -274,6 +274,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		String labelName = GlobalsCache.v().getUnitLabel(
 				(Stmt) arg0.getTarget());		
 		this.boogieStatements.add(this.pf.mkGotoStatement(labelName));
+		//if (labelName.contains("block324")) throw new RuntimeException("there it is!");
 	}
 
 	/*
@@ -294,10 +295,20 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	@Override
 	public void caseIfStmt(IfStmt arg0) {
+		
 		injectLabelStatements(arg0);
-		Statement[] thenPart = { this.pf.mkGotoStatement(GlobalsCache.v()
+		
+		Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(arg0.getTarget().getTags()), this.pf.mkGotoStatement(GlobalsCache.v()
 				.getUnitLabel(arg0.getTarget())) };
+		
 		Statement[] elsePart = {};
+		//now check if we can find a source location for the else block.
+		Stmt else_loc = findSuccessorStatement(arg0);
+		if (else_loc!=null) {
+			elsePart = new Statement[]{TranslationHelpers.mkLocationAssertion(else_loc.getTags())};
+		}
+		
+		
 		arg0.getCondition().apply(this.valueswitch);
 		Expression cond = TranslationHelpers.castBoogieTypes(
 				this.valueswitch.getExpression(), this.pf.getBoolType());
@@ -555,7 +566,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -566,4 +577,25 @@ public class SootStmtSwitch implements StmtSwitch {
 		assert (false);
 	}
 
+	/**
+	 * find the successor statement of a given statement. This is only used to find proper source locations
+	 * for else-blocks
+	 * @param stmt
+	 * @return
+	 */
+	private Stmt findSuccessorStatement(Stmt stmt) {
+		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
+		Iterator<Unit> stmtIt = tug.iterator();
+
+		while (stmtIt.hasNext()) {
+			Stmt s = (Stmt) stmtIt.next();
+			if (s==stmt) {
+				if (stmtIt.hasNext()) return (Stmt) stmtIt.next();
+				else return null;
+			}
+		}
+		return null;
+	}
+	
+	
 }

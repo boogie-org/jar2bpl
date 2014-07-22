@@ -320,7 +320,7 @@ public class SootRunner extends Runner {
 		args.add("none");
 		args.add("-allow-phantom-refs");
 		//args.add("-w");
-		// args.add("use-original-names");
+		args.add("use-original-names");
 	}
 
 	/**

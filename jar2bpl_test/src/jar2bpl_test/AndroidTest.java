@@ -1,6 +1,6 @@
 package jar2bpl_test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.joogie.Dispatcher;
 import org.joogie.Options;

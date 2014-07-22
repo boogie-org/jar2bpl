@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
-import org.joogie.GlobalsCache;
 import org.joogie.soot.SootProcedureInfo;
 import org.joogie.soot.SootStmtSwitch;
 
@@ -85,11 +84,11 @@ public class ExceptionErrorModel extends AbstractErrorModel {
 			 * do not expect it (i.e., it is not caught or in the throws clause).
 			 */
 			if (!expected) {
-				elseblock.add(
-						GlobalsCache.v().getPf().mkAssignmentStatement( 
-								procInfo.getExceptionalReturnFlag(), 
-								GlobalsCache.v().getPf().mkBooleanLiteral(true))
-					);
+//				elseblock.add(
+//						GlobalsCache.v().getPf().mkAssignmentStatement( 
+//								procInfo.getExceptionalReturnFlag(), 
+//								GlobalsCache.v().getPf().mkBooleanLiteral(true))
+//					);
 
 				//store all statements that are created for throwing an exception
 				//if any of those is feasible, then the exception might be thrown.

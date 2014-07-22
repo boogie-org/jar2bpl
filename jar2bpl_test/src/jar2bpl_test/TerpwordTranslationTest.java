@@ -14,7 +14,7 @@ public class TerpwordTranslationTest {
 		//TODO: design one test case for each sort of input to the translation.
 		try {
 			String javaFileDir = "regression/terpword/src";
-			Options.v().setClasspath(javaFileDir);
+			Options.v().setClasspath(javaFileDir);			
 			//Options.v().setSoundThreads(true);
 			String bplFile = "regression/test_output/terpword.bpl";
 			// create dispatcher
@@ -22,8 +22,8 @@ public class TerpwordTranslationTest {
 					bplFile);
 
 			// run dispatcher
-			dispatcher.run();
-
+			dispatcher.run();			
+			
 		} catch (Exception e) {			
 			fail("Translation Error " + e.toString());
 		}
