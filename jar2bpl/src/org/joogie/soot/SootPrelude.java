@@ -50,7 +50,7 @@ public class SootPrelude {
 		return SootPrelude.instance;
 	}
 
-	public static void restInstance() {
+	public static void resetInstance() {
 		if (instance != null) {
 			// TODO
 		}

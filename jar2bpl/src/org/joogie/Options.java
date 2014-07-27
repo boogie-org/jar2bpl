@@ -205,6 +205,11 @@ public class Options {
 	 */
 	private static Options options;
 
+	public static void resetInstance() {
+		options = null;	
+	}
+	
+	
 	/**
 	 * Singleton method
 	 * 

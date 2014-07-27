@@ -60,11 +60,8 @@ public class Main {
 	public static void runConsoleMode() {
 		try {
 			// create dispatcher
-			Dispatcher dispatcher = new Dispatcher(Options.v().getJarFile(),
+			Dispatcher.run(Options.v().getJarFile(),
 					Options.v().getBoogieFile());
-
-			// run dispatcher
-			dispatcher.run();
 
 		} catch (Exception e) {
 			e.printStackTrace();

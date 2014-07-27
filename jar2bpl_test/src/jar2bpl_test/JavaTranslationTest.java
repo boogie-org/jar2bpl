@@ -16,12 +16,9 @@ public class JavaTranslationTest {
 			String javaFileDir = "regression/java_input/";
 			Options.v().setClasspath(javaFileDir);
 			String bplFile = "regression/test_output/java_input.bpl";
-			// create dispatcher
-			Dispatcher dispatcher = new Dispatcher(javaFileDir,
-					bplFile);
 
-			// run dispatcher
-			dispatcher.run();
+			Dispatcher.run(javaFileDir,
+					bplFile);
 
 		} catch (Exception e) {
 			fail("Translation Error " + e.toString());

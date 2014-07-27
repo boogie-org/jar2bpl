@@ -16,15 +16,8 @@ public class AndroidTest {
 			Options.v().setClasspath(javaFileDir);
 			String bplFile = "regression/test_output/android.bpl";
 			
-			
-			
-			// create dispatcher
-			Dispatcher dispatcher = new Dispatcher(javaFileDir,
+			Dispatcher.run(javaFileDir,
 					bplFile);
-
-			// run dispatcher
-			dispatcher.run();
-
 		} catch (Exception e) {
 			fail("Translation Error " + e.toString());
 		}

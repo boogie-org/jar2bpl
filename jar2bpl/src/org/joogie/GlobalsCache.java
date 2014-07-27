@@ -92,8 +92,8 @@ public class GlobalsCache {
 		}
 		return GlobalsCache.instance;
 	}
-
-	public static void restInstance() {
+	
+	public static void resetInstance() {
 		if (instance != null) {
 			GlobalsCache.instance.procedureMap.clear();
 			GlobalsCache.instance.fieldMap.clear();

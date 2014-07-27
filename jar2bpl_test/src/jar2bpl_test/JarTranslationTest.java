@@ -16,12 +16,9 @@ public class JarTranslationTest {
 			String javaFileDir = "regression/jar_input/args4j-2.0.18.jar";
 			Options.v().setClasspath(javaFileDir);
 			String bplFile = "regression/test_output/args4j.bpl";
-			// create dispatcher
-			Dispatcher dispatcher = new Dispatcher(javaFileDir,
-					bplFile);
 
-			// run dispatcher
-			dispatcher.run();
+			Dispatcher.run(javaFileDir,
+					bplFile);
 
 		} catch (Exception e) {			
 			fail("Translation Error " + e.toString());

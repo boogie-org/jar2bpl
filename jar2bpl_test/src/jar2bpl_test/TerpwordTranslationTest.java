@@ -17,12 +17,9 @@ public class TerpwordTranslationTest {
 			Options.v().setClasspath(javaFileDir);			
 			//Options.v().setSoundThreads(true);
 			String bplFile = "regression/test_output/terpword.bpl";
-			// create dispatcher
-			Dispatcher dispatcher = new Dispatcher(javaFileDir,
-					bplFile);
 
-			// run dispatcher
-			dispatcher.run();			
+			Dispatcher.run(javaFileDir,
+					bplFile);
 			
 		} catch (Exception e) {			
 			fail("Translation Error " + e.toString());

@@ -41,6 +41,11 @@ public class MhpInfo {
 		return instance;
 	}
 	
+	public static void resetInstance() {
+		instance = null;	
+	}
+	
+	
 	/**
 	 * Returns the set of fields that are modified in "m" 
 	 * and may be modified by other threads at the same time.

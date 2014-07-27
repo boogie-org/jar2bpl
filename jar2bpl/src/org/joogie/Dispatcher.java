@@ -22,13 +22,15 @@ package org.joogie;
 import java.io.File;
 
 import org.joogie.runners.SootRunner;
+import org.joogie.soot.SootPrelude;
 import org.joogie.util.Log;
+import org.joogie.util.MhpInfo;
 import org.joogie.util.StopWatch;
 
 /**
  * Dispatcher
  * 
- * @author arlt
+ * @author schaef
  */
 public class Dispatcher {
 
@@ -38,61 +40,36 @@ public class Dispatcher {
 	public final static int VCGEN_TIMEOUT = 30000;
 
 	/**
-	 * Input
-	 */
-	private String input;
-
-	/**
-	 * Output
-	 */
-	private String output;
-
-	/**
-	 * Soot runner
-	 */
-	private SootRunner sootRunner;
-
-	/**
 	 * StopWatch for Soot
 	 */
-	private StopWatch swSoot;
-
-	/**
-	 * C-tor
-	 * 
-	 * @param input
-	 *            Input
-	 * @param output
-	 *            Output
-	 * @param report
-	 *            Report
-	 */
-	public Dispatcher(String input, String output) {
-		this.input = input;
-		this.output = output;
-		this.sootRunner = new SootRunner();
-	}
+	static private StopWatch swSoot;
 
 	/**
 	 * Runs the dispatcher
 	 */
-	public void run() {
+	public static void run(String input, String output) {
 		try {
 			Log.debug("Running Soot");
 			swSoot = StopWatch.getInstanceAndStart();
-			runSoot();
+			runSoot(input, output);
 			swSoot.stop();
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			GlobalsCache.resetInstance();
+			SootPrelude.resetInstance();
+			MhpInfo.resetInstance();
+			Options.resetInstance();
 		}
 	}
 
 	/**
 	 * Runs Soot
 	 */
-	protected void runSoot() {
-		// no input?
+	protected static void runSoot(String input, String output) {
+		SootRunner sootRunner = new SootRunner();
+		
 		if (null == input || input.isEmpty()) {
 			return;
 		}
@@ -113,15 +90,6 @@ public class Dispatcher {
 				sootRunner.runWithClass(input, output);
 			}
 		}
-	}
-
-	/**
-	 * Returns the Soot runner
-	 * 
-	 * @return Soot runner
-	 */
-	public SootRunner getSootRunner() {
-		return sootRunner;
 	}
 
 }
