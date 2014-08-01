@@ -53,7 +53,7 @@ import boogie.specification.Specification;
 import boogie.type.BoogieType;
 
 /**
- * @author martin
+ * @author schaef
  * 
  */
 public class SootProcedureInfo {

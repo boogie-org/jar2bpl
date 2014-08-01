@@ -21,7 +21,7 @@ import boogie.statement.IfStatement;
 import boogie.statement.Statement;
 
 /**
- * @author martin
+ * @author schaef
  *
  */
 public class ExceptionErrorModel extends AbstractErrorModel {

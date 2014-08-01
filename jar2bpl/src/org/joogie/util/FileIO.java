@@ -32,7 +32,7 @@ import java.util.UUID;
 /**
  * File I/O
  * 
- * @author arlt
+ * @author schaef
  */
 public class FileIO {
 

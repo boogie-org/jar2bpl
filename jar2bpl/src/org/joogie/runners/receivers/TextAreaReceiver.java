@@ -24,7 +24,7 @@ import javax.swing.JTextArea;
 /**
  * Text Area Output Receiver of a Runner
  * 
- * @author arlt
+ * @author schaef
  */
 public class TextAreaReceiver implements Receiver {
 

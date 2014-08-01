@@ -22,7 +22,7 @@ package org.joogie.runners.receivers;
 /**
  * Output Receiver of a Runner
  * 
- * @author arlt
+ * @author schaef
  */
 public interface Receiver {
 

@@ -22,7 +22,7 @@ package org.joogie.soot;
 import boogie.location.ILocation;
 
 /**
- * @author martin
+ * @author schaef
  * 
  */
 public class SootLocation implements ILocation {

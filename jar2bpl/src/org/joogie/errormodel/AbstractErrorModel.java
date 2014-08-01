@@ -23,7 +23,7 @@ import boogie.statement.Statement;
 
 
 /**
- * @author martin
+ * @author schaef
  *
  */
 public abstract class AbstractErrorModel {

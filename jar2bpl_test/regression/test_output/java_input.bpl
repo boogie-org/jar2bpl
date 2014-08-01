@@ -13,16 +13,16 @@ const { :SourceLocation "Object.java",-1,-1,-1,-1 } unique java.lang.Object : ja
 const { :SourceLocation "InfeasibleCode01.java",-1,-1,-1,-1 } unique InfeasibleCode01 : javaType extends  unique java.lang.Object complete;
 const { :SourceLocation "Appendable.java",-1,-1,-1,-1 } unique java.lang.Appendable : javaType extends  unique java.lang.Object complete;
 const { :SourceLocation "CharSequence.java",-1,-1,-1,-1 } unique java.lang.CharSequence : javaType extends  unique java.lang.Object complete;
-const { :SourceLocation "AbstractStringBuilder.java",-1,-1,-1,-1 } unique java.lang.AbstractStringBuilder : javaType extends  unique java.lang.CharSequence, unique java.lang.Object, unique java.lang.Appendable complete;
+const { :SourceLocation "AbstractStringBuilder.java",-1,-1,-1,-1 } unique java.lang.AbstractStringBuilder : javaType extends  unique java.lang.CharSequence, unique java.lang.Appendable, unique java.lang.Object complete;
 const { :SourceLocation "Serializable.java",-1,-1,-1,-1 } unique java.io.Serializable : javaType extends  unique java.lang.Object complete;
-const { :SourceLocation "StringBuffer.java",-1,-1,-1,-1 } unique java.lang.StringBuffer : javaType extends  unique java.lang.CharSequence, unique java.io.Serializable, unique java.lang.AbstractStringBuilder complete;
+const { :SourceLocation "StringBuffer.java",-1,-1,-1,-1 } unique java.lang.StringBuffer : javaType extends  unique java.lang.CharSequence, unique java.lang.AbstractStringBuilder, unique java.io.Serializable complete;
 const { :SourceLocation "Comparable.java",-1,-1,-1,-1 } unique java.lang.Comparable : javaType extends  unique java.lang.Object complete;
-const { :SourceLocation "String.java",-1,-1,-1,-1 } unique java.lang.String : javaType extends  unique java.lang.CharSequence, unique java.io.Serializable, unique java.lang.Object, unique java.lang.Comparable complete;
+const { :SourceLocation "String.java",-1,-1,-1,-1 } unique java.lang.String : javaType extends  unique java.lang.CharSequence, unique java.lang.Comparable, unique java.lang.Object, unique java.io.Serializable complete;
 const unique $StringConst0 : ref extends  complete;
 const { :SourceLocation "AutoCloseable.java",-1,-1,-1,-1 } unique java.lang.AutoCloseable : javaType extends  unique java.lang.Object complete;
-const { :SourceLocation "Closeable.java",-1,-1,-1,-1 } unique java.io.Closeable : javaType extends  unique java.lang.Object, unique java.lang.AutoCloseable complete;
+const { :SourceLocation "Closeable.java",-1,-1,-1,-1 } unique java.io.Closeable : javaType extends  unique java.lang.AutoCloseable, unique java.lang.Object complete;
 const { :SourceLocation "Flushable.java",-1,-1,-1,-1 } unique java.io.Flushable : javaType extends  unique java.lang.Object complete;
-const { :SourceLocation "OutputStream.java",-1,-1,-1,-1 } unique java.io.OutputStream : javaType extends  unique java.io.Flushable, unique java.io.Closeable, unique java.lang.Object complete;
+const { :SourceLocation "OutputStream.java",-1,-1,-1,-1 } unique java.io.OutputStream : javaType extends  unique java.io.Closeable, unique java.io.Flushable, unique java.lang.Object complete;
 const { :SourceLocation "FilterOutputStream.java",-1,-1,-1,-1 } unique java.io.FilterOutputStream : javaType extends  unique java.io.OutputStream complete;
 const { :SourceLocation "PrintStream.java",-1,-1,-1,-1 } unique java.io.PrintStream : javaType extends  unique java.io.FilterOutputStream, unique java.io.Closeable, unique java.lang.Appendable complete;
 const unique $StringConst1 : ref extends  complete;
@@ -54,9 +54,9 @@ function $xorInt(x:int, y:int) returns ($ret:int);
 function $shlInt(x:int, y:int) returns ($ret:int);
 function $ushrInt(x:int, y:int) returns ($ret:int);
 function $shrInt(x:int, y:int) returns ($ret:int);
-procedure $new(obj_type:javaType) returns ($obj:ref);    ensures $heap[$obj,$type] == obj_type;        requires $heap[$obj,$alloc] == false;    ensures $heap[$obj,$alloc] == true;    ensures $obj != $null;
+procedure $new(obj_type:javaType) returns ($obj:ref);    ensures $obj != $null;    ensures $heap[$obj,$alloc] == true;    ensures $heap[$obj,$type] == obj_type;        requires $heap[$obj,$alloc] == false;
 
-procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);        ensures $heap[$other,$type] == $heap[$this,$type];    ensures $heap[$other,$alloc] == true;    ensures $other != $null;
+procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);    ensures $heap[$other,$alloc] == true;    ensures $heap[$other,$type] == $heap[$this,$type];        ensures $other != $null;
 
 procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) returns ($return:int);    ensures ($this == $other ==> $return == 1) && ($this != $other ==> $return == 0);    
 
@@ -92,15 +92,15 @@ procedure void$java.lang.Object$$la$init$ra$$38($this:ref) returns ($exception:r
 
 implementation int$InfeasibleCode01$infeasible0$1889($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
     
-var temp$04 : ref;    
-var i3 : int;    
-var temp$48 : int;    
-var arr2 : ref;    
-var temp$26 : int;    
 var this1 : ref;    
-var temp$37 : ref;    
 var temp$59 : int;    
-var temp$15 : int;
+var temp$04 : ref;    
+var temp$37 : ref;    
+var temp$15 : int;    
+var i3 : int;    
+var temp$26 : int;    
+var arr2 : ref;    
+var temp$48 : int;
     assume $this != $null;
     this1 := $this;
     arr2 := $in_parameter__0;
@@ -122,17 +122,17 @@ var temp$15 : int;
 
 implementation int$InfeasibleCode01$infeasible1$1890($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
     
-var $fakelocal_0 : ref;    
-var this10 : ref;    
-var temp$214 : ref;    
-var o11 : ref;    
-var temp$416 : ref;    
 var temp$113 : ref;    
-var temp$517 : int;    
-var $fakelocal_2 : ref;    
-var temp$012 : int;    
+var this10 : ref;    
+var o11 : ref;    
+var $fakelocal_0 : ref;    
+var temp$214 : ref;    
 var $fakelocal_1 : ref;    
-var temp$315 : ref;
+var $fakelocal_2 : ref;    
+var temp$315 : ref;    
+var temp$517 : int;    
+var temp$416 : ref;    
+var temp$012 : int;
     assume $this != $null;
     this10 := $this;
     o11 := $in_parameter__0;
@@ -171,14 +171,14 @@ var temp$315 : ref;
 
 implementation void$InfeasibleCode01$infeasible2$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref){
     
-var i20 : int;    
-var temp$425 : int;    
-var temp$021 : int;    
-var temp$122 : ref;    
 var temp$324 : int;    
-var temp$223 : int;    
+var i20 : int;    
 var this18 : ref;    
-var arr19 : ref;
+var temp$223 : int;    
+var temp$425 : int;    
+var arr19 : ref;    
+var temp$021 : int;    
+var temp$122 : ref;
     assume $this != $null;
     this18 := $this;
     arr19 := $in_parameter__0;
@@ -209,14 +209,14 @@ var arr19 : ref;
 
 implementation void$InfeasibleCode01$infeasible3$1892($this:ref, $in_parameter__0:int, $in_parameter__1:int) returns ($exception:ref){
     
-var a27 : int;    
-var temp$332 : int;    
-var b28 : int;    
-var this26 : ref;    
-var temp$433 : int;    
-var temp$534 : int;    
-var temp$231 : int;    
 var temp$029 : int;    
+var temp$534 : int;    
+var a27 : int;    
+var temp$433 : int;    
+var temp$231 : int;    
+var b28 : int;    
+var temp$332 : int;    
+var this26 : ref;    
 var temp$130 : int;
     assume $this != $null;
     this26 := $this;
@@ -258,12 +258,12 @@ var temp$130 : int;
 
 implementation boolean$InfeasibleCode01$infeasible4$1893($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
     
-var this35 : ref;    
+var temp$138 : ref;    
 var temp$340 : int;    
+var this35 : ref;    
 var o36 : ref;    
-var temp$037 : ref;    
 var temp$239 : int;    
-var temp$138 : ref;
+var temp$037 : ref;
     assume $this != $null;
     this35 := $this;
     o36 := $in_parameter__0;
@@ -292,11 +292,11 @@ var temp$138 : ref;
 
 implementation void$InfeasibleCode01$infeasible5$1894($this:ref) returns ($exception:ref){
     
-var this41 : ref;    
 var temp$043 : int;    
-var temp$144 : ref;    
+var this41 : ref;    
 var $fakelocal_0 : ref;    
-var test42 : ref;
+var test42 : ref;    
+var temp$144 : ref;
     assume $this != $null;
     this41 := $this;
     call $fakelocal_0 := $new(java.lang.String);
@@ -321,15 +321,15 @@ var test42 : ref;
 
 implementation int$InfeasibleCode01$infeasible6$1895($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
     
-var temp$148 : int;    
-var temp$047 : ref;    
-var temp$552 : int;    
+var this45 : ref;    
 var temp$350 : ref;    
-var arr46 : ref;    
 var temp$451 : int;    
+var temp$148 : int;    
 var temp$249 : int;    
+var temp$552 : int;    
 var temp$653 : int;    
-var this45 : ref;
+var arr46 : ref;    
+var temp$047 : ref;
     assume $this != $null;
     this45 := $this;
     arr46 := $in_parameter__0;

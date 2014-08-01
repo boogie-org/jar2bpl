@@ -25,7 +25,7 @@ import java.io.IOException;
 /**
  * File Output Receiver of a Runner
  * 
- * @author arlt
+ * @author schaef
  */
 public class FileReceiver implements Receiver {
 

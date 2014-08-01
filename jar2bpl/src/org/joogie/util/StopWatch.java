@@ -20,7 +20,7 @@
 package org.joogie.util;
 
 /**
- * @author arlt
+ * @author schaef
  */
 public class StopWatch {
 

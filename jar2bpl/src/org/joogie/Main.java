@@ -26,7 +26,7 @@ import org.kohsuke.args4j.CmdLineParser;
 /**
  * Main-Class
  * 
- * @author arlt
+ * @author schaef
  */
 public class Main {
 

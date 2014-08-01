@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 /**
  * Log
  * 
- * @author arlt
+ * @author schaef
  */
 public class Log {
 

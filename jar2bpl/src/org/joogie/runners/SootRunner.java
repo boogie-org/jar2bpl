@@ -46,7 +46,7 @@ import soot.Transform;
 /**
  * The Soot Runner
  * 
- * @author arlt
+ * @author schaef
  */
 public class SootRunner extends Runner {
 
@@ -473,7 +473,7 @@ public class SootRunner extends Runner {
 	/**
 	 * FilteredStream
 	 * 
-	 * @author arlt
+	 * @author schaef
 	 */
 	class FilteredStream extends FilterOutputStream {
 

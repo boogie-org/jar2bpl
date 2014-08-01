@@ -27,7 +27,7 @@ import org.joogie.runners.receivers.Receiver;
 /**
  * An abstract Runner
  * 
- * @author arlt
+ * @author schaef
  */
 public abstract class Runner {
 

@@ -13,7 +13,7 @@ import boogie.expression.Expression;
 import boogie.statement.Statement;
 
 /**
- * @author martin
+ * @author schaef
  *
  */
 public class AssertionErrorModel extends AbstractErrorModel {

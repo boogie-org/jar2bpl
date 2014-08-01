@@ -36,7 +36,7 @@ import boogie.type.BoogieType;
 import boogie.type.ConstructedType;
 
 /**
- * @author martin
+ * @author schaef
  * 
  */
 public class SootPrelude {
