@@ -12,9 +12,9 @@ import soot.jimple.NewExpr;
 import soot.jimple.NewMultiArrayExpr;
 import soot.jimple.StringConstant;
 import boogie.ProgramFactory;
-import boogie.expression.ArrayAccessExpression;
-import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
+import boogie.ast.expression.ArrayAccessExpression;
+import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
 
 public class AssignmentTranslation {
 

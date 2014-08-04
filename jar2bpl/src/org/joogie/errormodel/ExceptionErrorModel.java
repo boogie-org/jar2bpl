@@ -15,10 +15,10 @@ import org.joogie.soot.SootStmtSwitch;
 import soot.SootClass;
 import soot.jimple.Stmt;
 import util.Log;
-import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
-import boogie.statement.IfStatement;
-import boogie.statement.Statement;
+import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
+import boogie.ast.statement.IfStatement;
+import boogie.ast.statement.Statement;
 
 /**
  * @author schaef

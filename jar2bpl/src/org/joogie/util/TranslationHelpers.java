@@ -35,9 +35,9 @@ import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
 import soot.tagkit.Tag;
 import boogie.ast.Attribute;
-import boogie.expression.Expression;
-import boogie.location.ILocation;
-import boogie.statement.Statement;
+import boogie.ast.expression.Expression;
+import boogie.ast.location.ILocation;
+import boogie.ast.statement.Statement;
 import boogie.type.BoogieType;
 
 /**

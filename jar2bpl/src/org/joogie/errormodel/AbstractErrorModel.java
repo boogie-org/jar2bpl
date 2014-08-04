@@ -17,9 +17,9 @@ import soot.jimple.Stmt;
 import soot.toolkits.graph.ExceptionalUnitGraph.ExceptionDest;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
+import boogie.ast.expression.Expression;
+import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
-import boogie.expression.Expression;
-import boogie.statement.Statement;
 
 
 /**

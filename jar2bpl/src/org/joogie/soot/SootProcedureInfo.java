@@ -44,12 +44,12 @@ import util.Log;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.VarList;
-import boogie.declaration.Implementation;
-import boogie.declaration.ProcedureDeclaration;
+import boogie.ast.declaration.Implementation;
+import boogie.ast.declaration.ProcedureDeclaration;
+import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
+import boogie.ast.specification.Specification;
 import boogie.enums.BinaryOperator;
-import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
-import boogie.specification.Specification;
 import boogie.type.BoogieType;
 
 /**

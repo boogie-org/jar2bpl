@@ -50,10 +50,10 @@ import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
+import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
+import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
-import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
-import boogie.statement.Statement;
 import boogie.type.BoogieType;
 
 /**

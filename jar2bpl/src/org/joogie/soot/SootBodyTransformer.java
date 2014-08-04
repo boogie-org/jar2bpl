@@ -36,9 +36,9 @@ import soot.Unit;
 import soot.jimple.Stmt;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ast.Attribute;
-import boogie.declaration.Implementation;
+import boogie.ast.declaration.Implementation;
+import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
-import boogie.statement.Statement;
 
 /**
  * Boogie Body Transformer

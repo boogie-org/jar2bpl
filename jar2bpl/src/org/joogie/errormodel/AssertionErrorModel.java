@@ -9,8 +9,8 @@ import org.joogie.util.TranslationHelpers;
 
 import soot.SootClass;
 import boogie.ast.Attribute;
-import boogie.expression.Expression;
-import boogie.statement.Statement;
+import boogie.ast.expression.Expression;
+import boogie.ast.statement.Statement;
 
 /**
  * @author schaef

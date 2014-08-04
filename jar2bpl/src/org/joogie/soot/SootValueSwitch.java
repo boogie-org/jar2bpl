@@ -83,12 +83,12 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.XorExpr;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
-import boogie.declaration.FunctionDeclaration;
+import boogie.ast.declaration.FunctionDeclaration;
+import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
+import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
 import boogie.enums.UnaryOperator;
-import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
-import boogie.statement.Statement;
 import boogie.type.BoogieType;
 
 /**

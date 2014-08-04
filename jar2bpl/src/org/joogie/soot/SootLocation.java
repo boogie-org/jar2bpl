@@ -19,7 +19,7 @@
 
 package org.joogie.soot;
 
-import boogie.location.ILocation;
+import boogie.ast.location.ILocation;
 
 /**
  * @author schaef

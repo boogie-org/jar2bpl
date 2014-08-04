@@ -27,11 +27,11 @@ import org.joogie.GlobalsCache;
 import util.Log;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
-import boogie.declaration.FunctionDeclaration;
-import boogie.declaration.ProcedureDeclaration;
-import boogie.expression.Expression;
-import boogie.expression.IdentifierExpression;
-import boogie.statement.Statement;
+import boogie.ast.declaration.FunctionDeclaration;
+import boogie.ast.declaration.ProcedureDeclaration;
+import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
+import boogie.ast.statement.Statement;
 import boogie.type.BoogieType;
 import boogie.type.ConstructedType;
 
