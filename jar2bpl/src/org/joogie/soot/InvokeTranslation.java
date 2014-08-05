@@ -163,7 +163,7 @@ public class InvokeTranslation {
 				.contains("<java.lang.System: void exit(int)>")) {
 			Log.info("Surppressing false positive from call to System.exit");
 			// this is not a return statement, it actually ends the application.			
-			ss.addStatement(pf.mkAssumeStatement(new Attribute[]{pf.mkNoCodeAttribute()},
+			ss.addStatement(pf.mkAssumeStatement(new Attribute[]{pf.mkNoVerifyAttribute()},
 					pf.mkBooleanLiteral(false)));
 			ss.addStatement(pf.mkReturnStatement());
 			return true;

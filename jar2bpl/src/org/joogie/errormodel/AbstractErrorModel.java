@@ -86,7 +86,7 @@ public abstract class AbstractErrorModel {
 			Statement raise = SootPrelude.v().newObject(new Attribute[]{}, this.procInfo.getExceptionVariable(), exception_type);
 			//if the exception is guarded create a conditional choice, otherwise just throw it.
 			if (guard!=null) {				
-				Statement[] elsePart = {this.pf.mkAssertStatement(new Attribute[]{pf.mkNoCodeAttribute()}, pf.mkBooleanLiteral(true)), raise, transferStatement};
+				Statement[] elsePart = {this.pf.mkAssertStatement(new Attribute[]{pf.mkNoVerifyAttribute()}, pf.mkBooleanLiteral(true)), raise, transferStatement};
 				Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(this.stmtSwitch.getCurrentStatement().getTags())};		
 				this.stmtSwitch.addStatement(this.pf.mkIfStatement( guard, thenPart, elsePart));					
 			} else {
