@@ -69,11 +69,11 @@ public class SootBodyTransformer extends BodyTransformer {
 			}
 		}
 
-		SootMethod sootMethod = arg0.getMethod();
-		Log.debug("METHOD: " + sootMethod);
+		
 		// report.addMethod(sootMethod);
-
+		GlobalsCache.v().currentMethod = arg0.getMethod(); 
 		transformStmtList(arg0);
+		GlobalsCache.v().currentMethod = null;
 	}
 
 	/**

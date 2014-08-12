@@ -274,7 +274,7 @@ public class SootRunner extends Runner {
 			pack.add(new Transform("jtp.BoogieTransform",
 					new SootBodyTransformer()));
 			
-			
+			System.err.println(args);
 
 			// Finally, run Soot
 			soot.Main.main(args.toArray(new String[]{}));
@@ -313,14 +313,15 @@ public class SootRunner extends Runner {
 	 *            Command-line arguments
 	 */
 	protected void fillSootArgs(List<String> args) {
-		args.add("-pp");
+		args.add("-pp");		
 		args.add("-keep-line-number");
+		args.add("-keep-offset");
 		args.add("-print-tags");
 		args.add("-output-format");
 		args.add("none");
 		args.add("-allow-phantom-refs");
 		//args.add("-w");
-		args.add("use-original-names");
+		//args.add("-use-original-names");
 	}
 
 	/**

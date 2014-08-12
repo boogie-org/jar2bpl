@@ -32,6 +32,7 @@ import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
 import soot.RefType;
+import soot.Scene;
 import soot.Type;
 import soot.Unit;
 import soot.jimple.AssignStmt;
@@ -127,7 +128,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		return this.currentStatement;
 	}
 
-	private void injectLabelStatements(Stmt arg0) {
+	private void injectLabelStatements(Stmt arg0) {		
 		this.currentStatement = arg0;
 		if (arg0.getBoxesPointingToThis().size() > 0) {
 			String label = GlobalsCache.v()

@@ -86,6 +86,8 @@ public class GlobalsCache {
 
 	private static GlobalsCache instance = null;
 
+	public SootMethod currentMethod = null;
+	
 	public static GlobalsCache v() {
 		if (GlobalsCache.instance == null) {
 			GlobalsCache.instance = new GlobalsCache();

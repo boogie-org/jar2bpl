@@ -82,12 +82,15 @@ public class TranslationHelpers {
 		startcol = -1;
 		endcol = -1;
 		filename = null;
-
+		
 		for (Tag tag : list) {
 			if (tag instanceof LineNumberTag) {
+				if (GlobalsCache.v().currentMethod!=null) {
+					filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
+				}				
 				startln = ((LineNumberTag) tag).getLineNumber();
 				break;
-			} else if (tag instanceof SourceLnNamePosTag) {
+			} else if (tag instanceof SourceLnNamePosTag) {				
 				startln = ((SourceLnNamePosTag) tag).startLn();
 				endln = ((SourceLnNamePosTag) tag).endLn();
 				filename = ((SourceLnNamePosTag) tag).getFileName();
@@ -98,7 +101,7 @@ public class TranslationHelpers {
 				filename = ((SourceFileTag) tag).getSourceFile();
 				break;
 			} else {
-				// Log.debug(tag.getClass().toString() + " "+tag.toString());
+				Log.debug(tag.getClass().toString() + " "+tag.toString());
 			}
 		}
 
