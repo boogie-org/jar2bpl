@@ -16,9 +16,7 @@ public class VariousJavaTest {
 			String javaFileDir = "regression/various_java/";
 			Options.v().setClasspath(javaFileDir);
 			String bplFile = "regression/test_output/various_java.bpl";
-
-			Dispatcher.run(javaFileDir,
-					bplFile);
+			Dispatcher.run(javaFileDir, bplFile);
 
 		} catch (Exception e) {
 			fail("Translation Error " + e.toString());

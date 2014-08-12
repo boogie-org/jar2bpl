@@ -11,21 +11,7 @@ const unique $type : Field javaType;
 const unique $alloc : Field bool;
 const { :sourceloc "Object.java",-1,-1,-1,-1 } unique java.lang.Object : javaType extends  complete;
 const { :sourceloc "InfeasibleCode01.java",-1,-1,-1,-1 } unique InfeasibleCode01 : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "Appendable.java",-1,-1,-1,-1 } unique java.lang.Appendable : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "CharSequence.java",-1,-1,-1,-1 } unique java.lang.CharSequence : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "AbstractStringBuilder.java",-1,-1,-1,-1 } unique java.lang.AbstractStringBuilder : javaType extends  unique java.lang.Object, unique java.lang.Appendable, unique java.lang.CharSequence complete;
-const { :sourceloc "Serializable.java",-1,-1,-1,-1 } unique java.io.Serializable : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "StringBuffer.java",-1,-1,-1,-1 } unique java.lang.StringBuffer : javaType extends  unique java.io.Serializable, unique java.lang.AbstractStringBuilder, unique java.lang.CharSequence complete;
-const { :sourceloc "Comparable.java",-1,-1,-1,-1 } unique java.lang.Comparable : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "String.java",-1,-1,-1,-1 } unique java.lang.String : javaType extends  unique java.io.Serializable, unique java.lang.Object, unique java.lang.Comparable, unique java.lang.CharSequence complete;
-const unique $StringConst0 : ref extends  complete;
-const { :sourceloc "AutoCloseable.java",-1,-1,-1,-1 } unique java.lang.AutoCloseable : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "Closeable.java",-1,-1,-1,-1 } unique java.io.Closeable : javaType extends  unique java.lang.AutoCloseable, unique java.lang.Object complete;
-const { :sourceloc "Flushable.java",-1,-1,-1,-1 } unique java.io.Flushable : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "OutputStream.java",-1,-1,-1,-1 } unique java.io.OutputStream : javaType extends  unique java.lang.Object, unique java.io.Closeable, unique java.io.Flushable complete;
-const { :sourceloc "FilterOutputStream.java",-1,-1,-1,-1 } unique java.io.FilterOutputStream : javaType extends  unique java.io.OutputStream complete;
-const { :sourceloc "PrintStream.java",-1,-1,-1,-1 } unique java.io.PrintStream : javaType extends  unique java.io.Closeable, unique java.lang.Appendable, unique java.io.FilterOutputStream complete;
-const unique $StringConst1 : ref extends  complete;
+const { :sourceloc "InfeasibleCode02.java",-1,-1,-1,-1 } unique InfeasibleCode02 : javaType extends  unique java.lang.Object complete;
 var $heap : $heap_type;
 var $intArrayType : javaType;
 var $charArrayType : javaType;
@@ -38,7 +24,7 @@ var $boolArrHeap : boolArrHeap_type;
 var $refArrHeap : refArrHeap_type;
 var $realArrHeap : realArrHeap_type;
 var $intArrHeap : intArrHeap_type;
-var java.io.PrintStream$java.lang.System$err236 : ref;
+var int$InfeasibleCode02$x0 : Field int;
 function $arrayType(t:javaType) returns ($ret:javaType);
 function $intToReal(x:int) returns ($ret:real);
 function $intToBool(x:int) returns ($ret:bool) { (if x == 0 then false else true) }
@@ -54,306 +40,171 @@ function $xorInt(x:int, y:int) returns ($ret:int);
 function $shlInt(x:int, y:int) returns ($ret:int);
 function $ushrInt(x:int, y:int) returns ($ret:int);
 function $shrInt(x:int, y:int) returns ($ret:int);
-procedure $new(obj_type:javaType) returns ($obj:ref);        requires $heap[$obj,$alloc] == false;    ensures $heap[$obj,$alloc] == true;    ensures $obj != $null;    ensures $heap[$obj,$type] == obj_type;
+procedure $new(obj_type:javaType) returns ($obj:ref);    ensures $heap[$obj,$type] == obj_type;        requires $heap[$obj,$alloc] == false;    ensures $obj != $null;    ensures $heap[$obj,$alloc] == true;
 
-procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);        ensures $heap[$other,$alloc] == true;    ensures $other != $null;    ensures $heap[$other,$type] == $heap[$this,$type];
+procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);    ensures $other != $null;        ensures $heap[$other,$type] == $heap[$this,$type];    ensures $heap[$other,$alloc] == true;
 
-procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) returns ($return:int);    ensures ($this == $other ==> $return == 1) && ($this != $other ==> $return == 0);    
+procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) returns ($return:int);        ensures ($this == $other ==> $return == 1) && ($this != $other ==> $return == 0);
 
-procedure int$InfeasibleCode01$infeasible0$1889($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref);    modifies $intArrHeap;
-
-procedure int$InfeasibleCode01$infeasible1$1890($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref);    
-
-procedure int$java.lang.Object$hashCode$41($this:ref) returns ($return:int, $exception:ref);    
-
-procedure void$java.lang.StringBuffer$$la$init$ra$$685($this:ref) returns ($exception:ref);    
-
-procedure java.lang.String$java.lang.Object$toString$44($this:ref) returns ($return:ref, $exception:ref);    
-
-procedure java.lang.StringBuffer$java.lang.StringBuffer$append$701($this:ref, $in_parameter__0:ref) returns ($return:ref, $exception:ref);    
-
-procedure java.lang.String$java.lang.StringBuffer$toString$738($this:ref) returns ($return:ref, $exception:ref);    
-
-procedure void$java.io.PrintStream$println$217($this:ref, $in_parameter__0:ref) returns ($exception:ref);    
-
-procedure void$InfeasibleCode01$infeasible2$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref);    modifies $intArrHeap;
-
-procedure void$InfeasibleCode01$infeasible3$1892($this:ref, $in_parameter__0:int, $in_parameter__1:int) returns ($exception:ref);    
-
-procedure boolean$InfeasibleCode01$infeasible4$1893($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref);    
-
-procedure void$InfeasibleCode01$infeasible5$1894($this:ref) returns ($exception:ref);    modifies $stringSizeHeap;
-
-procedure int$InfeasibleCode01$infeasible6$1895($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref);    
-
-procedure void$InfeasibleCode01$$la$init$ra$$1896($this:ref) returns ($exception:ref);    
+procedure void$InfeasibleCode01$$la$init$ra$$1889($this:ref) returns ($exception:ref);    
 
 procedure void$java.lang.Object$$la$init$ra$$38($this:ref) returns ($exception:ref);    
 
-implementation int$InfeasibleCode01$infeasible0$1889($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
+procedure void$InfeasibleCode02$infeasible01$1890($this:ref) returns ($exception:ref);    
+
+procedure void$InfeasibleCode02$infeasible07$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref);    
+
+procedure void$InfeasibleCode02$$la$init$ra$$1892($this:ref) returns ($exception:ref);    
+
+implementation void$InfeasibleCode01$$la$init$ra$$1889($this:ref) returns ($exception:ref){
     
-var temp$15 : int;    
-var arr2 : ref;    
-var temp$26 : int;    
-var this1 : ref;    
-var temp$48 : int;    
-var i3 : int;    
-var temp$59 : int;    
-var temp$37 : ref;    
-var temp$04 : ref;
+var this1 : ref;
     assume $this != $null;
     this1 := $this;
-    arr2 := $in_parameter__0;
-    assert { :sourceloc "InfeasibleCode01.java",28,3,28,21 } arr2 != $null;
-    i3 := $arrSizeHeap[arr2];
-    temp$04 := arr2;
-    temp$15 := 3;
-    temp$26 := 3;
-    assert { :sourceloc "InfeasibleCode01.java",29,6,29,8 } temp$15 < $arrSizeHeap[temp$04] && temp$15 >= 0;
-    $intArrHeap := $intArrHeap[temp$04 := $intArrHeap[temp$04][temp$15 := temp$26]];
-    temp$37 := arr2;
-    temp$48 := i3;
-    assert { :sourceloc "InfeasibleCode01.java",29,6,29,8 } temp$48 < $arrSizeHeap[temp$37] && temp$48 >= 0;
-    temp$59 := $intArrHeap[temp$37][temp$48];
-    $return := temp$59;
+    call $exception := void$java.lang.Object$$la$init$ra$$38(this1);
     return;
 }
 
 
-implementation int$InfeasibleCode01$infeasible1$1890($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
+implementation void$InfeasibleCode02$infeasible01$1890($this:ref) returns ($exception:ref){
     
-var $fakelocal_0 : ref;    
-var $fakelocal_1 : ref;    
-var temp$214 : ref;    
-var temp$315 : ref;    
-var $fakelocal_2 : ref;    
-var temp$416 : ref;    
-var temp$517 : int;    
-var temp$012 : int;    
-var o11 : ref;    
-var temp$113 : ref;    
-var this10 : ref;
+var this2 : ref;    
+var counter4 : int;    
+var temp$16 : int;    
+var temp$49 : int;    
+var hit3 : int;    
+var temp$05 : int;    
+var temp$38 : int;    
+var temp$27 : int;
     assume $this != $null;
-    this10 := $this;
-    o11 := $in_parameter__0;
-    if (o11 != $null) {
-        assert { :sourceloc "InfeasibleCode01.java",34,7,34,13 } true;
-        goto block1;
-    } else {
-        assert { :sourceloc "InfeasibleCode01.java",34,7,34,13 } true;
-    }
-    goto block2;
+    this2 := $this;
+    hit3 := 0;
+    counter4 := 0;
   block1:
-    assert { :sourceloc "InfeasibleCode01.java",34,7,34,13 } o11 != $null;
-    call temp$012, $exception := int$java.lang.Object$hashCode$41(o11);
-    $return := temp$012;
-    return;
+    temp$05 := 0;
+    hit3 := temp$05;
+    assert { :sourceloc "InfeasibleCode02.java",67,7,67,7 } this2 != $null;
+    temp$16 := $heap[this2,int$InfeasibleCode02$x0];
+    if (temp$16 == counter4) {
+        assert { :sourceloc "InfeasibleCode02.java",67,7,67,7 } true;
+        goto block2;
+    } else {
+        assert { :sourceloc "InfeasibleCode02.java",67,7,67,7 } true;
+    }
+    goto block3;
   block2:
-    temp$113 := java.io.PrintStream$java.lang.System$err236;
-    call $fakelocal_0 := $new(java.lang.StringBuffer);
-    temp$214 := $fakelocal_0;
-    call $exception := void$java.lang.StringBuffer$$la$init$ra$$685(temp$214);
-    assert { :sourceloc "InfeasibleCode01.java",37,22,37,53 } o11 != $null;
-    call temp$315, $exception := java.lang.String$java.lang.Object$toString$44(o11);
-    assert { :sourceloc "InfeasibleCode01.java",37,22,37,53 } temp$214 != $null;
-    call $fakelocal_1, $exception := java.lang.StringBuffer$java.lang.StringBuffer$append$701(temp$214, temp$315);
-    assert { :sourceloc "InfeasibleCode01.java",37,22,37,53 } temp$214 != $null;
-    call $fakelocal_2, $exception := java.lang.StringBuffer$java.lang.StringBuffer$append$701(temp$214, $StringConst0);
-    assert { :sourceloc "InfeasibleCode01.java",37,22,37,53 } temp$214 != $null;
-    call temp$416, $exception := java.lang.String$java.lang.StringBuffer$toString$738(temp$214);
-    assert { :sourceloc "InfeasibleCode01.java",37,22,37,53 } temp$113 != $null;
-    call $exception := void$java.io.PrintStream$println$217(temp$113, temp$416);
-    temp$517 := 2;
-    $return := temp$517;
-    return;
-}
-
-
-implementation void$InfeasibleCode01$infeasible2$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref){
-    
-var temp$122 : ref;    
-var temp$021 : int;    
-var temp$324 : int;    
-var i20 : int;    
-var this18 : ref;    
-var arr19 : ref;    
-var temp$223 : int;    
-var temp$425 : int;
-    assume $this != $null;
-    this18 := $this;
-    arr19 := $in_parameter__0;
-    i20 := 0;
-  block3:
-    assert { :sourceloc "InfeasibleCode01.java",42,17,42,29 } arr19 != $null;
-    temp$021 := $arrSizeHeap[arr19];
-    if (i20 <= temp$021) {
-        assert { :sourceloc "InfeasibleCode01.java",42,17,42,29 } true;
+    temp$27 := counter4;
+    temp$38 := temp$27 + 1;
+    counter4 := temp$38;
+    temp$49 := 1;
+    hit3 := temp$49;
+    if (counter4 > 10000) {
+        assert { :sourceloc "InfeasibleCode02.java",71,8,71,22 } true;
         goto block4;
     } else {
-        assert { :sourceloc "InfeasibleCode01.java",42,17,42,29 } true;
+        assert { :sourceloc "InfeasibleCode02.java",71,8,71,22 } true;
     }
     goto block5;
   block4:
-    temp$122 := arr19;
-    temp$223 := i20;
-    assert { :sourceloc "InfeasibleCode01.java",43,7,43,9 } temp$223 < $arrSizeHeap[temp$122] && temp$223 >= 0;
-    $intArrHeap := $intArrHeap[temp$122 := $intArrHeap[temp$122][temp$223 := i20]];
-    temp$324 := i20;
-    temp$425 := temp$324 + 1;
-    i20 := temp$425;
-    goto block3;
+    return;
   block5:
+  block3:
+    if (hit3 == 0) {
+        assert { :sourceloc "InfeasibleCode02.java",76,11,76,13 } true;
+        goto block6;
+    } else {
+        assert { :sourceloc "InfeasibleCode02.java",76,11,76,13 } true;
+    }
+    goto block1;
+  block6:
     return;
 }
 
 
-implementation void$InfeasibleCode01$infeasible3$1892($this:ref, $in_parameter__0:int, $in_parameter__1:int) returns ($exception:ref){
+implementation void$InfeasibleCode02$infeasible07$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref){
     
-var b28 : int;    
-var temp$433 : int;    
-var temp$130 : int;    
-var temp$534 : int;    
-var temp$332 : int;    
-var a27 : int;    
-var temp$231 : int;    
-var this26 : ref;    
-var temp$029 : int;
+var temp$621 : int;    
+var end13 : int;    
+var temp$116 : int;    
+var temp$823 : int;    
+var j14 : int;    
+var temp$520 : int;    
+var temp$419 : int;    
+var temp$924 : int;    
+var this10 : ref;    
+var temp$015 : int;    
+var temp11 : ref;    
+var temp$217 : ref;    
+var temp$318 : int;    
+var repos12 : int;    
+var temp$722 : int;
     assume $this != $null;
-    this26 := $this;
-    a27 := $in_parameter__0;
-    b28 := $in_parameter__1;
-    temp$029 := 1;
-    b28 := temp$029;
-    if (a27 > 0) {
-        assert { :sourceloc "InfeasibleCode01.java",49,7,49,9 } true;
-        goto block6;
-    } else {
-        assert { :sourceloc "InfeasibleCode01.java",49,7,49,9 } true;
-    }
-    goto block7;
-  block6:
-    temp$130 := b28;
-    temp$231 := temp$130 + -1;
-    b28 := temp$231;
+    this10 := $this;
+    temp11 := $in_parameter__0;
+    repos12 := -1;
+    end13 := -1;
+    j14 := end13;
   block7:
-    assert { :sourceloc "InfeasibleCode01.java",50,3,50,8 } b28 != 0;
-    temp$332 := 1 div b28;
-    b28 := temp$332;
-    if (a27 <= 0) {
-        assert { :sourceloc "InfeasibleCode01.java",51,7,51,10 } true;
+    temp$015 := j14;
+    temp$116 := temp$015 + 1;
+    j14 := temp$116;
+    temp$217 := temp11;
+    temp$318 := j14;
+    assert { :sourceloc "InfeasibleCode02.java",85,7,85,18 } temp$318 < $arrSizeHeap[temp$217] && temp$318 >= 0;
+    temp$419 := $intArrHeap[temp$217][temp$318];
+    temp$520 := temp$419;
+    if (temp$520 == 97) {
+        assert { :sourceloc "InfeasibleCode02.java",85,7,85,18 } true;
         goto block8;
     } else {
-        assert { :sourceloc "InfeasibleCode01.java",51,7,51,10 } true;
+        assert { :sourceloc "InfeasibleCode02.java",85,7,85,18 } true;
     }
     goto block9;
   block8:
-    temp$433 := 1 - b28;
-    assert { :sourceloc "InfeasibleCode01.java",51,13,51,22 } temp$433 != 0;
-    temp$534 := 1 div temp$433;
-    b28 := temp$534;
+    temp$621 := j14 - end13;
+    temp$722 := temp$621 - 1;
+    repos12 := temp$722;
   block9:
-    return;
-}
-
-
-implementation boolean$InfeasibleCode01$infeasible4$1893($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
-    
-var o36 : ref;    
-var temp$340 : int;    
-var temp$239 : int;    
-var this35 : ref;    
-var temp$138 : ref;    
-var temp$037 : ref;
-    assume $this != $null;
-    this35 := $this;
-    o36 := $in_parameter__0;
-    temp$037 := java.io.PrintStream$java.lang.System$err236;
-    assert { :sourceloc "InfeasibleCode01.java",55,3,55,35 } o36 != $null;
-    call temp$138, $exception := java.lang.String$java.lang.Object$toString$44(o36);
-    assert { :sourceloc "InfeasibleCode01.java",55,3,55,35 } temp$037 != $null;
-    call $exception := void$java.io.PrintStream$println$217(temp$037, temp$138);
-    if (o36 == $null) {
-        assert { :sourceloc "InfeasibleCode01.java",56,7,56,13 } true;
+    if (repos12 == -1) {
+        assert { :sourceloc "InfeasibleCode02.java",88,11,88,21 } true;
         goto block10;
     } else {
-        assert { :sourceloc "InfeasibleCode01.java",56,7,56,13 } true;
+        assert { :sourceloc "InfeasibleCode02.java",88,11,88,21 } true;
     }
     goto block11;
   block10:
-    temp$239 := 0;
-    $return := temp$239;
-    return;
+    assert { :sourceloc "InfeasibleCode02.java",88,26,88,40 } temp11 != $null;
+    temp$823 := $arrSizeHeap[temp11];
+    if (j14 < temp$823) {
+        assert { :sourceloc "InfeasibleCode02.java",83,2,88,42 } true;
+        goto block7;
+    } else {
+        assert { :sourceloc "InfeasibleCode02.java",88,26,88,40 } true;
+    }
+    goto block11;
+    goto block7;
   block11:
-    temp$340 := 1;
-    $return := temp$340;
-    return;
-}
-
-
-implementation void$InfeasibleCode01$infeasible5$1894($this:ref) returns ($exception:ref){
-    
-var temp$144 : ref;    
-var temp$043 : int;    
-var test42 : ref;    
-var this41 : ref;    
-var $fakelocal_0 : ref;
-    assume $this != $null;
-    this41 := $this;
-    call $fakelocal_0 := $new(java.lang.String);
-    $stringSizeHeap := $stringSizeHeap[$fakelocal_0 := 8];
-    test42 := $fakelocal_0;
-    temp$043 := $stringSizeHeap[test42];
-    if (temp$043 == 3) {
-        assert { :sourceloc "InfeasibleCode01.java",64,7,64,22 } true;
+    if (repos12 == -1) {
+        assert { :sourceloc "InfeasibleCode02.java",89,6,89,16 } true;
         goto block12;
     } else {
-        assert { :sourceloc "InfeasibleCode01.java",64,7,64,22 } true;
+        assert { :sourceloc "InfeasibleCode02.java",89,6,89,16 } true;
     }
     goto block13;
   block12:
-    temp$144 := java.io.PrintStream$java.lang.System$err236;
-    assert { :sourceloc "InfeasibleCode01.java",65,4,65,37 } temp$144 != $null;
-    call $exception := void$java.io.PrintStream$println$217(temp$144, $StringConst1);
+    temp$924 := 0;
+    repos12 := temp$924;
   block13:
     return;
 }
 
 
-implementation int$InfeasibleCode01$infeasible6$1895($this:ref, $in_parameter__0:ref) returns ($return:int, $exception:ref){
+implementation void$InfeasibleCode02$$la$init$ra$$1892($this:ref) returns ($exception:ref){
     
-var temp$451 : int;    
-var temp$148 : int;    
-var arr46 : ref;    
-var temp$249 : int;    
-var temp$350 : ref;    
-var temp$552 : int;    
-var this45 : ref;    
-var temp$653 : int;    
-var temp$047 : ref;
+var this25 : ref;
     assume $this != $null;
-    this45 := $this;
-    arr46 := $in_parameter__0;
-    temp$047 := arr46;
-    temp$148 := -1;
-    assert { :sourceloc "InfeasibleCode01.java",69,25,69,33 } temp$148 < $arrSizeHeap[temp$047] && temp$148 >= 0;
-    temp$249 := $intArrHeap[temp$047][temp$148];
-    temp$350 := arr46;
-    assert { :sourceloc "InfeasibleCode01.java",69,25,69,33 } arr46 != $null;
-    temp$451 := $arrSizeHeap[arr46];
-    assert { :sourceloc "InfeasibleCode01.java",69,25,69,33 } temp$451 < $arrSizeHeap[temp$350] && temp$451 >= 0;
-    temp$552 := $intArrHeap[temp$350][temp$451];
-    temp$653 := temp$249 + temp$552;
-    $return := temp$653;
-    return;
-}
-
-
-implementation void$InfeasibleCode01$$la$init$ra$$1896($this:ref) returns ($exception:ref){
-    
-var this54 : ref;
-    assume $this != $null;
-    this54 := $this;
-    call $exception := void$java.lang.Object$$la$init$ra$$38(this54);
+    this25 := $this;
+    call $exception := void$java.lang.Object$$la$init$ra$$38(this25);
     return;
 }
 

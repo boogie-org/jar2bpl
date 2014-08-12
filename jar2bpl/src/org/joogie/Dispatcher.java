@@ -27,6 +27,8 @@ import org.joogie.util.Log;
 import org.joogie.util.MhpInfo;
 import org.joogie.util.StopWatch;
 
+import boogie.ProgramFactory;
+
 /**
  * Dispatcher
  * 
@@ -64,6 +66,33 @@ public class Dispatcher {
 		}
 	}
 
+	/**
+	 * Use this run function if you plan to use jar2bpl as a library.
+	 * It runs soot, creates a Boogie AST and returns the ProgramFactory but
+	 * deletes all soot related data from memory.
+	 * @param input
+	 * @return
+	 */
+	public static ProgramFactory run(String input) {
+		ProgramFactory pf = null;
+		try {
+			Log.debug("Running Soot");
+			swSoot = StopWatch.getInstanceAndStart();
+			runSoot(input, null);
+			swSoot.stop();
+			pf = GlobalsCache.v().getPf();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			GlobalsCache.resetInstance();
+			SootPrelude.resetInstance();
+			MhpInfo.resetInstance();
+			Options.resetInstance();
+		}
+		return pf;
+	}
+	
+	
 	/**
 	 * Runs Soot
 	 */
