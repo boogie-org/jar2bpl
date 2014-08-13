@@ -13,7 +13,7 @@ public class JarTranslationTest {
 	public void testJarInputFile() {
 		//TODO: design one test case for each sort of input to the translation.
 		try {
-			String javaFileDir = "regression/jar_input/junit.jar";
+			String javaFileDir = "regression/jar_input/dacapo-9.12-bach.jar";
 			Options.v().setClasspath(javaFileDir);
 			String bplFile = "regression/test_output/dacapo.bpl";
 

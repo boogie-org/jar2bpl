@@ -273,8 +273,6 @@ public class SootRunner extends Runner {
 			Pack pack = PackManager.v().getPack("jtp");
 			pack.add(new Transform("jtp.BoogieTransform",
 					new SootBodyTransformer()));
-			
-			System.err.println(args);
 
 			// Finally, run Soot
 			soot.Main.main(args.toArray(new String[]{}));

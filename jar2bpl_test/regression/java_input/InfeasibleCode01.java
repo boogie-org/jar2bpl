@@ -85,6 +85,29 @@ public class InfeasibleCode01 {
 //		}
 //	}
 //	
+	int beginEndTag;
+	public void infeasible08(String source, String searchString, int interncaret) {
+		int temphitpoint = -1;
+		boolean flaghitup = false;
+		int hitUp = 0;
+		do
+		{
+			flaghitup = false;
+			temphitpoint = source.indexOf(searchString, interncaret);
+			if(temphitpoint > 0 && temphitpoint < beginEndTag)
+			{
+				hitUp++;
+				flaghitup = true;
+				interncaret = temphitpoint + searchString.length();
+			}
+		} while(flaghitup);
+		if(hitUp == 0)
+		{
+			//unreachable beacuse the loop can only be left if hitUp++ is
+			//executed once.
+			
+		}		
+	}
 	
 }
 

@@ -10,8 +10,14 @@ const unique $null : ref;
 const unique $type : Field javaType;
 const unique $alloc : Field bool;
 const { :sourceloc "Object.java",-1,-1,-1,-1 } unique java.lang.Object : javaType extends  complete;
-const { :sourceloc "InfeasibleCode01.java",-1,-1,-1,-1 } unique InfeasibleCode01 : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "InfeasibleCode02.java",-1,-1,-1,-1 } unique InfeasibleCode02 : javaType extends  unique java.lang.Object complete;
+const { :sourceloc "FalsePositives.java",-1,-1,-1,-1 } unique FalsePositives : javaType extends  unique java.lang.Object complete;
+const { :sourceloc "Serializable.java",-1,-1,-1,-1 } unique java.io.Serializable : javaType extends  unique java.lang.Object complete;
+const { :sourceloc "Comparable.java",-1,-1,-1,-1 } unique java.lang.Comparable : javaType extends  unique java.lang.Object complete;
+const { :sourceloc "CharSequence.java",-1,-1,-1,-1 } unique java.lang.CharSequence : javaType extends  unique java.lang.Object complete;
+const { :sourceloc "String.java",-1,-1,-1,-1 } unique java.lang.String : javaType extends  unique java.lang.CharSequence, unique java.lang.Object, unique java.lang.Comparable, unique java.io.Serializable complete;
+const unique $StringConst0 : ref extends  complete;
+const unique $StringConst1 : ref extends  complete;
+const unique $StringConst2 : ref extends  complete;
 var $heap : $heap_type;
 var $intArrayType : javaType;
 var $charArrayType : javaType;
@@ -24,7 +30,7 @@ var $boolArrHeap : boolArrHeap_type;
 var $refArrHeap : refArrHeap_type;
 var $realArrHeap : realArrHeap_type;
 var $intArrHeap : intArrHeap_type;
-var int$InfeasibleCode02$x0 : Field int;
+var int$FalsePositives$countSource0 : Field int;
 function $arrayType(t:javaType) returns ($ret:javaType);
 function $intToReal(x:int) returns ($ret:real);
 function $intToBool(x:int) returns ($ret:bool) { (if x == 0 then false else true) }
@@ -40,171 +46,98 @@ function $xorInt(x:int, y:int) returns ($ret:int);
 function $shlInt(x:int, y:int) returns ($ret:int);
 function $ushrInt(x:int, y:int) returns ($ret:int);
 function $shrInt(x:int, y:int) returns ($ret:int);
-procedure $new(obj_type:javaType) returns ($obj:ref);    ensures $heap[$obj,$type] == obj_type;        requires $heap[$obj,$alloc] == false;    ensures $obj != $null;    ensures $heap[$obj,$alloc] == true;
+procedure $new(obj_type:javaType) returns ($obj:ref);        requires $heap[$obj,$alloc] == false;    ensures $heap[$obj,$type] == obj_type;    ensures $heap[$obj,$alloc] == true;    ensures $obj != $null;
 
-procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);    ensures $other != $null;        ensures $heap[$other,$type] == $heap[$this,$type];    ensures $heap[$other,$alloc] == true;
+procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);    ensures $heap[$other,$type] == $heap[$this,$type];    ensures $heap[$other,$alloc] == true;        ensures $other != $null;
 
-procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) returns ($return:int);        ensures ($this == $other ==> $return == 1) && ($this != $other ==> $return == 0);
+procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) returns ($return:int);    ensures ($this == $other ==> $return == 1) && ($this != $other ==> $return == 0);    
 
-procedure void$InfeasibleCode01$$la$init$ra$$1889($this:ref) returns ($exception:ref);    
+procedure void$FalsePositives$FalsePositive02$1889($this:ref, $in_parameter__0:ref) returns ($exception:ref);    modifies $heap;
+
+procedure java.lang.String$java.lang.Object$toString$44($this:ref) returns ($return:ref, $exception:ref);    
+
+procedure void$FalsePositives$$la$init$ra$$1890($this:ref) returns ($exception:ref);    
 
 procedure void$java.lang.Object$$la$init$ra$$38($this:ref) returns ($exception:ref);    
 
-procedure void$InfeasibleCode02$infeasible01$1890($this:ref) returns ($exception:ref);    
-
-procedure void$InfeasibleCode02$infeasible07$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref);    
-
-procedure void$InfeasibleCode02$$la$init$ra$$1892($this:ref) returns ($exception:ref);    
-
-implementation void$InfeasibleCode01$$la$init$ra$$1889($this:ref) returns ($exception:ref){
+implementation void$FalsePositives$FalsePositive02$1889($this:ref, $in_parameter__0:ref) returns ($exception:ref){
     
-var this1 : ref;
+var temp$25 : int;    
+var temp$710 : int;    
+var htmlTag2 : ref;    
+var temp$36 : ref;    
+var temp$47 : int;    
+var temp$58 : int;    
+var temp$811 : int;    
+var temp$03 : ref;    
+var temp$69 : ref;    
+var this1 : ref;    
+var temp$14 : int;
     assume $this != $null;
     this1 := $this;
-    call $exception := void$java.lang.Object$$la$init$ra$$38(this1);
-    return;
-}
-
-
-implementation void$InfeasibleCode02$infeasible01$1890($this:ref) returns ($exception:ref){
-    
-var this2 : ref;    
-var counter4 : int;    
-var temp$16 : int;    
-var temp$49 : int;    
-var hit3 : int;    
-var temp$05 : int;    
-var temp$38 : int;    
-var temp$27 : int;
-    assume $this != $null;
-    this2 := $this;
-    hit3 := 0;
-    counter4 := 0;
-  block1:
-    temp$05 := 0;
-    hit3 := temp$05;
-    assert { :sourceloc "InfeasibleCode02.java",67,7,67,7 } this2 != $null;
-    temp$16 := $heap[this2,int$InfeasibleCode02$x0];
-    if (temp$16 == counter4) {
-        assert { :sourceloc "InfeasibleCode02.java",67,7,67,7 } true;
-        goto block2;
+    htmlTag2 := $in_parameter__0;
+    assert { :sourceloc "FalsePositives.java",67,7,67,47 } htmlTag2 != $null;
+    call temp$03, $exception := java.lang.String$java.lang.Object$toString$44(htmlTag2);
+    assert { :sourceloc "FalsePositives.java",67,7,67,47 } temp$03 != $null;
+    call temp$14 := int$java.lang.String$compareTo$87(temp$03, $StringConst0);
+    if (temp$14 == 0) {
+        assert { :sourceloc "FalsePositives.java",67,7,67,47 } true;
+        goto block1;
     } else {
-        assert { :sourceloc "InfeasibleCode02.java",67,7,67,7 } true;
+        assert { :sourceloc "FalsePositives.java",67,7,67,47 } true;
     }
+    goto block2;
+  block1:
+    temp$25 := 1;
+    assert { :sourceloc "FalsePositives.java",69,4,69,14 } this1 != $null;
+    $heap := $heap[this1,int$FalsePositives$countSource0 := temp$25];
     goto block3;
   block2:
-    temp$27 := counter4;
-    temp$38 := temp$27 + 1;
-    counter4 := temp$38;
-    temp$49 := 1;
-    hit3 := temp$49;
-    if (counter4 > 10000) {
-        assert { :sourceloc "InfeasibleCode02.java",71,8,71,22 } true;
+    assert { :sourceloc "FalsePositives.java",71,12,71,49 } htmlTag2 != $null;
+    call temp$36, $exception := java.lang.String$java.lang.Object$toString$44(htmlTag2);
+    assert { :sourceloc "FalsePositives.java",71,12,71,49 } temp$36 != $null;
+    call temp$47 := int$java.lang.String$compareTo$87(temp$36, $StringConst1);
+    if (temp$47 == 0) {
+        assert { :sourceloc "FalsePositives.java",71,12,71,49 } true;
         goto block4;
     } else {
-        assert { :sourceloc "InfeasibleCode02.java",71,8,71,22 } true;
+        assert { :sourceloc "FalsePositives.java",71,12,71,49 } true;
     }
     goto block5;
   block4:
-    return;
+    temp$58 := 2;
+    assert { :sourceloc "FalsePositives.java",73,4,73,14 } this1 != $null;
+    $heap := $heap[this1,int$FalsePositives$countSource0 := temp$58];
+    goto block6;
   block5:
-  block3:
-    if (hit3 == 0) {
-        assert { :sourceloc "InfeasibleCode02.java",76,11,76,13 } true;
-        goto block6;
-    } else {
-        assert { :sourceloc "InfeasibleCode02.java",76,11,76,13 } true;
-    }
-    goto block1;
-  block6:
-    return;
-}
-
-
-implementation void$InfeasibleCode02$infeasible07$1891($this:ref, $in_parameter__0:ref) returns ($exception:ref){
-    
-var temp$621 : int;    
-var end13 : int;    
-var temp$116 : int;    
-var temp$823 : int;    
-var j14 : int;    
-var temp$520 : int;    
-var temp$419 : int;    
-var temp$924 : int;    
-var this10 : ref;    
-var temp$015 : int;    
-var temp11 : ref;    
-var temp$217 : ref;    
-var temp$318 : int;    
-var repos12 : int;    
-var temp$722 : int;
-    assume $this != $null;
-    this10 := $this;
-    temp11 := $in_parameter__0;
-    repos12 := -1;
-    end13 := -1;
-    j14 := end13;
-  block7:
-    temp$015 := j14;
-    temp$116 := temp$015 + 1;
-    j14 := temp$116;
-    temp$217 := temp11;
-    temp$318 := j14;
-    assert { :sourceloc "InfeasibleCode02.java",85,7,85,18 } temp$318 < $arrSizeHeap[temp$217] && temp$318 >= 0;
-    temp$419 := $intArrHeap[temp$217][temp$318];
-    temp$520 := temp$419;
-    if (temp$520 == 97) {
-        assert { :sourceloc "InfeasibleCode02.java",85,7,85,18 } true;
-        goto block8;
-    } else {
-        assert { :sourceloc "InfeasibleCode02.java",85,7,85,18 } true;
-    }
-    goto block9;
-  block8:
-    temp$621 := j14 - end13;
-    temp$722 := temp$621 - 1;
-    repos12 := temp$722;
-  block9:
-    if (repos12 == -1) {
-        assert { :sourceloc "InfeasibleCode02.java",88,11,88,21 } true;
-        goto block10;
-    } else {
-        assert { :sourceloc "InfeasibleCode02.java",88,11,88,21 } true;
-    }
-    goto block11;
-  block10:
-    assert { :sourceloc "InfeasibleCode02.java",88,26,88,40 } temp11 != $null;
-    temp$823 := $arrSizeHeap[temp11];
-    if (j14 < temp$823) {
-        assert { :sourceloc "InfeasibleCode02.java",83,2,88,42 } true;
+    assert { :sourceloc "FalsePositives.java",75,12,75,49 } htmlTag2 != $null;
+    call temp$69, $exception := java.lang.String$java.lang.Object$toString$44(htmlTag2);
+    assert { :sourceloc "FalsePositives.java",75,12,75,49 } temp$69 != $null;
+    call temp$710 := int$java.lang.String$compareTo$87(temp$69, $StringConst2);
+    if (temp$710 == 0) {
+        assert { :sourceloc "FalsePositives.java",75,12,75,49 } true;
         goto block7;
     } else {
-        assert { :sourceloc "InfeasibleCode02.java",88,26,88,40 } true;
+        assert { :sourceloc "FalsePositives.java",75,12,75,49 } true;
     }
-    goto block11;
-    goto block7;
-  block11:
-    if (repos12 == -1) {
-        assert { :sourceloc "InfeasibleCode02.java",89,6,89,16 } true;
-        goto block12;
-    } else {
-        assert { :sourceloc "InfeasibleCode02.java",89,6,89,16 } true;
-    }
-    goto block13;
-  block12:
-    temp$924 := 0;
-    repos12 := temp$924;
-  block13:
+    goto block8;
+  block7:
+    temp$811 := 3;
+    assert { :sourceloc "FalsePositives.java",77,4,77,14 } this1 != $null;
+    $heap := $heap[this1,int$FalsePositives$countSource0 := temp$811];
+  block8:
+  block6:
+  block3:
     return;
 }
 
 
-implementation void$InfeasibleCode02$$la$init$ra$$1892($this:ref) returns ($exception:ref){
+implementation void$FalsePositives$$la$init$ra$$1890($this:ref) returns ($exception:ref){
     
-var this25 : ref;
+var this12 : ref;
     assume $this != $null;
-    this25 := $this;
-    call $exception := void$java.lang.Object$$la$init$ra$$38(this25);
+    this12 := $this;
+    call $exception := void$java.lang.Object$$la$init$ra$$38(this12);
     return;
 }
 

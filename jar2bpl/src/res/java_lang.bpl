@@ -7,4 +7,3 @@ procedure java.lang.Object$java.lang.Object$clone$43($this:ref)
 
 procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) 
 	returns ($return:int); 
-	ensures ( ($this==$other ==> $return==1) && ($this!=$other ==> $return==0) );

@@ -13,9 +13,9 @@ public class JavaTranslationTest {
 		//TODO: design one test case for each sort of input to the translation.
 		try {
 			
-			String javaFileDir = "/Users/schaef/Documents/junit/src";
+			String javaFileDir = "regression/java_input/";
 			Options.v().setClasspath(javaFileDir);
-			String bplFile = "regression/test_output/dacapo.bpl";
+			String bplFile = "regression/test_output/java_input.bpl";
 
 			Dispatcher.run(javaFileDir,
 					bplFile);

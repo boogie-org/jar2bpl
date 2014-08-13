@@ -32,7 +32,6 @@ import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
 import soot.RefType;
-import soot.Scene;
 import soot.Type;
 import soot.Unit;
 import soot.jimple.AssignStmt;
