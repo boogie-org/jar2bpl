@@ -247,6 +247,7 @@ public class GlobalsCache {
 		for (SootClass interf : c.getInterfaces()) {
 			parents.add(lookupClassVariable(interf));
 		}
+
 		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(c.getTags());
 		
 		IdentifierExpression cvar = pf.mkIdentifierExpression(attributes, SootPrelude

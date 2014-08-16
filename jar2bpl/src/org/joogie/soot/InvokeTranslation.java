@@ -201,7 +201,7 @@ public class InvokeTranslation {
 	
 		
 		Attribute[] attributes = TranslationHelpers
-				.javaLocation2Attribute(ss.getCurrentStatement().getTags());
+				.javaLocation2Attribute(ss.getCurrentStatement());
 
 		// we have to clone the lefts because we may add thing to it here.
 		List<IdentifierExpression> lefts_clone = new LinkedList<IdentifierExpression>();

@@ -34,7 +34,7 @@ public class AssertionErrorModel extends AbstractErrorModel {
 	}
 	
 	public void createdUnExpectedException(Expression guard, SootClass exception) {
-		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement().getTags());
+		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement());
 		Statement assertion;
 		if (guard!=null) {
 			//assertion = this.pf.mkAssertStatement(loc,this.pf.mkUnaryExpression(loc, guard.getType(), UnaryOperator.LOGICNEG, guard));

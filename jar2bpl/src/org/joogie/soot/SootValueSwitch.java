@@ -506,8 +506,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	private IdentifierExpression createHavocedExpression(BoogieType t) {
 		Attribute[] arrtibutes = TranslationHelpers
-				.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement()
-						.getTags());
+				.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement());
 		IdentifierExpression ide = GlobalsCache.v().getHavocGlobal(t);
 		this.stmtSwitch.addStatement(this.pf.mkHavocStatement(arrtibutes, ide));
 		return ide;
@@ -857,7 +856,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			if (identifier != null) {
 				Statement s = this.pf.mkHavocStatement(TranslationHelpers
 						.javaLocation2Attribute(this.stmtSwitch
-								.getCurrentStatement().getTags()), identifier);
+								.getCurrentStatement()), identifier);
 				this.stmtSwitch.addStatement(s);
 			} else {
 				throw new RuntimeException("Not Implemented");
@@ -869,7 +868,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					heapAccess.getType());
 			this.stmtSwitch.addStatement(this.pf.mkHavocStatement(
 					TranslationHelpers.javaLocation2Attribute(this.stmtSwitch
-							.getCurrentStatement().getTags()), havocval));
+							.getCurrentStatement()), havocval));
 			Expression[] indices = { base, field };
 			Expression heapupdate = pf.mkArrayStoreExpression(SootPrelude.v()
 					.getHeapVariable().getType(), SootPrelude.v()

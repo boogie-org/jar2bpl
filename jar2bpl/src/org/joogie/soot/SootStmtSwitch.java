@@ -52,6 +52,10 @@ import soot.jimple.Stmt;
 import soot.jimple.StmtSwitch;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
+import soot.tagkit.LineNumberTag;
+import soot.tagkit.SourceFileTag;
+import soot.tagkit.SourceLnNamePosTag;
+import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
@@ -152,8 +156,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		// create fresh local variable for "right"
 		Attribute[] attributes = {};
 		if (this.currentStatement != null) {
-			TranslationHelpers.javaLocation2Attribute(this.currentStatement
-					.getTags());
+			TranslationHelpers.javaLocation2Attribute(this.currentStatement);
 		}
 
 		IdentifierExpression newexpr = this.procInfo
@@ -298,14 +301,14 @@ public class SootStmtSwitch implements StmtSwitch {
 		
 		injectLabelStatements(arg0);
 		
-		Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(arg0.getTarget().getTags()), this.pf.mkGotoStatement(GlobalsCache.v()
+		Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(arg0.getTarget()), this.pf.mkGotoStatement(GlobalsCache.v()
 				.getUnitLabel(arg0.getTarget())) };
 		
 		Statement[] elsePart = {};
 		//now check if we can find a source location for the else block.
 		Stmt else_loc = findSuccessorStatement(arg0);
 		if (else_loc!=null) {
-			elsePart = new Statement[]{TranslationHelpers.mkLocationAssertion(else_loc.getTags())};
+			elsePart = new Statement[]{TranslationHelpers.mkLocationAssertion(else_loc)};
 		}
 		
 		
@@ -505,19 +508,12 @@ public class SootStmtSwitch implements StmtSwitch {
 						(Stmt) exc_succ.get(i));
 			}
 			if (exc_succ.size() > 1) {
-				// StringBuilder sb = new StringBuilder();
-				// sb.append("Throw statement may jump to more than one location: "+this.procInfo.getBoogieName()
-				// + ":"+this.currentStatement+"\n");
-				// sb.append("Line "+loc.getStartLine()+"\n");
-				// sb.append(arg0.getOp()+"\n");
 
 				for (int i = 0; i < exc_succ.size(); i++) {
 					Unit u = exc_succ.get(i);
-					// sb.append("Line "+Util.findLineNumber(u.getTags())+
-					// ": "+u+"\n");
 
 					if (u instanceof IdentityStmt) {
-						// sb.append("IdentityStmt ");
+
 						IdentityStmt istmt = (IdentityStmt) u;
 						if (istmt.getRightOp() instanceof CaughtExceptionRef) {
 							// sb.append("... catches exception! " +
@@ -547,9 +543,29 @@ public class SootStmtSwitch implements StmtSwitch {
 							throw new RuntimeException(
 									"Bug in translation of ThrowStmt!");
 						}
+					} else if (u instanceof NopStmt) {
+						String filename="";
+						int startln=-1;
+						for (Tag tag : u.getTags()) {
+							if (tag instanceof LineNumberTag) {
+								if (GlobalsCache.v().currentMethod!=null) {
+									filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
+								}				
+								startln = ((LineNumberTag) tag).getLineNumber();
+								break;
+							} else if (tag instanceof SourceLnNamePosTag) {				
+								startln = ((SourceLnNamePosTag) tag).startLn();
+								filename = ((SourceLnNamePosTag) tag).getFileName();
+								break;
+							} else if (tag instanceof SourceFileTag) {
+								filename = ((SourceFileTag) tag).getSourceFile();
+								break;
+							}
+						}										
+						Log.error("Catch block starts with Nop instead of assignment. Maybe unsound. " + filename + ": "+ startln);
 					} else {
 						throw new RuntimeException(
-								"Bug in translation of ThrowStmt!");
+								"Bug in translation of ThrowStmt! " + u.getClass().toString());
 					}
 				}
 				// throw new RuntimeException(sb.toString());

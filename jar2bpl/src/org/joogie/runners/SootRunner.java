@@ -83,7 +83,7 @@ public class SootRunner extends Runner {
 			// additional classpath available?
 			String cp = buildClassPath(jarFiles);
 			if (Options.v().hasClasspath()) {
-				cp += File.pathSeparator + Options.v().getClasspath();
+				cp += File.pathSeparatorChar + Options.v().getClasspath();
 			}
 
 			// set soot-class-path
@@ -118,7 +118,7 @@ public class SootRunner extends Runner {
 			// additional classpath available?
 			String cp = buildClassPath(jarFiles);
 			if (Options.v().hasClasspath()) {
-				cp += File.pathSeparator + Options.v().getClasspath();
+				cp += File.pathSeparatorChar + Options.v().getClasspath();
 			}
 
 			// command-line arguments for Soot
@@ -203,7 +203,7 @@ public class SootRunner extends Runner {
 			// additional classpath available?
 			String cp = buildClassPath(jarFiles);
 			if (Options.v().hasClasspath()) {
-				cp += File.pathSeparator + Options.v().getClasspath();
+				cp += File.pathSeparatorChar + Options.v().getClasspath();
 			}
 
 			// command-line arguments for Soot
@@ -214,10 +214,15 @@ public class SootRunner extends Runner {
 			args.add("-cp");
 			args.add(cp);
 			
+			args.add("-src-prec");
+			args.add("class");
+			
 			// add path to be processed
 			args.add("-process-path");
 			args.add(path);
 
+			
+			
 			// finally, run soot
 			run(args, boogieFile);
 
@@ -264,6 +269,7 @@ public class SootRunner extends Runner {
 				
 			} else {
 				// Iterator Hack
+				Scene.v().addBasicClass("org.eclipse.jdt.core.compiler.CategorizedProblem",SootClass.HIERARCHY);
 				Scene.v().addBasicClass("java.lang.Iterable",SootClass.SIGNATURES);			
 				Scene.v().addBasicClass("java.util.Iterator",SootClass.SIGNATURES);
 				Scene.v().addBasicClass("java.lang.reflect.Array",SootClass.SIGNATURES);
@@ -273,9 +279,9 @@ public class SootRunner extends Runner {
 			Pack pack = PackManager.v().getPack("jtp");
 			pack.add(new Transform("jtp.BoogieTransform",
 					new SootBodyTransformer()));
-
+			
 			// Finally, run Soot
-			soot.Main.main(args.toArray(new String[]{}));
+			soot.Main.main(args.toArray(new String[args.size()]));
 
 			//CallGraph cg = Scene.v().getCallGraph();
 //			StringBuilder sb = new StringBuilder();
@@ -311,13 +317,15 @@ public class SootRunner extends Runner {
 	 *            Command-line arguments
 	 */
 	protected void fillSootArgs(List<String> args) {
-		args.add("-pp");		
 		args.add("-keep-line-number");
 		args.add("-keep-offset");
-		args.add("-print-tags");
+		args.add("-pp");		
+		//args.add("-print-tags");
+		//args.add("true");
 		args.add("-output-format");
 		args.add("none");
 		args.add("-allow-phantom-refs");
+		args.add("true");
 		//args.add("-w");
 		//args.add("-use-original-names");
 	}
@@ -348,7 +356,7 @@ public class SootRunner extends Runner {
 	protected String buildClassPath(List<File> files) {
 		StringBuilder sb = new StringBuilder();
 		for (File file : files) {
-			sb.append(file.getPath() + File.pathSeparator);
+			sb.append(file.getPath() + File.pathSeparatorChar);
 		}
 		return sb.toString();
 	}

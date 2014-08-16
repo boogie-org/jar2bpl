@@ -30,6 +30,7 @@ import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.StaticFieldRef;
+import soot.jimple.Stmt;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
@@ -50,38 +51,41 @@ public class TranslationHelpers {
 		return new SootLocation(-1);
 	}
 
-	public static ILocation translateLocation(List<Tag> list) {
-		int lineNumber = -1;
-		for (Tag tag : list) {
-			if (tag instanceof LineNumberTag) {
-				lineNumber = ((LineNumberTag) tag).getLineNumber();
-				break;
-			} else if (tag instanceof SourceLnNamePosTag) {
-				lineNumber = ((SourceLnNamePosTag) tag).startLn();
-				break;
-			}
-		}
-		return new SootLocation(lineNumber);
-	}
-
-	public static Statement mkLocationAssertion(List<Tag> list) {
+	public static Statement mkLocationAssertion(Stmt s) {
 		return GlobalsCache
 				.v()
 				.getPf()
-				.mkAssertStatement(javaLocation2Attribute(list),
+				.mkAssertStatement(javaLocation2Attribute(s),
 						GlobalsCache.v().getPf().mkBooleanLiteral(true));
 	}
+	
 
+	public static Attribute[] javaLocation2Attribute(Stmt s) {
+//
+//		if (s.getJavaSourceStartLineNumber()>0) {
+//			String filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
+//			int line = s.getJavaSourceStartLineNumber();
+//			int col = s.getJavaSourceStartColumnNumber();			
+//			Attribute[] res = { GlobalsCache
+//					.v()
+//					.getPf()
+//					.mkLocationAttribute(filename, line, col, line, col) };
+//			return res;
+//		} else {
+			return javaLocation2Attribute(s.getTags());
+//		}
+	}
+	
 	public static Attribute[] javaLocation2Attribute(List<Tag> list) {
 		// if the taglist is empty return no location
 		int startln, endln, startcol, endcol;
-		String filename;
+		
 
 		startln = -1;
 		endln = -1;
 		startcol = -1;
 		endcol = -1;
-		filename = null;
+		String filename = null;
 		
 		for (Tag tag : list) {
 			if (tag instanceof LineNumberTag) {
@@ -101,14 +105,17 @@ public class TranslationHelpers {
 				filename = ((SourceFileTag) tag).getSourceFile();
 				break;
 			} else {
-				Log.debug(tag.getClass().toString() + " "+tag.toString());
+				Log.debug("Tag ignored: " + tag.getClass().toString());
 			}
 		}
 
-		if (filename == null) {
+		if (filename == null && startln == -1 && endln == -1 && startcol == -1 && endcol == -1) {			
 			return new Attribute[0];
-		}
-
+		}    
+		
+		if (filename == null && GlobalsCache.v().currentMethod!=null) {
+			filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
+		}		
 		Attribute[] res = { GlobalsCache
 				.v()
 				.getPf()

@@ -51,6 +51,8 @@ public class Dispatcher {
 	 */
 	public static void run(String input, String output) {
 		try {
+			//SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
+			
 			Log.debug("Running Soot");
 			swSoot = StopWatch.getInstanceAndStart();
 			runSoot(input, output);
@@ -64,6 +66,10 @@ public class Dispatcher {
 			MhpInfo.resetInstance();
 			Options.resetInstance();
 		}
+	}
+	
+	public static void setClassPath(String cp) {
+		Options.v().setClasspath(cp);
 	}
 
 	/**

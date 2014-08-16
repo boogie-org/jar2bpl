@@ -93,7 +93,7 @@ public class SootProcedureInfo {
 
 	public SootProcedureInfo(SootMethod m) {
 		ProgramFactory pf = GlobalsCache.v().getPf();
-
+		
 		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(m
 				.getTags());
 
