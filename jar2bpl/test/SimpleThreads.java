@@ -37,24 +37,37 @@ public class SimpleThreads {
 //    	st.startTheMess();
 //    }
 
-	private List<Integer> list;
-	private static final int SIZE = 10;
+    private String instanceListeners[] = new String[0];
+
+    private final Object instanceListenersLock = new Object();
 	
-	public void main(String[] args) {
 
-		PrintWriter out = null;
+    public String[] findInstanceListeners() {
 
-		try {
+        synchronized (instanceListenersLock) {
+            return (instanceListeners);
+        }
+
+    }	
+	
+//	private List<Integer> list;
+//	private static final int SIZE = 10;
+//	
+//	public void main(String[] args) {
+//
+//		PrintWriter out = null;
+//
+//		try {
+////		    for (Integer x : list) {
+////		        x.toString();
+////		    }
+////		    list.size();
 //		    for (Integer x : list) {
-//		        x.toString();
+//		        //x.toString();
 //		    }
-//		    list.size();
-		    for (Integer x : list) {
-		        //x.toString();
-		    }
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-	}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}	
+//	}
 	
 }

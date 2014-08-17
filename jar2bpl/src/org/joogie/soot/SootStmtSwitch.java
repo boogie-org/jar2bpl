@@ -250,6 +250,10 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseEnterMonitorStmt(EnterMonitorStmt arg0) {
 		injectLabelStatements(arg0);
+		EnterMonitorStmt em = (EnterMonitorStmt)arg0;
+//		em.getOp().apply(this.valueswitch);
+//		Expression monitored_var = this.valueswitch.getExpression();
+		//TODO:
 		this.inMonitor = true;
 	}
 
@@ -263,6 +267,11 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseExitMonitorStmt(ExitMonitorStmt arg0) {
 		injectLabelStatements(arg0);
+		ExitMonitorStmt em = (ExitMonitorStmt)arg0;
+//		em.getOp().apply(this.valueswitch);
+//		Expression monitored_var = this.valueswitch.getExpression();
+		//TODO:
+		
 		this.inMonitor = false;
 	}
 

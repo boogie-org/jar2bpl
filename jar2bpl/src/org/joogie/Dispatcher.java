@@ -61,6 +61,9 @@ public class Dispatcher {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
+			soot.Scene.v().releaseActiveHierarchy();
+			soot.Scene.v().releaseCallGraph();
+			soot.Scene.v().releaseFastHierarchy();
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();
 			MhpInfo.resetInstance();
