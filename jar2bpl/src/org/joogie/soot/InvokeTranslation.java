@@ -163,8 +163,8 @@ public class InvokeTranslation {
 				.contains("<java.lang.System: void exit(int)>")) {
 			Log.info("Surppressing false positive from call to System.exit");
 			// this is not a return statement, it actually ends the application.			
-			ss.addStatement(pf.mkAssumeStatement(new Attribute[]{pf.mkNoVerifyAttribute()},
-					pf.mkBooleanLiteral(false)));
+//			ss.addStatement(pf.mkAssumeStatement(new Attribute[]{pf.mkNoVerifyAttribute()},
+//					pf.mkBooleanLiteral(false)));
 			ss.addStatement(pf.mkReturnStatement());
 			return true;
 		}
@@ -191,7 +191,7 @@ public class InvokeTranslation {
 	 */
 	static private Statement createCallStatement(SootStmtSwitch ss, SootMethod m, List<IdentifierExpression> lefts,
 			Expression[] args) {
-		
+				
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		
 		//this is the procInfo for the procedure from which m is called

@@ -100,9 +100,7 @@ public class SootPrelude {
 
 	private FunctionDeclaration bitAnd, bitOr;
 
-	
 	private ProcedureDeclaration newObject;
-	
 
 	private String fieldTypeName = "Field";
 
@@ -208,7 +206,6 @@ public class SootPrelude {
 		this.bitAnd = pf.findFunctionDeclaration("$bitAnd");
 		this.bitOr = pf.findFunctionDeclaration("$bitOr");
 
-
 		this.newObject = pf.findProcedureDeclaration("$new");
 
 		if (org.joogie.Options.v().getPreludeFileName() == null) {
@@ -260,7 +257,7 @@ public class SootPrelude {
 		return this.nullConstant;
 	}
 
-	public Expression getHeapVariable() {
+	public IdentifierExpression getHeapVariable() {
 		return this.heapVariable;
 	}
 
@@ -488,8 +485,16 @@ public class SootPrelude {
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		return pf.mkCallStatement(attr, false,
 				new IdentifierExpression[] { var },
-				this.newObject.getIdentifier(),
-				new Expression[] { obj_type });
+				this.newObject.getIdentifier(), new Expression[] { obj_type });
 	}
-	
+
+	public Expression heapAccess(Expression base, Expression field) {
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		// Assemble the $heap[base, field] expression
+		Expression[] indices = { base, field };
+		return pf.mkArrayAccessExpression(
+				SootPrelude.v().getFieldType(field.getType()), SootPrelude.v()
+						.getHeapVariable(), indices);
+	}
+
 }

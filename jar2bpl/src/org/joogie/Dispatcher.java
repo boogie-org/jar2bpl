@@ -60,14 +60,12 @@ public class Dispatcher {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			soot.Scene.v().releaseActiveHierarchy();
-			soot.Scene.v().releaseCallGraph();
-			soot.Scene.v().releaseFastHierarchy();
+		} finally {			
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();
 			MhpInfo.resetInstance();
 			Options.resetInstance();
+			soot.G.reset();
 		}
 	}
 	
@@ -97,6 +95,7 @@ public class Dispatcher {
 			SootPrelude.resetInstance();
 			MhpInfo.resetInstance();
 			Options.resetInstance();
+			soot.G.reset();
 		}
 		return pf;
 	}

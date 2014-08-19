@@ -49,6 +49,7 @@ import boogie.ast.declaration.ProcedureDeclaration;
 import boogie.ast.expression.Expression;
 import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.specification.Specification;
+import boogie.ast.statement.AssumeStatement;
 import boogie.enums.BinaryOperator;
 import boogie.type.BoogieType;
 
@@ -77,6 +78,8 @@ public class SootProcedureInfo {
 	private Implementation boogieProcedure = null;
 
 	public Expression returnTypeVariable = null;
+	
+	public HashSet<AssumeStatement> typeAssumptions = new HashSet<AssumeStatement>();
 
 	private LinkedList<IdentifierExpression> idexpFromVarlist(VarList[] vla) {
 		LinkedList<IdentifierExpression> ret = new LinkedList<IdentifierExpression>();
@@ -91,9 +94,25 @@ public class SootProcedureInfo {
 		return ret;
 	}
 
+	
+	private void assumeParameterType(IdentifierExpression id, Type t) {
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		//create an assumption about the type to put in the body.
+		if (t instanceof RefType) {				
+			RefType rtype = (RefType) t;
+			Expression rhs = GlobalsCache.v().lookupClassVariable(
+					rtype.getSootClass());
+			Expression ofType = pf.mkBinaryExpression(
+					pf.getBoolType(), BinaryOperator.COMPPO,
+					SootPrelude.v().heapAccess(id, SootPrelude.v()
+							.getFieldClassVariable()), rhs);			
+			typeAssumptions.add((AssumeStatement) pf.mkAssumeStatement(new Attribute[0], ofType));
+		}		
+	}
+	
 	public SootProcedureInfo(SootMethod m) {
 		ProgramFactory pf = GlobalsCache.v().getPf();
-		
+
 		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(m
 				.getTags());
 
@@ -134,6 +153,14 @@ public class SootProcedureInfo {
 			this.thisVariable = null;
 		}
 
+		if (this.sootMethod.isAbstract()) {
+			// if the method is abstract assume the worst possible modifies
+			// clause
+			this.specification.add(pf.mkModifiesSpecification(true,
+					new IdentifierExpression[] { SootPrelude.v()
+							.getHeapVariable() }));
+		}
+
 		// collect the annotations
 		LinkedList<LinkedList<SootAnnotations.Annotation>> pannot = SootAnnotations
 				.parseParameterAnnotations(this.sootMethod);
@@ -147,6 +174,8 @@ public class SootProcedureInfo {
 					param_name, false, false, false);
 			this.inParameters.add(id);
 
+			assumeParameterType(id, this.sootMethod.getParameterType(i));
+			
 			// add precondition if parameter has @NonNull annotation
 			if (pannot.size() != 0) { // may be null if there are no annotations
 										// at all
@@ -174,6 +203,8 @@ public class SootProcedureInfo {
 			this.outParameters.add(id);
 			this.returnVariable = id;
 
+			assumeParameterType(id, returntype);
+			
 			// compute the type variable if the method return a reference type
 			// this is used to ensure the type in assume-guarantee reasoning
 			this.returnTypeVariable = null;
@@ -244,7 +275,7 @@ public class SootProcedureInfo {
 	public SootMethod getSootMethod() {
 		return this.sootMethod;
 	}
-	
+
 	public String getBoogieName() {
 		return cleanName;
 	}

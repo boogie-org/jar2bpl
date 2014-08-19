@@ -8,6 +8,7 @@ import org.joogie.soot.SootStmtSwitch;
 import org.joogie.util.TranslationHelpers;
 
 import soot.SootClass;
+import util.Log;
 import boogie.ast.Attribute;
 import boogie.ast.expression.Expression;
 import boogie.ast.statement.Statement;
@@ -42,7 +43,7 @@ public class AssertionErrorModel extends AbstractErrorModel {
 		} else {
 			//assertion = this.pf.mkAssertStatement(loc,this.pf.mkBooleanLiteral(loc, false));
 			//TODO:
-			System.err.println("unguarded exception " + exception);
+			Log.error("unguarded exception " + exception);
 			assertion = this.pf.mkReturnStatement();
 		}		
 		this.stmtSwitch.addStatement(assertion);		

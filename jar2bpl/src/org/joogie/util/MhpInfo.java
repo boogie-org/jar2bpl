@@ -164,6 +164,6 @@ public class MhpInfo {
 				sb.append("\n");
 			}
 		}
-		System.err.println(sb.toString());
+		Log.error(sb.toString());
 	}
 }

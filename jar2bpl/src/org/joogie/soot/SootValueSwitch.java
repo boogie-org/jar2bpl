@@ -986,10 +986,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			this.stmtSwitch.getErrorModel().createNonNullGuard(base);
 		}
 		// Assemble the $heap[base, field] expression
-		Expression[] indices = { base, field };
-		return pf.mkArrayAccessExpression(
-				SootPrelude.v().getFieldType(field.getType()), SootPrelude.v()
-						.getHeapVariable(), indices);
+		return SootPrelude.v().heapAccess(base, field);
 	}
 
 	/**

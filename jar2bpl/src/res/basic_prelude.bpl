@@ -7,13 +7,20 @@ type $heap_type = <$GenericType__0>[ref,Field $GenericType__0]$GenericType__0;
 
 var $heap : $heap_type;
 
-
-const unique $null : ref;
 //$type is used to store the type of a java object on the heap.
 //E.g., String s will have $heap[s,$type]==string
 const unique $type : Field javaType;
+
 //$heap[s,$alloc] is true if s is properly allocated
 const unique $alloc : Field bool ;
+
+
+const unique $null : ref;
+
+//ensure that $null is a subtype of everything
+axiom (forall t : javaType :: $heap[$null,$type] <: t);
+
+
 
 function $arrayType(t:javaType) returns ($ret:javaType);
 

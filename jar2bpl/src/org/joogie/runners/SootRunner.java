@@ -142,8 +142,6 @@ public class SootRunner extends Runner {
 		try {
 			// command-line arguments for Soot
 			
-			String suffix = apkFile.substring(apkFile.lastIndexOf("/")+1, apkFile.length());
-			
 			List<String> args = new ArrayList<String>();
 			fillSootArgs(args);
 
@@ -164,19 +162,9 @@ public class SootRunner extends Runner {
 			args.add(cp);
 			
 			//add process-dir
-			
-
-			System.err.println("FILE "+suffix);
 			args.add("-process-dir");
 			args.add(apkFile);
-			
-			System.err.print("ARGS ");
-			for (String s : args) {
-				System.err.print(s + "  ");
-			}
-			System.err.println();
-			
-			
+						
 			// finally, run soot
 			run(args, boogieFile);
 

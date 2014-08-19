@@ -102,7 +102,10 @@ public class SootBodyTransformer extends BodyTransformer {
 		// but let's play it safe.
 
 		LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
-
+		
+		//now add all assumptions about the types of the in and out parameters
+		boogieStatements.addAll(procInfo.typeAssumptions);
+		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
 			

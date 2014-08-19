@@ -105,7 +105,7 @@ public class TranslationHelpers {
 				filename = ((SourceFileTag) tag).getSourceFile();
 				break;
 			} else {
-				Log.debug("Tag ignored: " + tag.getClass().toString());
+				Log.debug("Tag ignored: " + tag.toString());
 			}
 		}
 
