@@ -17,7 +17,9 @@ import soot.jimple.Stmt;
 import soot.toolkits.graph.ExceptionalUnitGraph.ExceptionDest;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
+import boogie.ast.expression.BinaryExpression;
 import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
 
@@ -77,6 +79,10 @@ public abstract class AbstractErrorModel {
 				createdUnExpectedException(guard, exception);
 			}
 		} else {
+			if (isThisNonNullCheck(guard)) {
+				//we can ignore that.
+				return;
+			}
 			//if the exception is caught, create a goto
 			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
 			
@@ -94,6 +100,23 @@ public abstract class AbstractErrorModel {
 				this.stmtSwitch.addStatement(transferStatement);
 			}
 		}
+	}
+	
+	protected boolean isThisNonNullCheck(Expression guard) {
+		if (guard instanceof BinaryExpression) {
+			BinaryExpression boe = (BinaryExpression)guard;			
+			if (boe.getOperator()==BinaryOperator.COMPNEQ) {				
+				if (boe.getLeft() instanceof IdentifierExpression) {					
+					IdentifierExpression id = (IdentifierExpression)boe.getLeft();
+					if (id.getIdentifier().startsWith("this") && id.getIdentifier().length() <= 6 || SootPrelude.v().getNullConstant()==id) { 
+						if (boe.getRight() == SootPrelude.v().getNullConstant()) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 	
 	public Statement createAssumeNonNull(Expression expr) {

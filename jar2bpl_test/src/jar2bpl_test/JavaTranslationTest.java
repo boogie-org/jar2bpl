@@ -13,7 +13,7 @@ public class JavaTranslationTest {
 		//TODO: design one test case for each sort of input to the translation.
 		try {
 			
-			String javaFileDir = "regression/java_input/";
+			String javaFileDir = "regression/false_positives/fp04";
 			Options.v().setClasspath(javaFileDir);
 			String bplFile = "regression/test_output/java_input.bpl";
 

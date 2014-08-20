@@ -19,6 +19,7 @@
 
 package org.joogie.util;
 
+import java.util.HashSet;
 import java.util.List;
 
 import org.joogie.GlobalsCache;
@@ -35,6 +36,7 @@ import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
 import soot.tagkit.Tag;
+import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.expression.Expression;
 import boogie.ast.location.ILocation;
@@ -59,6 +61,7 @@ public class TranslationHelpers {
 						GlobalsCache.v().getPf().mkBooleanLiteral(true));
 	}
 	
+	public static HashSet<Stmt> clonedFinallyBlocks = new HashSet<Stmt>();
 
 	public static Attribute[] javaLocation2Attribute(Stmt s) {
 //
@@ -72,11 +75,34 @@ public class TranslationHelpers {
 //					.mkLocationAttribute(filename, line, col, line, col) };
 //			return res;
 //		} else {
-			return javaLocation2Attribute(s.getTags());
+			return javaLocation2Attribute(s.getTags(), clonedFinallyBlocks.contains(s));
 //		}
 	}
 	
 	public static Attribute[] javaLocation2Attribute(List<Tag> list) {
+		return javaLocation2Attribute(list, false);	
+	}
+	
+	
+	private static String getFileName(SootClass sc) {
+		if (sc.hasOuterClass()) return getFileName(sc.getOuterClass());
+		String filename = null;
+		for (Tag t_ : sc.getTags()) {
+			if (t_ instanceof SourceFileTag) {							
+				filename = ((SourceFileTag)t_).getSourceFile();
+				if (((SourceFileTag)t_).getAbsolutePath()!=null) {
+					filename = ((SourceFileTag)t_).getAbsolutePath()+filename;
+				}
+				break;
+			} else if (t_ instanceof SourceLnNamePosTag) {
+				filename = ((SourceLnNamePosTag)t_).getFileName();
+				//don't break, mybe there is still a source file tag.
+			}
+		}
+		return filename;
+	}
+	
+	public static Attribute[] javaLocation2Attribute(List<Tag> list, boolean isCloned) {
 		// if the taglist is empty return no location
 		int startln, endln, startcol, endcol;
 		
@@ -86,23 +112,32 @@ public class TranslationHelpers {
 		startcol = -1;
 		endcol = -1;
 		String filename = null;
+
+		if (GlobalsCache.v().currentMethod!=null) {
+			filename = getFileName(GlobalsCache.v().currentMethod.getDeclaringClass());
+		}				
+
 		
 		for (Tag tag : list) {
 			if (tag instanceof LineNumberTag) {
-				if (GlobalsCache.v().currentMethod!=null) {
-					filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
-				}				
 				startln = ((LineNumberTag) tag).getLineNumber();
 				break;
-			} else if (tag instanceof SourceLnNamePosTag) {				
+			} else if (tag instanceof SourceLnNamePosTag) {
+				if (filename==null) {
+					filename = ((SourceLnNamePosTag) tag).getFileName();
+				}
 				startln = ((SourceLnNamePosTag) tag).startLn();
-				endln = ((SourceLnNamePosTag) tag).endLn();
-				filename = ((SourceLnNamePosTag) tag).getFileName();
+				endln = ((SourceLnNamePosTag) tag).endLn();				
 				startcol = ((SourceLnNamePosTag) tag).startPos();
 				endcol = ((SourceLnNamePosTag) tag).endPos();
 				break;
 			} else if (tag instanceof SourceFileTag) {
-				filename = ((SourceFileTag) tag).getSourceFile();
+				if (filename==null) {
+					filename = ((SourceFileTag) tag).getAbsolutePath()+((SourceFileTag) tag).getSourceFile();
+					if (((SourceFileTag) tag).getAbsolutePath()!=null) {
+						filename = ((SourceFileTag)tag).getAbsolutePath()+filename;
+					}
+				}
 				break;
 			} else {
 				Log.debug("Tag ignored: " + tag.toString());
@@ -115,11 +150,19 @@ public class TranslationHelpers {
 		
 		if (filename == null && GlobalsCache.v().currentMethod!=null) {
 			filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
-		}		
-		Attribute[] res = { GlobalsCache
-				.v()
-				.getPf()
-				.mkLocationAttribute(filename, startln, endln, startcol, endcol) };
+		}
+		
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		Attribute loc = pf.mkLocationAttribute(filename, startln, endln, startcol, endcol);
+		
+		Attribute[] res;
+		if (isCloned) {			
+			res = new Attribute[]{ loc, pf.mkCustomAttribute(ProgramFactory.Cloned) };
+		} else {
+			res = new Attribute[]{ loc };
+		}
+ 		
+		
 		return res;
 	}
 

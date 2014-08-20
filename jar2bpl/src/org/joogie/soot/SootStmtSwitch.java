@@ -137,8 +137,10 @@ public class SootStmtSwitch implements StmtSwitch {
 			String label = GlobalsCache.v()
 					.getUnitLabel(arg0);
 
-			this.boogieStatements.add(this.pf.mkLabel(label));
+			this.boogieStatements.add(this.pf.mkLabel(label));			
 		}
+		
+		this.boogieStatements.add(TranslationHelpers.mkLocationAssertion(arg0));
 	}
 
 	/*
@@ -251,8 +253,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseEnterMonitorStmt(EnterMonitorStmt arg0) {
 		injectLabelStatements(arg0);
 		EnterMonitorStmt em = (EnterMonitorStmt)arg0;
-//		em.getOp().apply(this.valueswitch);
-//		Expression monitored_var = this.valueswitch.getExpression();
+		em.getOp().apply(this.valueswitch);
+		this.valueswitch.getExpression();
 		//TODO:
 		this.inMonitor = true;
 	}
@@ -268,8 +270,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseExitMonitorStmt(ExitMonitorStmt arg0) {
 		injectLabelStatements(arg0);
 		ExitMonitorStmt em = (ExitMonitorStmt)arg0;
-//		em.getOp().apply(this.valueswitch);
-//		Expression monitored_var = this.valueswitch.getExpression();
+		em.getOp().apply(this.valueswitch);
+		this.valueswitch.getExpression();
 		//TODO:
 		
 		this.inMonitor = false;
@@ -296,7 +298,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	@Override
 	public void caseIdentityStmt(IdentityStmt arg0) {
-		injectLabelStatements(arg0);
+		injectLabelStatements(arg0);		
 		AssignmentTranslation.translateAssignment(this, arg0.getLeftOp(), arg0.getRightOp(), arg0);
 	}
 

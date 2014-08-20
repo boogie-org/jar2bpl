@@ -32,7 +32,10 @@ public class TestFalsePositives  {
 		  if (directoryListing != null) {
 		    for (File child : directoryListing) {		    	
 		    	if (child.isDirectory() && child.getAbsolutePath()!=null) {
-		    		filenames.add(new Object[] {child.getAbsolutePath()});
+		    		int idx = child.getName().lastIndexOf('/');
+		    		idx = (idx<0)?0:idx;
+		    		String sn = child.getName().substring(idx);
+		    		filenames.add(new Object[] {child.getAbsolutePath(), sn });
 		    		
 		    	} else {
 		    		//Ignore
@@ -48,20 +51,23 @@ public class TestFalsePositives  {
 	   return filenames;
    }
 	
-    private String input;
+    private String input, shortname;
     
-    public TestFalsePositives(String input) {
+    public TestFalsePositives(String input, String shortname) {
         this.input = input;
+        this.shortname = shortname;
     }
 
 	
 	@Test
 	public void test() {
+		String bplFile = "regression/test_output/"+this.shortname.replace('/', '_')+".bpl";
 		System.out.println("Test: "+this.input);
+		System.out.println("  output: "+bplFile);
 		try {			
 			String javaFileDir = this.input;
 			Options.v().setClasspath(javaFileDir);
-			String bplFile = "regression/test_output/fic.bpl";
+			
 
 			Dispatcher.run(javaFileDir,
 					bplFile);

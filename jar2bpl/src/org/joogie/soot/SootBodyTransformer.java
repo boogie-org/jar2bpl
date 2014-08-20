@@ -19,6 +19,8 @@
 
 package org.joogie.soot;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -34,6 +36,9 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
 import soot.jimple.Stmt;
+import soot.tagkit.LineNumberTag;
+import soot.tagkit.SourceLnNamePosTag;
+import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ast.Attribute;
 import boogie.ast.declaration.Implementation;
@@ -92,20 +97,24 @@ public class SootBodyTransformer extends BodyTransformer {
 			return;
 		}
 		
-		//TOOD: what should we do if the procedure has already been defined 
-		//in the prelude?
 		
-		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
-		Iterator<Unit> stmtIt = tug.iterator();
-
-		// I am not sure if it is important to first compute the tug,
-		// but let's play it safe.
-
 		LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
 		
 		//now add all assumptions about the types of the in and out parameters
 		boogieStatements.addAll(procInfo.typeAssumptions);
 		
+		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
+		Iterator<Unit> stmtIt = tug.iterator();
+		
+		//in a first pass, check if statements have been duplicated
+		//in the bytecode, e.g. for finally-blocks, which is used
+		//later to generate attributes that suppress false alarms
+		//during infeasible code detection.				
+		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(stmtIt);
+		
+		//reset the iterator
+		stmtIt = tug.iterator();
+
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
 			
@@ -143,6 +152,104 @@ public class SootBodyTransformer extends BodyTransformer {
 								.size()]), procInfo.getLocalVariables());
 				
 		procInfo.setProcedureImplementation(proc);
+	}
+	
+	/**
+	 * In the bytecode, finally-blocks are duplicated. To prevent false positives 
+	 * during infeasible code detection it is vital to detect and flag these duplications.
+	 * The challenge is that they are not exact clones. Variables might be slightly different,
+	 * etc. 
+	 * Hence we look for blocks of statements that:
+	 * a) each statement has the same java line number
+	 * b) the blocks are not connected
+	 * c) they have a subsequence of instructions with exactly the same types.
+	 * This is certainly unsound but seems to work so far.
+	 * @param stmtIt
+	 */
+	private HashSet<Stmt> detectDuplicatedFinallyBlocks(Iterator<Unit> stmtIt) {
+		//TODO: instead of just returning the set of stmts that have duplicates
+		//we could group them so that we can still report infeasible code
+		//if all duplicates of one statement are infeasible.
+		HashSet<Stmt> duplicates = new HashSet<Stmt>();
+		
+		HashMap<Integer, LinkedList<Stmt>> subprogs = new HashMap<Integer, LinkedList<Stmt>>();
+		
+		LinkedList<Stmt> subprog = null;
+		int old_line = -100; // pick a negative constant that is not a line number
+		
+		while (stmtIt.hasNext()) {
+			Stmt s = (Stmt) stmtIt.next();
+			int line=-1;
+			for (Tag tag : s.getTags()) {
+				if (tag instanceof LineNumberTag) {
+					LineNumberTag t = (LineNumberTag)tag;					
+					line = t.getLineNumber();
+				} else if (tag instanceof SourceLnNamePosTag) {
+					SourceLnNamePosTag t = (SourceLnNamePosTag)tag;
+					line = t.startLn();
+				}	
+			}
+			if (line==old_line) {
+				subprog.add(s);
+			} else {
+				if (subprog!=null) {
+					if (!subprogs.containsKey(old_line)) {
+						subprogs.put(old_line, subprog);
+					} else {
+						if (compareSubprogs(subprog, subprogs.get(old_line))) {
+//							System.err.println("P1 " + line);
+							for (Stmt st : subprogs.get(old_line)) {
+//								System.err.println("\t"+st);
+								duplicates.add(st);
+							}
+//							System.err.println("P2 " + line);
+							for (Stmt st : subprog) {
+//								System.err.println("\t"+st);
+								duplicates.add(st);
+							}							
+						}
+					}
+				}
+				subprog = new LinkedList<Stmt>();
+				subprog.add(s);
+				old_line = line;
+			}
+
+		}
+		return duplicates;
+	}
+	
+	private boolean compareSubprogs(LinkedList<Stmt> p1, LinkedList<Stmt> p2) {		
+		LinkedList<Stmt> l1, l2;
+		if (p1.size()<p2.size()) {
+			l1=p1; l2=p2;
+		} else {
+			l1=p2; l2=p1;
+		}
+		
+		for (int i=0; i<l1.size();i++) {
+			if (l1.size()-i<l2.size()) {
+				//then they cannot be sublists anymore
+				return false;
+			}
+			boolean sublist = true;
+			for (int j=0; j<l2.size();j++) {
+				if (!shallowCompareStatements(l1.get(i+j),l2.get(j))) {
+					sublist = false;
+					break;
+				}
+			}
+			if (sublist) return true;
+		}
+		
+		return false;
+	}
+	
+	private boolean shallowCompareStatements(Stmt s1, Stmt s2) {
+		if (s1.getClass() == s2.getClass()) {
+			return true;
+		}
+		return false;
 	}
 	
 }
