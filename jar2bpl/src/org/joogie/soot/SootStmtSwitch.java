@@ -31,6 +31,7 @@ import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
+import soot.Local;
 import soot.RefType;
 import soot.Type;
 import soot.Unit;
@@ -51,6 +52,7 @@ import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
 import soot.jimple.StmtSwitch;
 import soot.jimple.TableSwitchStmt;
+import soot.jimple.ThisRef;
 import soot.jimple.ThrowStmt;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
@@ -300,8 +302,18 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseIdentityStmt(IdentityStmt arg0) {
 		injectLabelStatements(arg0);		
 		AssignmentTranslation.translateAssignment(this, arg0.getLeftOp(), arg0.getRightOp(), arg0);
+		if (isLocalRenamingOfThisPointer(arg0)) {
+			this.procInfo.thisRefLocal = this.procInfo.lookupLocalVariable((Local)(arg0.getLeftOp()));
+		}
+	}	
+	
+	private boolean isLocalRenamingOfThisPointer(IdentityStmt is) {
+		if (is.getLeftOp() instanceof Local && is.getRightOp() instanceof ThisRef) {
+			return true;
+		}
+		return false;
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 

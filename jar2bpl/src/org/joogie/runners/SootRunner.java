@@ -308,8 +308,8 @@ public class SootRunner extends Runner {
 		args.add("-keep-line-number");
 		args.add("-keep-offset");
 		args.add("-pp");		
-		//args.add("-print-tags");
-		//args.add("true");
+		args.add("-print-tags");
+		args.add("true");
 		if (org.joogie.Options.v().isDebug()) {
 			args.add("-f");
 			args.add("jimple");

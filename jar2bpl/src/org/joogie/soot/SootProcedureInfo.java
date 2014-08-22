@@ -325,6 +325,8 @@ public class SootProcedureInfo {
 		return this.sootMethod.isStatic();
 	}
 
+	public IdentifierExpression thisRefLocal = null;
+	
 	public IdentifierExpression lookupLocalVariable(Local local) {
 		if (!this.localVariable.containsKey(local)) {
 			BoogieType type = GlobalsCache.v().getBoogieType(local.getType());

@@ -140,7 +140,7 @@ public class TranslationHelpers {
 				}
 				break;
 			} else {
-				Log.debug("Tag ignored: " + tag.toString());
+//				Log.info("Tag ignored: " + tag.getClass().toString());
 			}
 		}
 

@@ -79,7 +79,7 @@ public abstract class FalsePositives05 {
         return sb.toString();
     }
     
-    abstract int integer();
+    abstract int integer() throws Exception;
     public void ex05() {
         boolean success = false;
         try {

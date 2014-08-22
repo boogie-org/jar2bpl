@@ -81,6 +81,7 @@ import soot.jimple.ThisRef;
 import soot.jimple.UshrExpr;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.XorExpr;
+import soot.jimple.toolkits.annotation.nullcheck.NullPointerChecker;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.declaration.FunctionDeclaration;
@@ -902,14 +903,14 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		arg0.getBase().apply(this);
 		Expression base = this.getExpression();
 		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
-
+		
 		boolean nullCheckNeeded = true;
 		// check if the field may be modified by another thread.
 		if (!islhs && checkSharedField(arg0, field)) {
 			havocField(field, base);
 			nullCheckNeeded = false;
 		}
-
+		
 		// We are checking if this is a @NonNull field
 		// if so, we add an assume to ensure that it actually is
 		// not null here.

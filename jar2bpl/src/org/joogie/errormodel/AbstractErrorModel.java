@@ -83,6 +83,8 @@ public abstract class AbstractErrorModel {
 				//we can ignore that.
 				return;
 			}
+			
+			
 			//if the exception is caught, create a goto
 			Statement transferStatement = this.pf.mkGotoStatement( transferlabel);
 			
@@ -103,12 +105,14 @@ public abstract class AbstractErrorModel {
 	}
 	
 	protected boolean isThisNonNullCheck(Expression guard) {
+		
 		if (guard instanceof BinaryExpression) {
 			BinaryExpression boe = (BinaryExpression)guard;			
 			if (boe.getOperator()==BinaryOperator.COMPNEQ) {				
 				if (boe.getLeft() instanceof IdentifierExpression) {					
 					IdentifierExpression id = (IdentifierExpression)boe.getLeft();
-					if (id.getIdentifier().startsWith("this") && id.getIdentifier().length() <= 6 || SootPrelude.v().getNullConstant()==id) { 
+					if (this.procInfo.thisRefLocal==id  
+							|| this.procInfo.getThisReference()==id) { 
 						if (boe.getRight() == SootPrelude.v().getNullConstant()) {
 							return true;
 						}
