@@ -222,17 +222,19 @@ public class SootBodyTransformer extends BodyTransformer {
 	private boolean compareSubprogs(LinkedList<Stmt> p1, LinkedList<Stmt> p2) {		
 		LinkedList<Stmt> l1, l2;
 		if (p1.size()<p2.size()) {
-			l1=p1; l2=p2;
+			l2=p1; l1=p2;
 		} else {
-			l1=p2; l2=p1;
+			l2=p2; l1=p1;
 		}
 		
 		for (int i=0; i<l1.size();i++) {
+			
 			if (l1.size()-i<l2.size()) {
 				//then they cannot be sublists anymore
 				return false;
 			}
 			boolean sublist = true;
+						
 			for (int j=0; j<l2.size();j++) {
 				if (!shallowCompareStatements(l1.get(i+j),l2.get(j))) {
 					sublist = false;

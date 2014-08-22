@@ -20,6 +20,8 @@ public abstract class FalsePositives05 {
 
 	private final Object welcomeFilesLock = new Object();
     private String welcomeFiles[] = new String[0];
+    abstract Object foo();
+    abstract InputStream bar();
 	
     
     public String[] ex01() {
@@ -52,8 +54,6 @@ public abstract class FalsePositives05 {
         }
     }
     
-    abstract Object foo();
-    abstract InputStream bar();
     
     public String ex04() {
 

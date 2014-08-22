@@ -323,15 +323,18 @@ public class SootStmtSwitch implements StmtSwitch {
 	public void caseIfStmt(IfStmt arg0) {
 		
 		injectLabelStatements(arg0);
-		
-		Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(arg0.getTarget()), this.pf.mkGotoStatement(GlobalsCache.v()
+		boolean forceCloneAttibute = false;
+		if (TranslationHelpers.clonedFinallyBlocks.contains(arg0) ) {
+			forceCloneAttibute = true;
+		}
+		Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(arg0.getTarget(), forceCloneAttibute), this.pf.mkGotoStatement(GlobalsCache.v()
 				.getUnitLabel(arg0.getTarget())) };
 		
 		Statement[] elsePart = {};
 		//now check if we can find a source location for the else block.
 		Stmt else_loc = findSuccessorStatement(arg0);
 		if (else_loc!=null) {
-			elsePart = new Statement[]{TranslationHelpers.mkLocationAssertion(else_loc)};
+			elsePart = new Statement[]{TranslationHelpers.mkLocationAssertion(else_loc, forceCloneAttibute)};
 		}
 		
 		

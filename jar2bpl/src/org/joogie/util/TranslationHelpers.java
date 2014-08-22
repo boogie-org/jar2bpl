@@ -54,29 +54,25 @@ public class TranslationHelpers {
 	}
 
 	public static Statement mkLocationAssertion(Stmt s) {
+		return mkLocationAssertion(s, false);
+	}
+	
+	public static Statement mkLocationAssertion(Stmt s, boolean forceCloneAttribute) {
 		return GlobalsCache
 				.v()
 				.getPf()
-				.mkAssertStatement(javaLocation2Attribute(s),
+				.mkAssertStatement(javaLocation2Attribute(s, forceCloneAttribute),
 						GlobalsCache.v().getPf().mkBooleanLiteral(true));
 	}
 	
 	public static HashSet<Stmt> clonedFinallyBlocks = new HashSet<Stmt>();
 
 	public static Attribute[] javaLocation2Attribute(Stmt s) {
-//
-//		if (s.getJavaSourceStartLineNumber()>0) {
-//			String filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
-//			int line = s.getJavaSourceStartLineNumber();
-//			int col = s.getJavaSourceStartColumnNumber();			
-//			Attribute[] res = { GlobalsCache
-//					.v()
-//					.getPf()
-//					.mkLocationAttribute(filename, line, col, line, col) };
-//			return res;
-//		} else {
-			return javaLocation2Attribute(s.getTags(), clonedFinallyBlocks.contains(s));
-//		}
+		return javaLocation2Attribute(s, false);
+	}
+	
+	public static Attribute[] javaLocation2Attribute(Stmt s, boolean forceCloneAttribute) {
+		return javaLocation2Attribute(s.getTags(), clonedFinallyBlocks.contains(s) || forceCloneAttribute);
 	}
 	
 	public static Attribute[] javaLocation2Attribute(List<Tag> list) {

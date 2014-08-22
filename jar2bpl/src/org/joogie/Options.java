@@ -52,7 +52,7 @@ public class Options {
 		return soundThreads;
 	}
 
-	@Option(name = "-debug", usage = "Debug mode. E.g., prints jimple output to ./dump", required = false)
+	@Option(name = "-debug-mode", usage = "Debug mode. E.g., prints jimple output to ./dump", required = false)
 	private boolean debug=false;
 	public boolean isDebug() {
 		return debug;
