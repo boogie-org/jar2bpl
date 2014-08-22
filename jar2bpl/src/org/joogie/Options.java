@@ -52,6 +52,13 @@ public class Options {
 		return soundThreads;
 	}
 
+	@Option(name = "-debug", usage = "Debug mode. E.g., prints jimple output to ./dump", required = false)
+	private boolean debug=false;
+	public boolean isDebug() {
+		return debug;
+	}
+	
+	
 	@Option(name = "-vcalls", usage = "Use sound translation for abstract and virtual calls.", required = false)
 	private boolean soundCalls=false;
 	public boolean useSoundCalls() {

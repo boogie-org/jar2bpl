@@ -487,9 +487,18 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			RefType rtype = (RefType) arg0.getCheckType();
 			Expression rhs = GlobalsCache.v().lookupClassVariable(
 					rtype.getSootClass());
-			this.expressionStack.push(this.pf.mkBinaryExpression(
+			
+			Expression isNonNull = this.pf.mkBinaryExpression(
+					this.pf.getBoolType(), BinaryOperator.COMPNEQ,
+					lhs, SootPrelude.v().getNullConstant());
+			
+			Expression isSubtype = this.pf.mkBinaryExpression(
 					this.pf.getBoolType(), BinaryOperator.COMPPO,
-					this.getClassTypeFromExpression(lhs, false), rhs));
+					this.getClassTypeFromExpression(lhs, false), rhs);
+			
+			this.expressionStack.push( this.pf.mkBinaryExpression(
+					this.pf.getBoolType(), BinaryOperator.LOGICAND,
+					isNonNull, isSubtype) );
 		} else {
 			Log.error("instanceof for arrays not implemented");
 			this.expressionStack.push(createHavocedExpression(GlobalsCache.v()

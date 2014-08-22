@@ -310,12 +310,15 @@ public class SootRunner extends Runner {
 		args.add("-pp");		
 		//args.add("-print-tags");
 		//args.add("true");
-		args.add("-output-format");
-		args.add("none");
+		if (org.joogie.Options.v().isDebug()) {
+			args.add("-f");
+			args.add("jimple");
+			args.add("-d");
+			args.add("./dump");
+		}
 		args.add("-allow-phantom-refs");
 		args.add("true");
-		//args.add("-w");
-		//args.add("-use-original-names");
+		//args.add("-w");		
 	}
 
 	/**
