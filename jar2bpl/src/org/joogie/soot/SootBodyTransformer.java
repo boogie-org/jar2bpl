@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.joogie.GlobalsCache;
@@ -35,6 +36,10 @@ import soot.BodyTransformer;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
+import soot.Value;
+import soot.ValueBox;
+import soot.jimple.EnterMonitorStmt;
+import soot.jimple.ExitMonitorStmt;
 import soot.jimple.Stmt;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceLnNamePosTag;
@@ -110,11 +115,11 @@ public class SootBodyTransformer extends BodyTransformer {
 		//in the bytecode, e.g. for finally-blocks, which is used
 		//later to generate attributes that suppress false alarms
 		//during infeasible code detection.				
-		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(stmtIt);
+		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(stmtIt);
 		
 		//reset the iterator
 		stmtIt = tug.iterator();
-
+		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
 			
@@ -126,8 +131,6 @@ public class SootBodyTransformer extends BodyTransformer {
 		}
 
 		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(body.getTags());
-		
-		// TODO add code to initialize the the $type field of all parameters?
 		
 		if (procInfo.getThisReference()!=null) {
 			//for non-static procedures we have to assume that .this is non-null
@@ -152,6 +155,7 @@ public class SootBodyTransformer extends BodyTransformer {
 								.size()]), procInfo.getLocalVariables());
 				
 		procInfo.setProcedureImplementation(proc);
+		GlobalsCache.v().modifiedInMonitor.clear();
 	}
 	
 	/**
@@ -166,7 +170,7 @@ public class SootBodyTransformer extends BodyTransformer {
 	 * This is certainly unsound but seems to work so far.
 	 * @param stmtIt
 	 */
-	private HashSet<Stmt> detectDuplicatedFinallyBlocks(Iterator<Unit> stmtIt) {
+	private HashSet<Stmt> detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(Iterator<Unit> stmtIt) {
 		//TODO: instead of just returning the set of stmts that have duplicates
 		//we could group them so that we can still report infeasible code
 		//if all duplicates of one statement are infeasible.
@@ -177,9 +181,28 @@ public class SootBodyTransformer extends BodyTransformer {
 		LinkedList<Stmt> subprog = null;
 		int old_line = -100; // pick a negative constant that is not a line number
 		
+		LinkedList<Stmt> currentStack = new LinkedList<Stmt>();
+		EnterMonitorStmt currentMonitor = null;
+		
+		GlobalsCache.v().modifiedInMonitor = new HashMap<EnterMonitorStmt, HashSet<Value>>();
+		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
-			int line=-1;
+
+			//check the modifies clauses in monitors first
+			//TODO: this is a brutal over-approximation. We have to do follow the CFG
+			//to figure out the actual set of variables that may be modified in the monitor.
+			//currently, we just collect everything until we reach an exit monitor.
+			if (s instanceof EnterMonitorStmt) {
+				currentMonitor = (EnterMonitorStmt)s;
+			} else if (s instanceof ExitMonitorStmt) {
+				GlobalsCache.v().modifiedInMonitor.put(currentMonitor, collectUsedVariables(currentStack));
+			} else {
+				currentStack.add(s);
+			}
+			
+			//now check for finally blocks
+			int line=-1;			
 			for (Tag tag : s.getTags()) {
 				if (tag instanceof LineNumberTag) {
 					LineNumberTag t = (LineNumberTag)tag;					
@@ -217,6 +240,16 @@ public class SootBodyTransformer extends BodyTransformer {
 
 		}
 		return duplicates;
+	}
+	
+	private HashSet<Value> collectUsedVariables(List<Stmt> stmts) {
+		HashSet<Value> values = new HashSet<Value>();
+		for (Stmt s : stmts) {
+			for (ValueBox vb : s.getUseBoxes()) {
+				values.add(vb.getValue());
+			}
+		}
+		return values;
 	}
 	
 	private boolean compareSubprogs(LinkedList<Stmt> p1, LinkedList<Stmt> p2) {		

@@ -42,9 +42,11 @@ import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
 import soot.Type;
+import soot.Value;
 import soot.VoidType;
 import soot.jimple.ClassConstant;
 import soot.jimple.DoubleConstant;
+import soot.jimple.EnterMonitorStmt;
 import soot.jimple.FloatConstant;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
@@ -87,6 +89,9 @@ public class GlobalsCache {
 	private static GlobalsCache instance = null;
 
 	public SootMethod currentMethod = null;
+	
+	public HashMap<EnterMonitorStmt, HashSet<Value>> modifiedInMonitor;
+	
 	
 	public static GlobalsCache v() {
 		if (GlobalsCache.instance == null) {

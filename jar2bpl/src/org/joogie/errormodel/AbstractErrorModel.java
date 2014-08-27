@@ -111,8 +111,8 @@ public abstract class AbstractErrorModel {
 			if (boe.getOperator()==BinaryOperator.COMPNEQ) {				
 				if (boe.getLeft() instanceof IdentifierExpression) {					
 					IdentifierExpression id = (IdentifierExpression)boe.getLeft();
-					if (this.procInfo.thisRefLocal==id  
-							|| this.procInfo.getThisReference()==id) { 
+					if (this.procInfo.isGuaranteedNonNullVariable(id)  
+							|| this.procInfo.getThisReference()==id) {
 						if (boe.getRight() == SootPrelude.v().getNullConstant()) {
 							return true;
 						}

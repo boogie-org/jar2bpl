@@ -6,6 +6,7 @@ import org.joogie.util.TranslationHelpers;
 
 import soot.Unit;
 import soot.Value;
+import soot.jimple.CaughtExceptionRef;
 import soot.jimple.InvokeExpr;
 import soot.jimple.NewArrayExpr;
 import soot.jimple.NewExpr;
@@ -70,14 +71,32 @@ public class AssignmentTranslation {
 							.mkIntLiteral((new Integer(str.value.length()))
 									.toString())));
 		} else {
-			rhs.apply(valueswitch);
+			rhs.apply(valueswitch);			
 			right = valueswitch.getExpression();
 		}
 
+		SootProcedureInfo procInfo = ss.getProcInfo();
+		if (isLocalRenamingOfNonNullVariable(procInfo, left, right)) {
+			procInfo.addGuaranteedNonNullVariable((IdentifierExpression)left);
+		} else if (rhs instanceof CaughtExceptionRef) {			
+			procInfo.addGuaranteedNonNullVariable((IdentifierExpression)left);
+		}
+		
+		
 		translateAssignment(ss, left, right);
 
 	}
 
+	private static boolean isLocalRenamingOfNonNullVariable(SootProcedureInfo procInfo, Expression left, Expression right) {
+		if (left instanceof IdentifierExpression 
+				&& right instanceof IdentifierExpression
+				&& procInfo.isGuaranteedNonNullVariable((IdentifierExpression)right)) {
+			return true;
+		}
+		return false;
+	}
+	
+	
 	/**
 	 * This method creates an assignment. It is used by caseAssignStmt and
 	 * caseIdentityStmt

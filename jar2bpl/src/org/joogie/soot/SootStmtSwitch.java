@@ -19,6 +19,7 @@
 
 package org.joogie.soot;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,10 +32,10 @@ import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
-import soot.Local;
 import soot.RefType;
 import soot.Type;
 import soot.Unit;
+import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.BreakpointStmt;
 import soot.jimple.CaughtExceptionRef;
@@ -52,7 +53,6 @@ import soot.jimple.ReturnVoidStmt;
 import soot.jimple.Stmt;
 import soot.jimple.StmtSwitch;
 import soot.jimple.TableSwitchStmt;
-import soot.jimple.ThisRef;
 import soot.jimple.ThrowStmt;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
@@ -61,6 +61,7 @@ import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
+import boogie.ast.expression.BinaryExpression;
 import boogie.ast.expression.Expression;
 import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.statement.Statement;
@@ -93,7 +94,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	public SootProcedureInfo getProcInfo() {
 		return this.procInfo;
 	}
-	
+
 	public LinkedList<Statement> popAll() {
 		LinkedList<Statement> ret = new LinkedList<Statement>();
 		ret.addAll(this.boogieStatements);
@@ -104,19 +105,21 @@ public class SootStmtSwitch implements StmtSwitch {
 	public SootValueSwitch getValueSwitch() {
 		return this.valueswitch;
 	}
-	
+
 	public AbstractErrorModel getErrorModel() {
 		return this.errorModel;
 	}
 
 	/**
-	 * Returns true if we are in a monitor or if the whole method is synchronized.
+	 * Returns true if we are in a monitor or if the whole method is
+	 * synchronized.
+	 * 
 	 * @return
 	 */
 	public boolean isInMonitor() {
 		return this.inMonitor || this.procInfo.getSootMethod().isSynchronized();
 	}
-	
+
 	private LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
 
 	/**
@@ -133,15 +136,14 @@ public class SootStmtSwitch implements StmtSwitch {
 		return this.currentStatement;
 	}
 
-	private void injectLabelStatements(Stmt arg0) {		
+	private void injectLabelStatements(Stmt arg0) {
 		this.currentStatement = arg0;
 		if (arg0.getBoxesPointingToThis().size() > 0) {
-			String label = GlobalsCache.v()
-					.getUnitLabel(arg0);
+			String label = GlobalsCache.v().getUnitLabel(arg0);
 
-			this.boogieStatements.add(this.pf.mkLabel(label));			
+			this.boogieStatements.add(this.pf.mkLabel(label));
 		}
-		
+
 		this.boogieStatements.add(TranslationHelpers.mkLocationAssertion(arg0));
 	}
 
@@ -153,7 +155,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseAssignStmt(AssignStmt arg0) {
 		injectLabelStatements(arg0);
-		AssignmentTranslation.translateAssignment(this, arg0.getLeftOp(), arg0.getRightOp(), arg0);
+		AssignmentTranslation.translateAssignment(this, arg0.getLeftOp(),
+				arg0.getRightOp(), arg0);
 	}
 
 	public IdentifierExpression createAllocatedVariable(Type sootType) {
@@ -183,54 +186,57 @@ public class SootStmtSwitch implements StmtSwitch {
 		} else {
 			throw new RuntimeException("Translation of Array Access failed!");
 		}
-		
-		this.boogieStatements.add(SootPrelude.v().newObject(attributes, newexpr, obj_type));
-//		// havoc right
-//		this.boogieStatements
-//				.add(this.pf.mkHavocStatement(attributes, newexpr));
-//		// assume $heap[right, $alloc] == false
-//		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
-//				.mkUnaryExpression(
-//
-//				this.pf.getBoolType(), UnaryOperator.LOGICNEG, this.valueswitch
-//						.makeHeapAccessExpression(newexpr, SootPrelude.v()
-//								.getFieldAllocVariable(), false))));
-//		// $heap[right, $alloc] := true
-//		AssignmentTranslation.translateAssignment(this, this.valueswitch.makeHeapAccessExpression(newexpr,
-//				SootPrelude.v().getFieldAllocVariable(), false),
-//				this.pf.mkBooleanLiteral(true));
-//
-//		// $heap[right, $type] := ...the appropriate type...
-//		Expression typeRhs;
-//		if (sootType instanceof RefType) {
-//			typeRhs = GlobalsCache.v().lookupClassVariable(
-//					((RefType) sootType).getSootClass());
-//			if (typeRhs == null) {
-//				throw new RuntimeException("Not a class variable: "
-//						+ ((RefType) sootType).getSootClass());
-//			}
-//		} else if (sootType instanceof ArrayType) {
-//			typeRhs = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
-//			if (typeRhs == null) {
-//				throw new RuntimeException("Not a type: "
-//						+ (ArrayType) sootType);
-//			}
-//
-//		} else {
-//			throw new RuntimeException("Translation of Array Access failed!");
-//		}
-//
-//		this.boogieStatements.add(this.pf.mkAssumeStatement(attributes, this.pf
-//				.mkBinaryExpression(this.pf.getBoolType(),
-//						BinaryOperator.COMPNEQ, newexpr, SootPrelude.v()
-//								.getNullConstant())));
-//
-//		AssignmentTranslation.translateAssignment(this, 
-//				this.valueswitch.getClassTypeFromExpression(newexpr, false),
-//				typeRhs);
+
+		this.boogieStatements.add(SootPrelude.v().newObject(attributes,
+				newexpr, obj_type));
+		// // havoc right
+		// this.boogieStatements
+		// .add(this.pf.mkHavocStatement(attributes, newexpr));
+		// // assume $heap[right, $alloc] == false
+		// this.boogieStatements.add(this.pf.mkAssumeStatement(attributes,
+		// this.pf
+		// .mkUnaryExpression(
+		//
+		// this.pf.getBoolType(), UnaryOperator.LOGICNEG, this.valueswitch
+		// .makeHeapAccessExpression(newexpr, SootPrelude.v()
+		// .getFieldAllocVariable(), false))));
+		// // $heap[right, $alloc] := true
+		// AssignmentTranslation.translateAssignment(this,
+		// this.valueswitch.makeHeapAccessExpression(newexpr,
+		// SootPrelude.v().getFieldAllocVariable(), false),
+		// this.pf.mkBooleanLiteral(true));
+		//
+		// // $heap[right, $type] := ...the appropriate type...
+		// Expression typeRhs;
+		// if (sootType instanceof RefType) {
+		// typeRhs = GlobalsCache.v().lookupClassVariable(
+		// ((RefType) sootType).getSootClass());
+		// if (typeRhs == null) {
+		// throw new RuntimeException("Not a class variable: "
+		// + ((RefType) sootType).getSootClass());
+		// }
+		// } else if (sootType instanceof ArrayType) {
+		// typeRhs = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
+		// if (typeRhs == null) {
+		// throw new RuntimeException("Not a type: "
+		// + (ArrayType) sootType);
+		// }
+		//
+		// } else {
+		// throw new RuntimeException("Translation of Array Access failed!");
+		// }
+		//
+		// this.boogieStatements.add(this.pf.mkAssumeStatement(attributes,
+		// this.pf
+		// .mkBinaryExpression(this.pf.getBoolType(),
+		// BinaryOperator.COMPNEQ, newexpr, SootPrelude.v()
+		// .getNullConstant())));
+		//
+		// AssignmentTranslation.translateAssignment(this,
+		// this.valueswitch.getClassTypeFromExpression(newexpr, false),
+		// typeRhs);
 		return newexpr;
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -254,11 +260,36 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseEnterMonitorStmt(EnterMonitorStmt arg0) {
 		injectLabelStatements(arg0);
-		EnterMonitorStmt em = (EnterMonitorStmt)arg0;
+		EnterMonitorStmt em = (EnterMonitorStmt) arg0;
 		em.getOp().apply(this.valueswitch);
 		this.valueswitch.getExpression();
-		//TODO:
+
 		this.inMonitor = true;
+
+		if (GlobalsCache.v().modifiedInMonitor.containsKey(arg0)) {
+			SootValueSwitch vs = new SootValueSwitch(procInfo, null);
+			HashSet<IdentifierExpression> vars = new HashSet<IdentifierExpression>();
+			for (Value v : GlobalsCache.v().modifiedInMonitor.get(arg0)) {
+				v.apply(vs);
+				Expression e = vs.getExpression();
+				vars.addAll(e.getFreeVariables());
+			}
+			// make sure we don't havoc in or out params
+			for (IdentifierExpression ie : this.getProcInfo().getInParamters()) {
+				if (vars.contains(ie))
+					vars.remove(ie);
+			}
+			for (IdentifierExpression ie : this.getProcInfo().getOutParamters()) {
+				if (vars.contains(ie))
+					vars.remove(ie);
+			}
+
+			if (vars.size() > 0) {
+				this.boogieStatements.add(this.pf.mkHavocStatement(
+						TranslationHelpers.javaLocation2Attribute(arg0),
+						vars.toArray(new IdentifierExpression[vars.size()])));
+			}
+		}
 	}
 
 	/*
@@ -271,11 +302,11 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseExitMonitorStmt(ExitMonitorStmt arg0) {
 		injectLabelStatements(arg0);
-		ExitMonitorStmt em = (ExitMonitorStmt)arg0;
+		ExitMonitorStmt em = (ExitMonitorStmt) arg0;
 		em.getOp().apply(this.valueswitch);
 		this.valueswitch.getExpression();
-		//TODO:
-		
+		// TODO:
+
 		this.inMonitor = false;
 	}
 
@@ -285,12 +316,14 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @see soot.jimple.StmtSwitch#caseGotoStmt(soot.jimple.GotoStmt)
 	 */
 	@Override
-	public void caseGotoStmt(GotoStmt arg0) {		;
+	public void caseGotoStmt(GotoStmt arg0) {
+		;
 		injectLabelStatements(arg0);
 		String labelName = GlobalsCache.v().getUnitLabel(
-				(Stmt) arg0.getTarget());		
+				(Stmt) arg0.getTarget());
 		this.boogieStatements.add(this.pf.mkGotoStatement(labelName));
-		//if (labelName.contains("block324")) throw new RuntimeException("there it is!");
+		// if (labelName.contains("block324")) throw new
+		// RuntimeException("there it is!");
 	}
 
 	/*
@@ -300,20 +333,24 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	@Override
 	public void caseIdentityStmt(IdentityStmt arg0) {
-		injectLabelStatements(arg0);		
-		AssignmentTranslation.translateAssignment(this, arg0.getLeftOp(), arg0.getRightOp(), arg0);
-		if (isLocalRenamingOfThisPointer(arg0)) {
-			this.procInfo.thisRefLocal = this.procInfo.lookupLocalVariable((Local)(arg0.getLeftOp()));
-		}
-	}	
-	
-	private boolean isLocalRenamingOfThisPointer(IdentityStmt is) {
-		if (is.getLeftOp() instanceof Local && is.getRightOp() instanceof ThisRef) {
-			return true;
+		injectLabelStatements(arg0);
+		AssignmentTranslation.translateAssignment(this, arg0.getLeftOp(),
+				arg0.getRightOp(), arg0);
+	}
+
+	private boolean isTrivialFalseNullCheck(Expression e) {
+		if (e instanceof BinaryExpression) {
+			BinaryExpression boe = (BinaryExpression) e;
+			if (boe.getRight() == SootPrelude.v().getNullConstant()
+					&& boe.getLeft() instanceof IdentifierExpression
+					&& this.procInfo.isGuaranteedNonNullVariable((IdentifierExpression) boe
+							.getLeft())) {
+				return true;
+			}
 		}
 		return false;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -321,28 +358,36 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	@Override
 	public void caseIfStmt(IfStmt arg0) {
-		
+
 		injectLabelStatements(arg0);
 		boolean forceCloneAttibute = false;
-		if (TranslationHelpers.clonedFinallyBlocks.contains(arg0) ) {
+		if (TranslationHelpers.clonedFinallyBlocks.contains(arg0)) {
 			forceCloneAttibute = true;
 		}
-		Statement[] thenPart = {TranslationHelpers.mkLocationAssertion(arg0.getTarget(), forceCloneAttibute), this.pf.mkGotoStatement(GlobalsCache.v()
-				.getUnitLabel(arg0.getTarget())) };
-		
+		Statement[] thenPart = {
+				TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
+						forceCloneAttibute),
+				this.pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
+						arg0.getTarget())) };
+
 		Statement[] elsePart = {};
-		//now check if we can find a source location for the else block.
+		// now check if we can find a source location for the else block.
 		Stmt else_loc = findSuccessorStatement(arg0);
-		if (else_loc!=null) {
-			elsePart = new Statement[]{TranslationHelpers.mkLocationAssertion(else_loc, forceCloneAttibute)};
+		if (else_loc != null) {
+			elsePart = new Statement[] { TranslationHelpers
+					.mkLocationAssertion(else_loc, forceCloneAttibute) };
 		}
-		
-		
+
 		arg0.getCondition().apply(this.valueswitch);
 		Expression cond = TranslationHelpers.castBoogieTypes(
 				this.valueswitch.getExpression(), this.pf.getBoolType());
-		this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
-				elsePart));
+		if (isTrivialFalseNullCheck(cond)) {
+			//ignore the check
+			Log.info("Ignored trivial false check: "+ arg0);
+		} else {
+			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
+					elsePart));
+		}
 	}
 
 	/*
@@ -353,7 +398,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseInvokeStmt(InvokeStmt arg0) {
 		injectLabelStatements(arg0);
-		AssignmentTranslation.translateAssignment(this, null, arg0.getInvokeExpr(), arg0);
+		AssignmentTranslation.translateAssignment(this, null,
+				arg0.getInvokeExpr(), arg0);
 	}
 
 	/*
@@ -523,7 +569,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		// the current procedure.
 		// Note that this only works because soot moves the "new" statement
 		// to a new local variable.
-		AssignmentTranslation.translateAssignment(this, this.procInfo.getExceptionVariable(), right);
+		AssignmentTranslation.translateAssignment(this,
+				this.procInfo.getExceptionVariable(), right);
 		// Add a goto statement to the exceptional successors.
 		List<Unit> exc_succ = procInfo.getExceptionalUnitGraph()
 				.getExceptionalSuccsOf((Unit) arg0);
@@ -570,28 +617,33 @@ public class SootStmtSwitch implements StmtSwitch {
 									"Bug in translation of ThrowStmt!");
 						}
 					} else if (u instanceof NopStmt) {
-						String filename="";
-						int startln=-1;
+						String filename = "";
+						int startln = -1;
 						for (Tag tag : u.getTags()) {
 							if (tag instanceof LineNumberTag) {
-								if (GlobalsCache.v().currentMethod!=null) {
-									filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
-								}				
+								if (GlobalsCache.v().currentMethod != null) {
+									filename = GlobalsCache.v().currentMethod
+											.getDeclaringClass().getName();
+								}
 								startln = ((LineNumberTag) tag).getLineNumber();
 								break;
-							} else if (tag instanceof SourceLnNamePosTag) {				
+							} else if (tag instanceof SourceLnNamePosTag) {
 								startln = ((SourceLnNamePosTag) tag).startLn();
-								filename = ((SourceLnNamePosTag) tag).getFileName();
+								filename = ((SourceLnNamePosTag) tag)
+										.getFileName();
 								break;
 							} else if (tag instanceof SourceFileTag) {
-								filename = ((SourceFileTag) tag).getSourceFile();
+								filename = ((SourceFileTag) tag)
+										.getSourceFile();
 								break;
 							}
-						}										
-						Log.error("Catch block starts with Nop instead of assignment. Maybe unsound. " + filename + ": "+ startln);
+						}
+						Log.error("Catch block starts with Nop instead of assignment. Maybe unsound. "
+								+ filename + ": " + startln);
 					} else {
 						throw new RuntimeException(
-								"Bug in translation of ThrowStmt! " + u.getClass().toString());
+								"Bug in translation of ThrowStmt! "
+										+ u.getClass().toString());
 					}
 				}
 				// throw new RuntimeException(sb.toString());
@@ -608,7 +660,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -620,8 +672,9 @@ public class SootStmtSwitch implements StmtSwitch {
 	}
 
 	/**
-	 * find the successor statement of a given statement. This is only used to find proper source locations
-	 * for else-blocks
+	 * find the successor statement of a given statement. This is only used to
+	 * find proper source locations for else-blocks
+	 * 
 	 * @param stmt
 	 * @return
 	 */
@@ -631,13 +684,14 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
-			if (s==stmt) {
-				if (stmtIt.hasNext()) return (Stmt) stmtIt.next();
-				else return null;
+			if (s == stmt) {
+				if (stmtIt.hasNext())
+					return (Stmt) stmtIt.next();
+				else
+					return null;
 			}
 		}
 		return null;
 	}
-	
-	
+
 }

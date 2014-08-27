@@ -98,6 +98,12 @@ public class TranslationHelpers {
 		return filename;
 	}
 	
+	public static Statement createClonedAttribAssert() {
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		Attribute[] res = new Attribute[]{ pf.mkCustomAttribute(ProgramFactory.Cloned) };		
+		return pf.mkAssertStatement(res, pf.mkBooleanLiteral(true));
+	}
+	
 	public static Attribute[] javaLocation2Attribute(List<Tag> list, boolean isCloned) {
 		// if the taglist is empty return no location
 		int startln, endln, startcol, endcol;

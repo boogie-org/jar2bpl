@@ -306,18 +306,21 @@ public class SootRunner extends Runner {
 	 */
 	protected void fillSootArgs(List<String> args) {
 		args.add("-keep-line-number");
-		args.add("-keep-offset");
+//		args.add("-keep-offset");
 		args.add("-pp");		
-		args.add("-print-tags");
-		args.add("true");
+//		args.add("-print-tags");
+//		args.add("true");
 		if (org.joogie.Options.v().isDebug()) {
 			args.add("-f");
 			args.add("jimple");
 			args.add("-d");
 			args.add("./dump");
+		} else {
+			args.add("-output-format");
+			args.add("none");
 		}
 		args.add("-allow-phantom-refs");
-		args.add("true");
+//		args.add("true");
 		//args.add("-w");		
 	}
 

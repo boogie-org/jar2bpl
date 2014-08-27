@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.joogie.GlobalsCache;
-import org.joogie.errormodel.AbstractErrorModel;
 import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
@@ -31,23 +30,23 @@ import boogie.ast.expression.Expression;
 import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
+import boogie.type.BoogieType;
 
 /**
  * @author schaef
- *
+ * 
  */
 public class InvokeTranslation {
 
-	public static void translateInvokeAssignment(SootStmtSwitch ss, Value lhs, InvokeExpr ivk,
-			Unit statement) {
+	public static void translateInvokeAssignment(SootStmtSwitch ss, Value lhs,
+			InvokeExpr ivk, Unit statement) {
 		if (specialCaseInvoke(ss, lhs, ivk))
 			return;
 
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		SootProcedureInfo procInfo = ss.getProcInfo();
-		AbstractErrorModel errorModel = ss.getErrorModel();
-		
-		//translate the left-hand side of the assignment (if there is one).
+
+		// translate the left-hand side of the assignment (if there is one).
 		LinkedList<IdentifierExpression> lefts = new LinkedList<IdentifierExpression>();
 		IdentifierExpression stubbedvar = null;
 		Expression left = null;
@@ -56,54 +55,82 @@ public class InvokeTranslation {
 			left = valueswitch.getExpression();
 			if (left instanceof IdentifierExpression) {
 				lefts.add((IdentifierExpression) left);
-			} else {				
+			} else {
 				/*
 				 * boogie doesn't allow you to put an array access as left hand
 				 * side for a function call. So, if this happens, we add a fake
 				 * local and assign it back after the call statement.
 				 */
-				stubbedvar = procInfo .createLocalVariable(left.getType());
+				stubbedvar = procInfo.createLocalVariable(left.getType());
 				lefts.add(stubbedvar);
 			}
 		}
 
-		
 		SootMethod m = ivk.getMethod();
 
-		//translate the call args
+		// translate the call args
 		LinkedList<Expression> args = new LinkedList<Expression>();
 		for (int i = 0; i < ivk.getArgs().size(); i++) {
 			ivk.getArg(i).apply(valueswitch);
 			args.add(valueswitch.getExpression());
 		}
-		
-		//Translate base, if necessary.
-		//SootClass baseClass = null;
+
+		// Translate base, if necessary.
+		// SootClass baseClass = null;
 		if (ivk instanceof InstanceInvokeExpr) {
-			//this include Interface-, Virtual, and SpecialInvokeExpr
-			
-			InstanceInvokeExpr iivk = (InstanceInvokeExpr) ivk;		
-			//baseClass = getBaseClass(iivk.getBase().getType());
-			
+			// this include Interface-, Virtual, and SpecialInvokeExpr
+
+			InstanceInvokeExpr iivk = (InstanceInvokeExpr) ivk;
+			// baseClass = getBaseClass(iivk.getBase().getType());
+
 			iivk.getBase().apply(valueswitch);
-			Expression base = valueswitch.getExpression();			
-			//add the "this" variable to the list of args
+			Expression base = valueswitch.getExpression();
+			// add the "this" variable to the list of args
 			args.addFirst(base);
-			
-			//If its not a constructor ensure that the base it non-null.
-			if (!iivk.getMethod().isConstructor()) {
-				errorModel.createNonNullGuard(base);
-			}
-			
+
 		} else if (ivk instanceof StaticInvokeExpr) {
-			//Do nothing
+			// Do nothing
 		} else {
 			throw new RuntimeException(
-					"Cannot compute instance for static or dynamic call");		
-		}		
-		
-		ss.addStatement(createCallStatement(ss, m, lefts, args.toArray(new Expression[args.size()]) ));
-		
+					"Cannot compute instance for static or dynamic call");
+		}
+
+		ss.addStatement(createCallStatement(ss, m, lefts,
+				args.toArray(new Expression[args.size()])));
+
+		if (m.isConstructor()) {
+			// if it is a call to a constructor, we have to add
+			// the condition that the object which is being constructed
+			// will be set to null if the constructor terminates
+			// with an exception.
+			// That is, for: $exception = Object$init(base)
+			// we create
+			// if ($exception!=null && base!=this) base=null;
+
+			Expression instance = args.getFirst(); // the first arg must be the
+													// pointer to that object
+			
+			Expression exceptionvar = procInfo.getExceptionVariable();
+
+			ProgramFactory pf = GlobalsCache.v().getPf();
+
+			Expression cond1 = pf.mkBinaryExpression(BoogieType.boolType,
+					BinaryOperator.COMPNEQ, exceptionvar, SootPrelude.v()
+							.getNullConstant());
+			Expression cond2 = pf.mkBinaryExpression(BoogieType.boolType,
+					BinaryOperator.COMPNEQ, instance,
+					procInfo.getThisReference());
+			Expression cond = pf.mkBinaryExpression(BoogieType.boolType,
+					BinaryOperator.LOGICAND, cond1, cond2);
+
+			Statement then = pf.mkAssignmentStatement(instance, SootPrelude.v()
+					.getNullConstant());
+			ss.addStatement(pf.mkIfStatement(cond, new Statement[] {
+					TranslationHelpers.createClonedAttribAssert(), then },
+					new Statement[] { TranslationHelpers
+							.createClonedAttribAssert() }));
+		}
+
 		// now check if the procedure returned exceptional
 		// and jump to the appropriate location
 		translateCalleeExceptions(ss, procInfo.getThrowsClasses(), statement);
@@ -115,26 +142,27 @@ public class InvokeTranslation {
 		 */
 		if (stubbedvar != null) {
 			AssignmentTranslation.translateAssignment(ss, left, stubbedvar);
-		}		
+		}
 	}
 
-//	static private SootClass getBaseClass(Type type) {
-//		SootClass c = null;
-//		if (type instanceof RefType) {
-//			RefType rt = (RefType) type;
-//			c = rt.getSootClass();
-//		} else if (type instanceof ArrayType) {
-//			c = Scene.v().loadClass("java.lang.reflect.Array",
-//					SootClass.SIGNATURES);
-//		} else {
-//			throw new RuntimeException(
-//					"Something wrong in translateInvokeAssignment: Expected RefType or ArrayType but found "
-//							+ type.getClass().toString());
-//		}
-//		return c;
-//	}
-	
-	static private boolean specialCaseInvoke(SootStmtSwitch ss, Value lhs, InvokeExpr ivk) {
+	// static private SootClass getBaseClass(Type type) {
+	// SootClass c = null;
+	// if (type instanceof RefType) {
+	// RefType rt = (RefType) type;
+	// c = rt.getSootClass();
+	// } else if (type instanceof ArrayType) {
+	// c = Scene.v().loadClass("java.lang.reflect.Array",
+	// SootClass.SIGNATURES);
+	// } else {
+	// throw new RuntimeException(
+	// "Something wrong in translateInvokeAssignment: Expected RefType or ArrayType but found "
+	// + type.getClass().toString());
+	// }
+	// return c;
+	// }
+
+	static private boolean specialCaseInvoke(SootStmtSwitch ss, Value lhs,
+			InvokeExpr ivk) {
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		// java.lang.String.length is treated as a special case:
@@ -149,9 +177,8 @@ public class InvokeTranslation {
 				throw new RuntimeException("Bad usage of String.length?");
 			}
 			Expression[] indices = { valueswitch.getExpression() };
-			Expression right = pf.mkArrayAccessExpression(pf
-					.getIntType(), SootPrelude.v().getStringSizeHeapVariable(),
-					indices);
+			Expression right = pf.mkArrayAccessExpression(pf.getIntType(),
+					SootPrelude.v().getStringSizeHeapVariable(), indices);
 
 			lhs.apply(valueswitch);
 			Expression left = valueswitch.getExpression();
@@ -162,26 +189,24 @@ public class InvokeTranslation {
 		if (ivk.getMethod().getSignature()
 				.contains("<java.lang.System: void exit(int)>")) {
 			Log.info("Surppressing false positive from call to System.exit");
-			// this is not a return statement, it actually ends the application.			
-//			ss.addStatement(pf.mkAssumeStatement(new Attribute[]{pf.mkNoVerifyAttribute()},
-//					pf.mkBooleanLiteral(false)));
+			// this is not a return statement, it actually ends the application.
+			// ss.addStatement(pf.mkAssumeStatement(new
+			// Attribute[]{pf.mkNoVerifyAttribute()},
+			// pf.mkBooleanLiteral(false)));
 			ss.addStatement(pf.mkReturnStatement());
 			return true;
 		}
 		return false;
 	}
-	
-	
 
 	/**
-	 * Create a Boogie call statement. The trick is, that, given a call
-	 * f(x)
-	 * we may have to create stubs for the return value of f and the exception
+	 * Create a Boogie call statement. The trick is, that, given a call f(x) we
+	 * may have to create stubs for the return value of f and the exception
 	 * thrown by f because in Boogie the number of lhs variables has to match
-	 * the number of return variables. E.g. if f returns an int and throws 
-	 * exceptions, the call above would be translated to
-	 * call ret, exc := f(x);
+	 * the number of return variables. E.g. if f returns an int and throws
+	 * exceptions, the call above would be translated to call ret, exc := f(x);
 	 * where ret and exc are fresh local variables.
+	 * 
 	 * @param ss
 	 * @param m
 	 * @param throwsclauses
@@ -189,19 +214,18 @@ public class InvokeTranslation {
 	 * @param args
 	 * @return
 	 */
-	static private Statement createCallStatement(SootStmtSwitch ss, SootMethod m, List<IdentifierExpression> lefts,
-			Expression[] args) {
-				
+	static private Statement createCallStatement(SootStmtSwitch ss,
+			SootMethod m, List<IdentifierExpression> lefts, Expression[] args) {
+
 		ProgramFactory pf = GlobalsCache.v().getPf();
-		
-		//this is the procInfo for the procedure from which m is called
+
+		// this is the procInfo for the procedure from which m is called
 		SootProcedureInfo procInfo = ss.getProcInfo();
-		//this is the procInfo for the called procedure m
+		// this is the procInfo for the called procedure m
 		SootProcedureInfo calleeInfo = GlobalsCache.v().lookupProcedure(m);
-	
-		
-		Attribute[] attributes = TranslationHelpers
-				.javaLocation2Attribute(ss.getCurrentStatement());
+
+		Attribute[] attributes = TranslationHelpers.javaLocation2Attribute(ss
+				.getCurrentStatement());
 
 		// we have to clone the lefts because we may add thing to it here.
 		List<IdentifierExpression> lefts_clone = new LinkedList<IdentifierExpression>();
@@ -237,7 +261,6 @@ public class InvokeTranslation {
 		return s;
 	}
 
-
 	/**
 	 * (Only used after procedure calls) Inserts a switch case to check if the
 	 * exception variable has been set to any of the elements in maxThrowSet or
@@ -249,20 +272,20 @@ public class InvokeTranslation {
 	 * @param maxThrowSet
 	 * @param statement
 	 */
-	static private void translateCalleeExceptions(SootStmtSwitch ss, List<SootClass> maxThrowSet,
-			Unit statement) {
-		
+	static private void translateCalleeExceptions(SootStmtSwitch ss,
+			List<SootClass> maxThrowSet, Unit statement) {
+
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		SootProcedureInfo procInfo = ss.getProcInfo();
-		
+
 		// keep track of the caught exceptions so that we can add the uncaught
 		// ones later
 		HashSet<SootClass> caughtExceptions = new HashSet<SootClass>();
 		// now collect all exceptions that are in the exceptional unit graph
 		// and their associated traps
-		if (procInfo.getExceptionalUnitGraph()
-				.getExceptionalSuccsOf(statement).size() != 0) {
+		if (procInfo.getExceptionalUnitGraph().getExceptionalSuccsOf(statement)
+				.size() != 0) {
 			for (ExceptionDest dest : procInfo.getExceptionalUnitGraph()
 					.getExceptionDests(statement)) {
 				if (dest.getTrap() != null
@@ -270,41 +293,32 @@ public class InvokeTranslation {
 					caughtExceptions.add(dest.getTrap().getException());
 					Statement transitionStmt;
 					Expression condition = pf.mkBinaryExpression(pf
-							.getBoolType(), BinaryOperator.COMPNEQ,
-							procInfo.getExceptionVariable(), SootPrelude
-									.v().getNullConstant());
+							.getBoolType(), BinaryOperator.COMPNEQ, procInfo
+							.getExceptionVariable(), SootPrelude.v()
+							.getNullConstant());
 					// the exception is caught somewhere in this procedure
-					transitionStmt = pf.mkGotoStatement(
-					GlobalsCache.v().getUnitLabel(
-							(Stmt) dest.getTrap().getHandlerUnit()));
-					
+					transitionStmt = pf.mkGotoStatement(GlobalsCache.v()
+							.getUnitLabel(
+									(Stmt) dest.getTrap().getHandlerUnit()));
+
 					// add a conjunct to check if that the type of the exception
 					// is <: than the one caught
 					// by the catch block
-					condition = pf
-							.mkBinaryExpression(
+					condition = pf.mkBinaryExpression(pf.getBoolType(),
+							BinaryOperator.LOGICAND, condition,
+							pf.mkBinaryExpression(
 
 									pf.getBoolType(),
-									BinaryOperator.LOGICAND,
-									condition,
-									pf.mkBinaryExpression(
-
-											pf.getBoolType(),
-											BinaryOperator.COMPPO,
-											valueswitch
-													.getClassTypeFromExpression(
-															procInfo
-																	.getExceptionVariable(),
-															false),
-											GlobalsCache
-													.v()
-													.lookupClassVariable(
-															dest.getTrap()
-																	.getException())));
+									BinaryOperator.COMPPO,
+									valueswitch.getClassTypeFromExpression(
+											procInfo.getExceptionVariable(),
+											false),
+									GlobalsCache.v().lookupClassVariable(
+											dest.getTrap().getException())));
 					Statement[] thenPart = { transitionStmt };
 					Statement[] elsePart = {};
-					ss.addStatement(pf.mkIfStatement(condition,
-							thenPart, elsePart));
+					ss.addStatement(pf.mkIfStatement(condition, thenPart,
+							elsePart));
 				} else {
 					// Log.error("NO CATCH FOR "+ dest);
 				}
@@ -352,28 +366,31 @@ public class InvokeTranslation {
 					|| org.joogie.Options.v().isRuntimeExceptionReturns()) {
 
 				Statement transitionStmt;
-				Expression condition = pf.mkBinaryExpression(pf
-						.getBoolType(), BinaryOperator.COMPNEQ, procInfo
-						.getExceptionVariable(), SootPrelude.v()
-						.getNullConstant());
+				Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
+						BinaryOperator.COMPNEQ,
+						procInfo.getExceptionVariable(), SootPrelude.v()
+								.getNullConstant());
 
 				// add a conjunct to check if that the type of the exception
 				// is <: than the one caught
 				// by the catch block
-				condition = pf.mkBinaryExpression(pf.getBoolType(),
-						BinaryOperator.LOGICAND, condition,
-						pf.mkBinaryExpression(pf.getBoolType(),
-								BinaryOperator.COMPPO,
-								valueswitch.getClassTypeFromExpression(
-										procInfo.getExceptionVariable(),
-										false), GlobalsCache.v()
-										.lookupClassVariable(current)));
+				condition = pf
+						.mkBinaryExpression(
+								pf.getBoolType(),
+								BinaryOperator.LOGICAND,
+								condition,
+								pf.mkBinaryExpression(
+										pf.getBoolType(),
+										BinaryOperator.COMPPO,
+										valueswitch.getClassTypeFromExpression(
+												procInfo.getExceptionVariable(),
+												false), GlobalsCache.v()
+												.lookupClassVariable(current)));
 
 				transitionStmt = pf.mkReturnStatement();
 				Statement[] thenPart = { transitionStmt };
 				Statement[] elsePart = {};
-				ss.addStatement(pf.mkIfStatement(condition,
-						thenPart, elsePart));
+				ss.addStatement(pf.mkIfStatement(condition, thenPart, elsePart));
 
 			} else {
 				Log.debug("The exception: " + current
@@ -384,6 +401,4 @@ public class InvokeTranslation {
 
 	}
 
-
-	
 }
