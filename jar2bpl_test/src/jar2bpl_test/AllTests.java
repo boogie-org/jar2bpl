@@ -5,10 +5,9 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ AndroidTest.class,
-		JarTranslationTest.class, 
-		JavaTranslationTest.class,
-		TerpwordTranslationTest.class})
+@SuiteClasses({ TestTruePositives.class,
+	TestFalsePositives.class 
+		})
 public class AllTests {
 
 }

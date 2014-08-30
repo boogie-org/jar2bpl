@@ -1,0 +1,12 @@
+In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp01/InfeasibleCode01.java
+	line 12
+	line 27
+	line 34
+	line 49
+	line 51
+	line 56
+	line 64
+	line 69
+	line 82
+	line 83
+
