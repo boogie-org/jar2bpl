@@ -268,6 +268,12 @@ public class SootRunner extends Runner {
 			pack.add(new Transform("jtp.BoogieTransform",
 					new SootBodyTransformer()));
 			
+			StringBuilder sb = new StringBuilder();
+			for (String s : args) {
+				sb.append(" "+s);
+			}
+			Log.info("Running soot with "+sb.toString());
+			
 			// Finally, run Soot
 			soot.Main.main(args.toArray(new String[args.size()]));
 

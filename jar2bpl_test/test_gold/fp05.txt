@@ -1,11 +1,1 @@
-In file: FalsePositives05.java
-	line 30
-	line 45
-	line 54
-	line 75
-	line 77
-	line 96
-	line 99
-	line 108
-	line 110
 

@@ -8,6 +8,6 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({ TestTruePositives.class,
 	TestFalsePositives.class 
 		})
-public class AllTests {
+public class AllRegressionTests {
 
 }

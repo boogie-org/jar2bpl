@@ -55,29 +55,29 @@ public abstract class FalsePositives05 {
     }
     
     
-    public String ex04() {
-
-        InputStream stream = null;
-        Object servletContext = foo();
-        if (servletContext != null) {
-            stream = bar();
-        }
-        if (stream == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
-            String strRead = "";
-            while (strRead != null) {
-                sb.append(strRead);
-                strRead = br.readLine();
-            }
-        } catch (IOException e) {
-            return "";
-        }
-
-        return sb.toString();
-    }
+//    public String ex04() {
+//
+//        InputStream stream = null;
+//        Object servletContext = foo();
+//        if (servletContext != null) {
+//            stream = bar();
+//        }
+//        if (stream == null) {
+//            return "";
+//        }
+//        StringBuilder sb = new StringBuilder();
+//        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
+//            String strRead = "";
+//            while (strRead != null) {
+//                sb.append(strRead);
+//                strRead = br.readLine();
+//            }
+//        } catch (IOException e) {
+//            return "";
+//        }
+//
+//        return sb.toString();
+//    }
     
     abstract int integer() throws Exception;
     public void ex05() {
@@ -106,6 +106,6 @@ public abstract class FalsePositives05 {
             bar();
             
         }
-
     }
+    
 }
