@@ -84,9 +84,12 @@ public class InvokeTranslation {
 			// baseClass = getBaseClass(iivk.getBase().getType());
 
 			iivk.getBase().apply(valueswitch);
-			Expression base = valueswitch.getExpression();
+			Expression base = valueswitch.getExpression();			
 			// add the "this" variable to the list of args
 			args.addFirst(base);
+			if (base!=ss.getProcInfo().getThisReference()) {
+				ss.getErrorModel().createNonNullViolationException(base);
+			}
 
 		} else if (ivk instanceof StaticInvokeExpr) {
 			// Do nothing
@@ -114,21 +117,24 @@ public class InvokeTranslation {
 
 			ProgramFactory pf = GlobalsCache.v().getPf();
 
-			Expression cond1 = pf.mkBinaryExpression(BoogieType.boolType,
+			Expression cond = pf.mkBinaryExpression(BoogieType.boolType,
 					BinaryOperator.COMPNEQ, exceptionvar, SootPrelude.v()
 							.getNullConstant());
-			Expression cond2 = pf.mkBinaryExpression(BoogieType.boolType,
-					BinaryOperator.COMPNEQ, instance,
-					procInfo.getThisReference());
-			Expression cond = pf.mkBinaryExpression(BoogieType.boolType,
-					BinaryOperator.LOGICAND, cond1, cond2);
-
+			
+			if (procInfo.getThisReference()!=null) {
+				Expression cond2 = pf.mkBinaryExpression(BoogieType.boolType,
+						BinaryOperator.COMPNEQ, instance,
+						procInfo.getThisReference());
+				cond = pf.mkBinaryExpression(BoogieType.boolType,
+						BinaryOperator.LOGICAND, cond, cond2);
+			}
 			Statement then = pf.mkAssignmentStatement(instance, SootPrelude.v()
 					.getNullConstant());
-			ss.addStatement(pf.mkIfStatement(cond, new Statement[] {
-					TranslationHelpers.createClonedAttribAssert(), then },
-					new Statement[] { TranslationHelpers
-							.createClonedAttribAssert() }));
+//			ss.addStatement(pf.mkIfStatement(cond, new Statement[] {
+//					TranslationHelpers.createClonedAttribAssert(), then },
+//					new Statement[] { TranslationHelpers
+//							.createClonedAttribAssert() }));
+			//TODO: we have to create a transition into an exception handler, otherwise this does not make sense!
 		}
 
 		// now check if the procedure returned exceptional

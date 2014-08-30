@@ -106,7 +106,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
 		
 		//now add all assumptions about the types of the in and out parameters
-		boogieStatements.addAll(procInfo.typeAssumptions);
+		//boogieStatements.addAll(procInfo.typeAssumptions);
 		
 		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
 		Iterator<Unit> stmtIt = tug.iterator();
@@ -115,7 +115,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		//in the bytecode, e.g. for finally-blocks, which is used
 		//later to generate attributes that suppress false alarms
 		//during infeasible code detection.				
-		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(stmtIt);
+		//TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(stmtIt);
 		
 		//reset the iterator
 		stmtIt = tug.iterator();
@@ -155,7 +155,7 @@ public class SootBodyTransformer extends BodyTransformer {
 								.size()]), procInfo.getLocalVariables());
 				
 		procInfo.setProcedureImplementation(proc);
-		GlobalsCache.v().modifiedInMonitor.clear();
+		//GlobalsCache.v().modifiedInMonitor.clear();
 	}
 	
 	/**
@@ -184,7 +184,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		LinkedList<Stmt> currentStack = new LinkedList<Stmt>();
 		EnterMonitorStmt currentMonitor = null;
 		
-		GlobalsCache.v().modifiedInMonitor = new HashMap<EnterMonitorStmt, HashSet<Value>>();
+		//GlobalsCache.v().modifiedInMonitor = new HashMap<EnterMonitorStmt, HashSet<Value>>();
 		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
@@ -193,13 +193,13 @@ public class SootBodyTransformer extends BodyTransformer {
 			//TODO: this is a brutal over-approximation. We have to do follow the CFG
 			//to figure out the actual set of variables that may be modified in the monitor.
 			//currently, we just collect everything until we reach an exit monitor.
-			if (s instanceof EnterMonitorStmt) {
-				currentMonitor = (EnterMonitorStmt)s;
-			} else if (s instanceof ExitMonitorStmt) {
-				GlobalsCache.v().modifiedInMonitor.put(currentMonitor, collectUsedVariables(currentStack));
-			} else {
-				currentStack.add(s);
-			}
+//			if (s instanceof EnterMonitorStmt) {
+//				currentMonitor = (EnterMonitorStmt)s;
+//			} else if (s instanceof ExitMonitorStmt) {
+//				GlobalsCache.v().modifiedInMonitor.put(currentMonitor, collectUsedVariables(currentStack));
+//			} else {
+//				currentStack.add(s);
+//			}
 			
 			//now check for finally blocks
 			int line=-1;			

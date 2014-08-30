@@ -106,20 +106,20 @@ public abstract class AbstractErrorModel {
 	
 	protected boolean isThisNonNullCheck(Expression guard) {
 		
-		if (guard instanceof BinaryExpression) {
-			BinaryExpression boe = (BinaryExpression)guard;			
-			if (boe.getOperator()==BinaryOperator.COMPNEQ) {				
-				if (boe.getLeft() instanceof IdentifierExpression) {					
-					IdentifierExpression id = (IdentifierExpression)boe.getLeft();
-					if (this.procInfo.isGuaranteedNonNullVariable(id)  
-							|| this.procInfo.getThisReference()==id) {
-						if (boe.getRight() == SootPrelude.v().getNullConstant()) {
-							return true;
-						}
-					}
-				}
-			}
-		}
+//		if (guard instanceof BinaryExpression) {
+//			BinaryExpression boe = (BinaryExpression)guard;			
+//			if (boe.getOperator()==BinaryOperator.COMPNEQ) {				
+//				if (boe.getLeft() instanceof IdentifierExpression) {					
+//					IdentifierExpression id = (IdentifierExpression)boe.getLeft();
+//					if (this.procInfo.isGuaranteedNonNullVariable(id)  
+//							|| this.procInfo.getThisReference()==id) {
+//						if (boe.getRight() == SootPrelude.v().getNullConstant()) {
+//							return true;
+//						}
+//					}
+//				}
+//			}
+//		}
 		return false;
 	}
 	

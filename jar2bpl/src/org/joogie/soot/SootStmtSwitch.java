@@ -189,52 +189,8 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		this.boogieStatements.add(SootPrelude.v().newObject(attributes,
 				newexpr, obj_type));
-		// // havoc right
-		// this.boogieStatements
-		// .add(this.pf.mkHavocStatement(attributes, newexpr));
-		// // assume $heap[right, $alloc] == false
-		// this.boogieStatements.add(this.pf.mkAssumeStatement(attributes,
-		// this.pf
-		// .mkUnaryExpression(
-		//
-		// this.pf.getBoolType(), UnaryOperator.LOGICNEG, this.valueswitch
-		// .makeHeapAccessExpression(newexpr, SootPrelude.v()
-		// .getFieldAllocVariable(), false))));
-		// // $heap[right, $alloc] := true
-		// AssignmentTranslation.translateAssignment(this,
-		// this.valueswitch.makeHeapAccessExpression(newexpr,
-		// SootPrelude.v().getFieldAllocVariable(), false),
-		// this.pf.mkBooleanLiteral(true));
-		//
-		// // $heap[right, $type] := ...the appropriate type...
-		// Expression typeRhs;
-		// if (sootType instanceof RefType) {
-		// typeRhs = GlobalsCache.v().lookupClassVariable(
-		// ((RefType) sootType).getSootClass());
-		// if (typeRhs == null) {
-		// throw new RuntimeException("Not a class variable: "
-		// + ((RefType) sootType).getSootClass());
-		// }
-		// } else if (sootType instanceof ArrayType) {
-		// typeRhs = GlobalsCache.v().lookupArrayType((ArrayType) sootType);
-		// if (typeRhs == null) {
-		// throw new RuntimeException("Not a type: "
-		// + (ArrayType) sootType);
-		// }
-		//
-		// } else {
-		// throw new RuntimeException("Translation of Array Access failed!");
-		// }
-		//
-		// this.boogieStatements.add(this.pf.mkAssumeStatement(attributes,
-		// this.pf
-		// .mkBinaryExpression(this.pf.getBoolType(),
-		// BinaryOperator.COMPNEQ, newexpr, SootPrelude.v()
-		// .getNullConstant())));
-		//
-		// AssignmentTranslation.translateAssignment(this,
-		// this.valueswitch.getClassTypeFromExpression(newexpr, false),
-		// typeRhs);
+
+
 		return newexpr;
 	}
 
@@ -266,30 +222,30 @@ public class SootStmtSwitch implements StmtSwitch {
 
 		this.inMonitor = true;
 
-		if (GlobalsCache.v().modifiedInMonitor.containsKey(arg0)) {
-			SootValueSwitch vs = new SootValueSwitch(procInfo, null);
-			HashSet<IdentifierExpression> vars = new HashSet<IdentifierExpression>();
-			for (Value v : GlobalsCache.v().modifiedInMonitor.get(arg0)) {
-				v.apply(vs);
-				Expression e = vs.getExpression();
-				vars.addAll(e.getFreeVariables());
-			}
-			// make sure we don't havoc in or out params
-			for (IdentifierExpression ie : this.getProcInfo().getInParamters()) {
-				if (vars.contains(ie))
-					vars.remove(ie);
-			}
-			for (IdentifierExpression ie : this.getProcInfo().getOutParamters()) {
-				if (vars.contains(ie))
-					vars.remove(ie);
-			}
-
-			if (vars.size() > 0) {
-				this.boogieStatements.add(this.pf.mkHavocStatement(
-						TranslationHelpers.javaLocation2Attribute(arg0),
-						vars.toArray(new IdentifierExpression[vars.size()])));
-			}
-		}
+//		if (GlobalsCache.v().modifiedInMonitor.containsKey(arg0)) {
+//			SootValueSwitch vs = new SootValueSwitch(procInfo, null);
+//			HashSet<IdentifierExpression> vars = new HashSet<IdentifierExpression>();
+//			for (Value v : GlobalsCache.v().modifiedInMonitor.get(arg0)) {
+//				v.apply(vs);
+//				Expression e = vs.getExpression();
+//				vars.addAll(e.getFreeVariables());
+//			}
+//			// make sure we don't havoc in or out params
+//			for (IdentifierExpression ie : this.getProcInfo().getInParamters()) {
+//				if (vars.contains(ie))
+//					vars.remove(ie);
+//			}
+//			for (IdentifierExpression ie : this.getProcInfo().getOutParamters()) {
+//				if (vars.contains(ie))
+//					vars.remove(ie);
+//			}
+//
+//			if (vars.size() > 0) {
+//				this.boogieStatements.add(this.pf.mkHavocStatement(
+//						TranslationHelpers.javaLocation2Attribute(arg0),
+//						vars.toArray(new IdentifierExpression[vars.size()])));
+//			}
+//		}
 	}
 
 	/*
@@ -339,15 +295,15 @@ public class SootStmtSwitch implements StmtSwitch {
 	}
 
 	private boolean isTrivialFalseNullCheck(Expression e) {
-		if (e instanceof BinaryExpression) {
-			BinaryExpression boe = (BinaryExpression) e;
-			if (boe.getRight() == SootPrelude.v().getNullConstant()
-					&& boe.getLeft() instanceof IdentifierExpression
-					&& this.procInfo.isGuaranteedNonNullVariable((IdentifierExpression) boe
-							.getLeft())) {
-				return true;
-			}
-		}
+//		if (e instanceof BinaryExpression) {
+//			BinaryExpression boe = (BinaryExpression) e;
+//			if (boe.getRight() == SootPrelude.v().getNullConstant()
+//					&& boe.getLeft() instanceof IdentifierExpression
+//					&& this.procInfo.isGuaranteedNonNullVariable((IdentifierExpression) boe
+//							.getLeft())) {
+//				return true;
+//			}
+//		}
 		return false;
 	}
 

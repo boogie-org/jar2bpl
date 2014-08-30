@@ -87,7 +87,7 @@ public class TranslationHelpers {
 			if (t_ instanceof SourceFileTag) {							
 				filename = ((SourceFileTag)t_).getSourceFile();
 				if (((SourceFileTag)t_).getAbsolutePath()!=null) {
-					filename = ((SourceFileTag)t_).getAbsolutePath()+filename;
+					filename = ((SourceFileTag)t_).getAbsolutePath();
 				}
 				break;
 			} else if (t_ instanceof SourceLnNamePosTag) {
@@ -135,9 +135,9 @@ public class TranslationHelpers {
 				break;
 			} else if (tag instanceof SourceFileTag) {
 				if (filename==null) {
-					filename = ((SourceFileTag) tag).getAbsolutePath()+((SourceFileTag) tag).getSourceFile();
+					filename = ((SourceFileTag) tag).getSourceFile();
 					if (((SourceFileTag) tag).getAbsolutePath()!=null) {
-						filename = ((SourceFileTag)tag).getAbsolutePath()+filename;
+						filename = ((SourceFileTag)tag).getAbsolutePath();
 					}
 				}
 				break;
