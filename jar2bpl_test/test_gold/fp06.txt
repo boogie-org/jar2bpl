@@ -1,3 +1,1 @@
-In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp06/FalsePositives06.java
-	line 39
 

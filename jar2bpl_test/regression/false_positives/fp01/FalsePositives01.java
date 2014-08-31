@@ -86,4 +86,28 @@ public class FalsePositives01 {
 		}		
 	}
 	
+	int beginEndTag;
+	public void FalsePositive03(String source, String searchString, int interncaret) {
+		int temphitpoint = -1;
+		boolean flaghitup = false;
+		int hitUp = 0;
+		do
+		{
+			flaghitup = false;
+			temphitpoint = source.indexOf(searchString, interncaret);
+			if(temphitpoint > 0 && temphitpoint < beginEndTag)
+			{
+				hitUp++;
+				flaghitup = true;
+				interncaret = temphitpoint + searchString.length();
+			}
+		} while(flaghitup);
+		if(hitUp == 0)
+		{
+			//at some point, this was reported as infeasible
+			//because we forced the loop to do at least
+			//one iteration
+		}		
+	}	
+	
 }

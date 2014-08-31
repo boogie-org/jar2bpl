@@ -6,8 +6,6 @@ import org.joogie.Dispatcher;
 import org.joogie.Options;
 import org.junit.Test;
 
-import bixie.*;
-
 public class JavaTranslationTest {
 	
 	@Test

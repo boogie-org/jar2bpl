@@ -19,7 +19,6 @@
 
 package org.joogie.soot;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,15 +27,18 @@ import org.joogie.GlobalsCache;
 import org.joogie.errormodel.AbstractErrorModel;
 import org.joogie.errormodel.AssertionErrorModel;
 import org.joogie.errormodel.ExceptionErrorModel;
+import org.joogie.util.CustomNullnessAnalysis;
 import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
+import soot.Immediate;
 import soot.RefType;
 import soot.Type;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.AssignStmt;
+import soot.jimple.BinopExpr;
 import soot.jimple.BreakpointStmt;
 import soot.jimple.CaughtExceptionRef;
 import soot.jimple.EnterMonitorStmt;
@@ -61,7 +63,6 @@ import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
-import boogie.ast.expression.BinaryExpression;
 import boogie.ast.expression.Expression;
 import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.statement.Statement;
@@ -190,7 +191,6 @@ public class SootStmtSwitch implements StmtSwitch {
 		this.boogieStatements.add(SootPrelude.v().newObject(attributes,
 				newexpr, obj_type));
 
-
 		return newexpr;
 	}
 
@@ -221,31 +221,14 @@ public class SootStmtSwitch implements StmtSwitch {
 		this.valueswitch.getExpression();
 
 		this.inMonitor = true;
-
-//		if (GlobalsCache.v().modifiedInMonitor.containsKey(arg0)) {
-//			SootValueSwitch vs = new SootValueSwitch(procInfo, null);
-//			HashSet<IdentifierExpression> vars = new HashSet<IdentifierExpression>();
-//			for (Value v : GlobalsCache.v().modifiedInMonitor.get(arg0)) {
-//				v.apply(vs);
-//				Expression e = vs.getExpression();
-//				vars.addAll(e.getFreeVariables());
-//			}
-//			// make sure we don't havoc in or out params
-//			for (IdentifierExpression ie : this.getProcInfo().getInParamters()) {
-//				if (vars.contains(ie))
-//					vars.remove(ie);
-//			}
-//			for (IdentifierExpression ie : this.getProcInfo().getOutParamters()) {
-//				if (vars.contains(ie))
-//					vars.remove(ie);
-//			}
-//
-//			if (vars.size() > 0) {
-//				this.boogieStatements.add(this.pf.mkHavocStatement(
-//						TranslationHelpers.javaLocation2Attribute(arg0),
-//						vars.toArray(new IdentifierExpression[vars.size()])));
-//			}
-//		}
+		// TODO: this is a very aggressive hack
+		// to avoid false positives that we encountered in Tomcat.
+		// For example: if (A) synchronized() { if (A) ...
+		this.boogieStatements
+				.add(this.pf.mkHavocStatement(TranslationHelpers
+						.javaLocation2Attribute(arg0),
+						new IdentifierExpression[] { SootPrelude.v()
+								.getHeapVariable() }));
 	}
 
 	/*
@@ -294,16 +277,31 @@ public class SootStmtSwitch implements StmtSwitch {
 				arg0.getRightOp(), arg0);
 	}
 
-	private boolean isTrivialFalseNullCheck(Expression e) {
-//		if (e instanceof BinaryExpression) {
-//			BinaryExpression boe = (BinaryExpression) e;
-//			if (boe.getRight() == SootPrelude.v().getNullConstant()
-//					&& boe.getLeft() instanceof IdentifierExpression
-//					&& this.procInfo.isGuaranteedNonNullVariable((IdentifierExpression) boe
-//							.getLeft())) {
-//				return true;
-//			}
-//		}
+	private boolean isTrivialFalseNullCheck(Value v) {
+		if (v instanceof BinopExpr && this.getProcInfo() != null
+				&& this.getProcInfo().getNullnessAnalysis() != null) {
+			BinopExpr boe = (BinopExpr) v;
+			if (boe.getSymbol().contains("==")) {
+				CustomNullnessAnalysis nna = this.getProcInfo()
+						.getNullnessAnalysis();
+				if (boe.getOp1() instanceof Immediate
+						&& boe.getOp2() instanceof Immediate)
+					if (nna.isAlwaysNonNullBefore(currentStatement,
+							(Immediate) boe.getOp1())
+							&& nna.isAlwaysNullBefore(currentStatement,
+									(Immediate) boe.getOp2())) {
+						System.err.println("trivial");
+						return true;
+					} else if (nna.isAlwaysNullBefore(currentStatement,
+							(Immediate) boe.getOp1())
+							&& nna.isAlwaysNonNullBefore(currentStatement,
+									(Immediate) boe.getOp2())) {
+						System.err.println("trivial");
+						return true;
+					}
+
+			}
+		}
 		return false;
 	}
 
@@ -337,9 +335,9 @@ public class SootStmtSwitch implements StmtSwitch {
 		arg0.getCondition().apply(this.valueswitch);
 		Expression cond = TranslationHelpers.castBoogieTypes(
 				this.valueswitch.getExpression(), this.pf.getBoolType());
-		if (isTrivialFalseNullCheck(cond)) {
-			//ignore the check
-			Log.info("Ignored trivial false check: "+ arg0);
+		if (isTrivialFalseNullCheck(arg0.getCondition())) {
+			// ignore the check
+			Log.info("Ignored trivial false check: " + arg0);
 		} else {
 			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
 					elsePart));

@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import org.joogie.GlobalsCache;
@@ -36,10 +35,6 @@ import soot.BodyTransformer;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
-import soot.jimple.EnterMonitorStmt;
-import soot.jimple.ExitMonitorStmt;
 import soot.jimple.Stmt;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceLnNamePosTag;
@@ -106,7 +101,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		LinkedList<Statement> boogieStatements = new LinkedList<Statement>();
 		
 		//now add all assumptions about the types of the in and out parameters
-		//boogieStatements.addAll(procInfo.typeAssumptions);
+		boogieStatements.addAll(procInfo.typeAssumptions);
 		
 		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
 		Iterator<Unit> stmtIt = tug.iterator();
@@ -115,7 +110,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		//in the bytecode, e.g. for finally-blocks, which is used
 		//later to generate attributes that suppress false alarms
 		//during infeasible code detection.				
-		//TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(stmtIt);
+		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(stmtIt);
 		
 		//reset the iterator
 		stmtIt = tug.iterator();
@@ -180,26 +175,11 @@ public class SootBodyTransformer extends BodyTransformer {
 		
 		LinkedList<Stmt> subprog = null;
 		int old_line = -100; // pick a negative constant that is not a line number
-		
-		LinkedList<Stmt> currentStack = new LinkedList<Stmt>();
-		EnterMonitorStmt currentMonitor = null;
-		
+				
 		//GlobalsCache.v().modifiedInMonitor = new HashMap<EnterMonitorStmt, HashSet<Value>>();
 		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
-
-			//check the modifies clauses in monitors first
-			//TODO: this is a brutal over-approximation. We have to do follow the CFG
-			//to figure out the actual set of variables that may be modified in the monitor.
-			//currently, we just collect everything until we reach an exit monitor.
-//			if (s instanceof EnterMonitorStmt) {
-//				currentMonitor = (EnterMonitorStmt)s;
-//			} else if (s instanceof ExitMonitorStmt) {
-//				GlobalsCache.v().modifiedInMonitor.put(currentMonitor, collectUsedVariables(currentStack));
-//			} else {
-//				currentStack.add(s);
-//			}
 			
 			//now check for finally blocks
 			int line=-1;			
@@ -242,15 +222,6 @@ public class SootBodyTransformer extends BodyTransformer {
 		return duplicates;
 	}
 	
-	private HashSet<Value> collectUsedVariables(List<Stmt> stmts) {
-		HashSet<Value> values = new HashSet<Value>();
-		for (Stmt s : stmts) {
-			for (ValueBox vb : s.getUseBoxes()) {
-				values.add(vb.getValue());
-			}
-		}
-		return values;
-	}
 	
 	private boolean compareSubprogs(LinkedList<Stmt> p1, LinkedList<Stmt> p2) {		
 		LinkedList<Stmt> l1, l2;

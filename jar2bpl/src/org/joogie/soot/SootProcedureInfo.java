@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.joogie.GlobalsCache;
+import org.joogie.util.CustomNullnessAnalysis;
 import org.joogie.util.TranslationHelpers;
 
 import soot.Local;
@@ -69,6 +70,7 @@ public class SootProcedureInfo {
 	private IdentifierExpression containingClassVariable;
 
 	private ExceptionalUnitGraph exceptionalUnitGraph;
+	private CustomNullnessAnalysis nullnessAnalysis;
 
 	private IdentifierExpression thisVariable;
 	private SootMethod sootMethod;
@@ -268,8 +270,10 @@ public class SootProcedureInfo {
 		if (this.sootMethod.hasActiveBody()) {
 			this.exceptionalUnitGraph = new ExceptionalUnitGraph(
 					this.sootMethod.getActiveBody(), UnitThrowAnalysis.v());
+			this.nullnessAnalysis = new CustomNullnessAnalysis(this.exceptionalUnitGraph);
 		} else {
 			this.exceptionalUnitGraph = null;
+			this.nullnessAnalysis = null;
 		}
 	}
 
@@ -322,6 +326,10 @@ public class SootProcedureInfo {
 		return exceptionalUnitGraph;
 	}
 
+	public CustomNullnessAnalysis getNullnessAnalysis() {
+		return this.nullnessAnalysis;
+	}
+	
 	public boolean isStatic() {
 		return this.sootMethod.isStatic();
 	}

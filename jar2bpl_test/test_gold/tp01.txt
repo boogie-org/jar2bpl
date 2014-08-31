@@ -2,6 +2,7 @@ In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp01/I
 	line 12
 	line 27
 	line 34
+	line 42
 	line 49
 	line 51
 	line 56

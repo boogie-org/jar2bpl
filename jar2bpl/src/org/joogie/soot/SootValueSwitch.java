@@ -23,6 +23,7 @@ import java.util.LinkedList;
 
 import org.joogie.GlobalsCache;
 import org.joogie.Options;
+import org.joogie.util.CustomNullnessAnalysis;
 import org.joogie.util.Log;
 import org.joogie.util.MhpInfo;
 import org.joogie.util.TranslationHelpers;
@@ -30,6 +31,7 @@ import org.joogie.util.TranslationHelpers;
 import soot.ArrayType;
 import soot.DoubleType;
 import soot.FloatType;
+import soot.Immediate;
 import soot.Local;
 import soot.NullType;
 import soot.RefType;
@@ -916,6 +918,15 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			nullCheckNeeded = false;
 		}
 		
+		//check if base is trivially non-null
+		if (this.stmtSwitch.getProcInfo()!=null) {
+			CustomNullnessAnalysis nna = this.stmtSwitch.getProcInfo().getNullnessAnalysis();
+			if (nna!=null && arg0.getBase() instanceof Immediate) {
+				if (nna.isAlwaysNonNullBefore(this.stmtSwitch.getCurrentStatement(), (Immediate)arg0.getBase())) {
+					nullCheckNeeded = false;		
+				}
+			}
+		}
 		// We are checking if this is a @NonNull field
 		// if so, we add an assume to ensure that it actually is
 		// not null here.

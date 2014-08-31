@@ -84,10 +84,10 @@ public class InvokeTranslation {
 			// baseClass = getBaseClass(iivk.getBase().getType());
 
 			iivk.getBase().apply(valueswitch);
-			Expression base = valueswitch.getExpression();			
+			Expression base = valueswitch.getExpression();
 			// add the "this" variable to the list of args
 			args.addFirst(base);
-			if (base!=ss.getProcInfo().getThisReference()) {
+			if (base != ss.getProcInfo().getThisReference()) {
 				ss.getErrorModel().createNonNullViolationException(base);
 			}
 
@@ -101,6 +101,7 @@ public class InvokeTranslation {
 		ss.addStatement(createCallStatement(ss, m, lefts,
 				args.toArray(new Expression[args.size()])));
 
+		Expression constructorInstance = null;
 		if (m.isConstructor()) {
 			// if it is a call to a constructor, we have to add
 			// the condition that the object which is being constructed
@@ -109,37 +110,14 @@ public class InvokeTranslation {
 			// That is, for: $exception = Object$init(base)
 			// we create
 			// if ($exception!=null && base!=this) base=null;
-
-			Expression instance = args.getFirst(); // the first arg must be the
+			constructorInstance = args.getFirst(); // the first arg must be the
 													// pointer to that object
-			
-			Expression exceptionvar = procInfo.getExceptionVariable();
-
-			ProgramFactory pf = GlobalsCache.v().getPf();
-
-			Expression cond = pf.mkBinaryExpression(BoogieType.boolType,
-					BinaryOperator.COMPNEQ, exceptionvar, SootPrelude.v()
-							.getNullConstant());
-			
-			if (procInfo.getThisReference()!=null) {
-				Expression cond2 = pf.mkBinaryExpression(BoogieType.boolType,
-						BinaryOperator.COMPNEQ, instance,
-						procInfo.getThisReference());
-				cond = pf.mkBinaryExpression(BoogieType.boolType,
-						BinaryOperator.LOGICAND, cond, cond2);
-			}
-			Statement then = pf.mkAssignmentStatement(instance, SootPrelude.v()
-					.getNullConstant());
-//			ss.addStatement(pf.mkIfStatement(cond, new Statement[] {
-//					TranslationHelpers.createClonedAttribAssert(), then },
-//					new Statement[] { TranslationHelpers
-//							.createClonedAttribAssert() }));
-			//TODO: we have to create a transition into an exception handler, otherwise this does not make sense!
 		}
 
 		// now check if the procedure returned exceptional
 		// and jump to the appropriate location
-		translateCalleeExceptions(ss, procInfo.getThrowsClasses(), statement);
+		translateCalleeExceptions(ss, procInfo.getThrowsClasses(), statement,
+				constructorInstance);
 
 		/*
 		 * if the left-hand side was an array access and we introduced a helper
@@ -277,13 +255,21 @@ public class InvokeTranslation {
 	 * @param loc
 	 * @param maxThrowSet
 	 * @param statement
+	 * @param constructorInstance
+	 *            non-Null if the callee is a constructor. In that case, we have
+	 *            to set the instance to Null if the constructor returned an
+	 *            exception.
 	 */
 	static private void translateCalleeExceptions(SootStmtSwitch ss,
-			List<SootClass> maxThrowSet, Unit statement) {
+			List<SootClass> maxThrowSet, Unit statement,
+			Expression constructorInstance) {
 
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		SootProcedureInfo procInfo = ss.getProcInfo();
+
+		// first we collect all possible exceptions.
+		LinkedList<Statement> statements = new LinkedList<Statement>();
 
 		// keep track of the caught exceptions so that we can add the uncaught
 		// ones later
@@ -298,10 +284,6 @@ public class InvokeTranslation {
 						&& dest.getTrap().getException() != null) {
 					caughtExceptions.add(dest.getTrap().getException());
 					Statement transitionStmt;
-					Expression condition = pf.mkBinaryExpression(pf
-							.getBoolType(), BinaryOperator.COMPNEQ, procInfo
-							.getExceptionVariable(), SootPrelude.v()
-							.getNullConstant());
 					// the exception is caught somewhere in this procedure
 					transitionStmt = pf.mkGotoStatement(GlobalsCache.v()
 							.getUnitLabel(
@@ -310,20 +292,16 @@ public class InvokeTranslation {
 					// add a conjunct to check if that the type of the exception
 					// is <: than the one caught
 					// by the catch block
-					condition = pf.mkBinaryExpression(pf.getBoolType(),
-							BinaryOperator.LOGICAND, condition,
-							pf.mkBinaryExpression(
-
-									pf.getBoolType(),
-									BinaryOperator.COMPPO,
-									valueswitch.getClassTypeFromExpression(
-											procInfo.getExceptionVariable(),
-											false),
-									GlobalsCache.v().lookupClassVariable(
-											dest.getTrap().getException())));
+					Expression condition = pf.mkBinaryExpression(
+							pf.getBoolType(),
+							BinaryOperator.COMPPO,
+							valueswitch.getClassTypeFromExpression(
+									procInfo.getExceptionVariable(), false),
+							GlobalsCache.v().lookupClassVariable(
+									dest.getTrap().getException()));
 					Statement[] thenPart = { transitionStmt };
 					Statement[] elsePart = {};
-					ss.addStatement(pf.mkIfStatement(condition, thenPart,
+					statements.add(pf.mkIfStatement(condition, thenPart,
 							elsePart));
 				} else {
 					// Log.error("NO CATCH FOR "+ dest);
@@ -372,38 +350,46 @@ public class InvokeTranslation {
 					|| org.joogie.Options.v().isRuntimeExceptionReturns()) {
 
 				Statement transitionStmt;
-				Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
-						BinaryOperator.COMPNEQ,
-						procInfo.getExceptionVariable(), SootPrelude.v()
-								.getNullConstant());
-
 				// add a conjunct to check if that the type of the exception
 				// is <: than the one caught
 				// by the catch block
-				condition = pf
-						.mkBinaryExpression(
-								pf.getBoolType(),
-								BinaryOperator.LOGICAND,
-								condition,
-								pf.mkBinaryExpression(
-										pf.getBoolType(),
-										BinaryOperator.COMPPO,
-										valueswitch.getClassTypeFromExpression(
-												procInfo.getExceptionVariable(),
-												false), GlobalsCache.v()
-												.lookupClassVariable(current)));
+				Expression condition = pf.mkBinaryExpression(
+						pf.getBoolType(),
+						BinaryOperator.COMPPO,
+						valueswitch.getClassTypeFromExpression(
+								procInfo.getExceptionVariable(), false),
+						GlobalsCache.v().lookupClassVariable(current));
 
 				transitionStmt = pf.mkReturnStatement();
 				Statement[] thenPart = { transitionStmt };
 				Statement[] elsePart = {};
-				ss.addStatement(pf.mkIfStatement(condition, thenPart, elsePart));
+				statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
 
 			} else {
 				Log.debug("The exception: " + current
 						+ " is not handeled and treated as RuntimeException.");
 			}
-
 		}
+		// TODO: the part above is pretty hacky and can be improved using
+		// TrapManager.
+
+		// if the call was a constructor, add an assignment that sets
+		// the created variable back to null
+		if (constructorInstance != null
+				&& constructorInstance != ss.getProcInfo().getThisReference()) {
+			statements.addFirst(pf.mkAssignmentStatement(constructorInstance,
+					SootPrelude.v().getNullConstant()));
+		}
+
+		// now add all the exceptional checks in a block where
+		// we ensure that $excpeiton was not null
+		Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
+				BinaryOperator.COMPNEQ, procInfo.getExceptionVariable(),
+				SootPrelude.v().getNullConstant());
+
+		ss.addStatement(pf.mkIfStatement(condition,
+				statements.toArray(new Statement[statements.size()]),
+				new Statement[] {}));
 
 	}
 
