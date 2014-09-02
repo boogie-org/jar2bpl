@@ -101,6 +101,50 @@ public class SootRunner extends Runner {
 		}
 	}
 
+	public void runWithEclipseClasspath(String cpfile, String boogieFile) {
+		try {
+			List<String> args = new ArrayList<String>();
+			fillSootArgs(args);
+
+			// dependent system JAR files
+			List<File> jarFiles = new ArrayList<File>();
+			fillClassPath(jarFiles);
+			
+			EclipseClasspathFileReader er = EclipseClasspathFileReader.classpath2Args(cpfile);
+			for (String s : er.getLibEntries()) {
+				jarFiles.add(new File(s));
+			}			
+			String cp = buildClassPath(jarFiles);
+			
+			
+			for (String s : er.getSrcEntries()) {
+				cp += File.pathSeparatorChar + s;
+				// add path to be processed
+				args.add("-process-path");
+				args.add(s);
+
+			}
+			
+			// add soot-class-path
+			args.add("-cp");
+			args.add(cp);
+			
+			args.add("-src-prec");
+			args.add("java");
+			
+			System.err.print("args:");
+			for (String s : args) {
+				System.err.print(" "+s);
+			}
+			System.err.println(" ");
+			// finally, run soot
+			run(args, boogieFile);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Runs Soot by using a class (e.g., from Joogie)
 	 * 
@@ -265,6 +309,9 @@ public class SootRunner extends Runner {
 			}
 			
 			Pack pack = PackManager.v().getPack("jtp");
+			
+			//pack.add(new Transform("jtp.NullCheckEliminator",new NullCheckEliminator()));
+			
 			pack.add(new Transform("jtp.BoogieTransform",
 					new SootBodyTransformer()));
 			

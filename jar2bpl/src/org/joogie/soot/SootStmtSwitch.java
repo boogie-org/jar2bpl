@@ -33,14 +33,17 @@ import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
 import soot.Immediate;
+import soot.Local;
 import soot.RefType;
+import soot.Scene;
+import soot.SootClass;
+import soot.Trap;
 import soot.Type;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.BinopExpr;
 import soot.jimple.BreakpointStmt;
-import soot.jimple.CaughtExceptionRef;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.ExitMonitorStmt;
 import soot.jimple.GotoStmt;
@@ -48,6 +51,7 @@ import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.InvokeStmt;
 import soot.jimple.LookupSwitchStmt;
+import soot.jimple.NewExpr;
 import soot.jimple.NopStmt;
 import soot.jimple.RetStmt;
 import soot.jimple.ReturnStmt;
@@ -56,10 +60,6 @@ import soot.jimple.Stmt;
 import soot.jimple.StmtSwitch;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
-import soot.tagkit.LineNumberTag;
-import soot.tagkit.SourceFileTag;
-import soot.tagkit.SourceLnNamePosTag;
-import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
@@ -509,6 +509,20 @@ public class SootStmtSwitch implements StmtSwitch {
 		translateSwitch(cases, targets);
 	}
 
+	private SootClass findExceptionType(ThrowStmt s) {
+		if (s.getOp() instanceof NewExpr) {
+			NewExpr ne = (NewExpr) s.getOp();
+			return ne.getBaseType().getSootClass();
+		} else if (s.getOp() instanceof Local) {
+			Local l = (Local) s.getOp();
+			if (l.getType() instanceof RefType) {
+				return ((RefType) l.getType()).getSootClass();
+			}
+		}
+		System.err.println("Unexpected value in throw stmt " + s.getOp());
+		return Scene.v().loadClass("java.lang.Throwable", SootClass.SIGNATURES);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -517,6 +531,10 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void caseThrowStmt(ThrowStmt arg0) {
 		injectLabelStatements(arg0);
+
+		// find the type of the exception that is thrown.
+		SootClass c = findExceptionType(arg0);
+
 		arg0.getOp().apply(this.valueswitch);
 		Expression right = this.valueswitch.getExpression();
 		// assign the value from arg0.getOp() to the $exception variable of
@@ -526,95 +544,121 @@ public class SootStmtSwitch implements StmtSwitch {
 		AssignmentTranslation.translateAssignment(this,
 				this.procInfo.getExceptionVariable(), right);
 		// Add a goto statement to the exceptional successors.
-		List<Unit> exc_succ = procInfo.getExceptionalUnitGraph()
-				.getExceptionalSuccsOf((Unit) arg0);
-		String[] labels = new String[exc_succ.size()];
-		if (exc_succ.size() > 0) {
-			for (int i = 0; i < exc_succ.size(); i++) {
-				labels[i] = GlobalsCache.v().getUnitLabel(
-						(Stmt) exc_succ.get(i));
+		List<Trap> traps = TranslationHelpers.getReachableTraps(arg0,
+				this.procInfo.getSootMethod());
+		//TODO, maybe we need to consider the case that
+		//we don't know the exact type of arg0.getOp at this point?
+		for (Trap trap : traps) {
+			if (GlobalsCache.v().isSubTypeOrEqual(c, trap.getException())) {
+				this.boogieStatements.add(this.pf.mkGotoStatement(GlobalsCache
+						.v().getUnitLabel((Stmt) trap.getHandlerUnit())));
+				return;
 			}
-			if (exc_succ.size() > 1) {
-
-				for (int i = 0; i < exc_succ.size(); i++) {
-					Unit u = exc_succ.get(i);
-
-					if (u instanceof IdentityStmt) {
-
-						IdentityStmt istmt = (IdentityStmt) u;
-						if (istmt.getRightOp() instanceof CaughtExceptionRef) {
-							// sb.append("... catches exception! " +
-							// istmt.getLeftOp().getType()+"\n");
-							Type caughttype = istmt.getLeftOp().getType();
-							if (!(caughttype instanceof RefType)) {
-								throw new RuntimeException(
-										"Bug in translation of ThrowStmt!");
-							}
-							RefType caught = (RefType) caughttype;
-							Expression cond = GlobalsCache
-									.v()
-									.compareTypeExpressions(
-											this.valueswitch.getClassTypeFromExpression(
-													right, false),
-											GlobalsCache
-													.v()
-													.lookupClassVariable(
-															caught.getSootClass()));
-							Statement[] thenPart = new Statement[] { this.pf
-									.mkGotoStatement(labels[i]) };
-							Statement ifstmt = this.pf.mkIfStatement(cond,
-									thenPart, new Statement[0]);
-							// sb.append("created choice: "+ifstmt+"\n");
-							this.boogieStatements.add(ifstmt);
-						} else {
-							throw new RuntimeException(
-									"Bug in translation of ThrowStmt!");
-						}
-					} else if (u instanceof NopStmt) {
-						String filename = "";
-						int startln = -1;
-						for (Tag tag : u.getTags()) {
-							if (tag instanceof LineNumberTag) {
-								if (GlobalsCache.v().currentMethod != null) {
-									filename = GlobalsCache.v().currentMethod
-											.getDeclaringClass().getName();
-								}
-								startln = ((LineNumberTag) tag).getLineNumber();
-								break;
-							} else if (tag instanceof SourceLnNamePosTag) {
-								startln = ((SourceLnNamePosTag) tag).startLn();
-								filename = ((SourceLnNamePosTag) tag)
-										.getFileName();
-								break;
-							} else if (tag instanceof SourceFileTag) {
-								filename = ((SourceFileTag) tag)
-										.getSourceFile();
-								break;
-							}
-						}
-						Log.error("Catch block starts with Nop instead of assignment. Maybe unsound. "
-								+ filename + ": " + startln);
-					} else {
-						throw new RuntimeException(
-								"Bug in translation of ThrowStmt! "
-										+ u.getClass().toString());
-					}
-				}
-				// throw new RuntimeException(sb.toString());
-				// Log.error(sb);
-				// Make sure that the execution does not continue after the
-				// throw statement
-				this.boogieStatements.add(this.pf.mkReturnStatement());
-			} else {
-				this.boogieStatements.add(this.pf.mkGotoStatement(labels[0]));
-			}
-		} else {
-
-			this.boogieStatements.add(this.pf.mkReturnStatement());
 		}
+		this.boogieStatements.add(this.pf.mkReturnStatement());
 
 	}
 
+	// public void caseThrowStmt(ThrowStmt arg0) {
+	// injectLabelStatements(arg0);
+	// arg0.getOp().apply(this.valueswitch);
+	// Expression right = this.valueswitch.getExpression();
+	// // assign the value from arg0.getOp() to the $exception variable of
+	// // the current procedure.
+	// // Note that this only works because soot moves the "new" statement
+	// // to a new local variable.
+	// AssignmentTranslation.translateAssignment(this,
+	// this.procInfo.getExceptionVariable(), right);
+	// // Add a goto statement to the exceptional successors.
+	// List<Unit> exc_succ = procInfo.getExceptionalUnitGraph()
+	// .getExceptionalSuccsOf((Unit) arg0);
+	// String[] labels = new String[exc_succ.size()];
+	// if (exc_succ.size() > 0) {
+	// for (int i = 0; i < exc_succ.size(); i++) {
+	// labels[i] = GlobalsCache.v().getUnitLabel(
+	// (Stmt) exc_succ.get(i));
+	// }
+	// if (exc_succ.size() > 1) {
+	//
+	// for (int i = 0; i < exc_succ.size(); i++) {
+	// Unit u = exc_succ.get(i);
+	//
+	// if (u instanceof IdentityStmt) {
+	//
+	// IdentityStmt istmt = (IdentityStmt) u;
+	// if (istmt.getRightOp() instanceof CaughtExceptionRef) {
+	// // sb.append("... catches exception! " +
+	// // istmt.getLeftOp().getType()+"\n");
+	// Type caughttype = istmt.getLeftOp().getType();
+	// if (!(caughttype instanceof RefType)) {
+	// throw new RuntimeException(
+	// "Bug in translation of ThrowStmt!");
+	// }
+	// RefType caught = (RefType) caughttype;
+	// Expression cond = GlobalsCache
+	// .v()
+	// .compareTypeExpressions(
+	// this.valueswitch.getClassTypeFromExpression(
+	// right, false),
+	// GlobalsCache
+	// .v()
+	// .lookupClassVariable(
+	// caught.getSootClass()));
+	// Statement[] thenPart = new Statement[] { this.pf
+	// .mkGotoStatement(labels[i]) };
+	// Statement ifstmt = this.pf.mkIfStatement(cond,
+	// thenPart, new Statement[0]);
+	// // sb.append("created choice: "+ifstmt+"\n");
+	// this.boogieStatements.add(ifstmt);
+	// } else {
+	// throw new RuntimeException(
+	// "Bug in translation of ThrowStmt!");
+	// }
+	// } else if (u instanceof NopStmt) {
+	// String filename = "";
+	// int startln = -1;
+	// for (Tag tag : u.getTags()) {
+	// if (tag instanceof LineNumberTag) {
+	// if (GlobalsCache.v().currentMethod != null) {
+	// filename = GlobalsCache.v().currentMethod
+	// .getDeclaringClass().getName();
+	// }
+	// startln = ((LineNumberTag) tag).getLineNumber();
+	// break;
+	// } else if (tag instanceof SourceLnNamePosTag) {
+	// startln = ((SourceLnNamePosTag) tag).startLn();
+	// filename = ((SourceLnNamePosTag) tag)
+	// .getFileName();
+	// break;
+	// } else if (tag instanceof SourceFileTag) {
+	// filename = ((SourceFileTag) tag)
+	// .getSourceFile();
+	// break;
+	// }
+	// }
+	// Log.error("Catch block starts with Nop instead of assignment. Maybe unsound. "
+	// + filename + ": " + startln);
+	// } else {
+	// throw new RuntimeException(
+	// "Bug in translation of ThrowStmt! "
+	// + u.getClass().toString());
+	// }
+	// }
+	// // throw new RuntimeException(sb.toString());
+	// // Log.error(sb);
+	// // Make sure that the execution does not continue after the
+	// // throw statement
+	// this.boogieStatements.add(this.pf.mkReturnStatement());
+	// } else {
+	// this.boogieStatements.add(this.pf.mkGotoStatement(labels[0]));
+	// }
+	// } else {
+	//
+	// this.boogieStatements.add(this.pf.mkReturnStatement());
+	// }
+	//
+	// }
+	//
 	/*
 	 * (non-Javadoc)
 	 * 

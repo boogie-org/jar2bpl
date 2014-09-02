@@ -16,11 +16,8 @@ const unique $StringConst0 : ref extends  complete;
 const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.io.Serializable : javaType extends  unique java.lang.Object complete;
 const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.Comparable : javaType extends  unique java.lang.Object complete;
 const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.CharSequence : javaType extends  unique java.lang.Object complete;
-const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.String : javaType extends  unique java.lang.Comparable, unique java.lang.Object, unique java.io.Serializable, unique java.lang.CharSequence complete;
+const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.String : javaType extends  unique java.lang.Object, unique java.lang.CharSequence, unique java.lang.Comparable, unique java.io.Serializable complete;
 const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.Throwable : javaType extends  unique java.lang.Object, unique java.io.Serializable complete;
-const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.Exception : javaType extends  unique java.lang.Throwable complete;
-const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.RuntimeException : javaType extends  unique java.lang.Exception complete;
-const { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } unique java.lang.ClassCastException : javaType extends  unique java.lang.RuntimeException complete;
 const unique $StringConst1 : ref extends  complete;
 const unique $StringConst2 : ref extends  complete;
 const unique $StringConst3 : ref extends  complete;
@@ -55,9 +52,9 @@ function $shlInt(x:int, y:int) returns ($ret:int);
 function $ushrInt(x:int, y:int) returns ($ret:int);
 function $shrInt(x:int, y:int) returns ($ret:int);
 axiom (forall t : javaType :: $heap[$null,$type] <: t);
-procedure $new(obj_type:javaType) returns ($obj:ref);        ensures $obj != $null;    requires $heap[$obj,$alloc] == false;    ensures $heap[$obj,$alloc] == true;    ensures $heap[$obj,$type] == obj_type;
+procedure $new(obj_type:javaType) returns ($obj:ref);    ensures $heap[$obj,$type] == obj_type;    ensures $obj != $null;        ensures $heap[$obj,$alloc] == true;    requires $heap[$obj,$alloc] == false;
 
-procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);    ensures $heap[$other,$type] == $heap[$this,$type];    ensures $heap[$other,$alloc] == true;        ensures $other != $null;
+procedure java.lang.Object$java.lang.Object$clone$43($this:ref) returns ($other:ref);    ensures $heap[$other,$alloc] == true;        ensures $heap[$other,$type] == $heap[$this,$type];    ensures $other != $null;
 
 procedure int$java.lang.String$compareTo$87($this:ref, $other:ref) returns ($return:int);    
 
@@ -85,8 +82,8 @@ procedure void$java.lang.Object$$la$init$ra$$38($this:ref) returns ($exception:r
 
 implementation int$FalsePositives01$foo$1889($this:ref) returns ($return:int, $exception:ref){
     
-var this1 : ref;    
-var temp$02 : int;
+var temp$02 : int;    
+var this1 : ref;
     assume { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } $this != $null;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",23,2,23,29 } true;
     this1 := $this;
@@ -116,23 +113,23 @@ var temp$04 : ref;
 
 implementation void$FalsePositives01$removeAttribute$1891($this:ref) returns ($exception:ref){
     
-var temp$1119 : int;    
-var temp$614 : int;    
-var temp$19 : int;    
-var temp$917 : ref;    
-var temp$1220 : int;    
-var temp$412 : int;    
-var temp$715 : ref;    
-var temp$816 : int;    
-var temp$08 : ref;    
-var temp$513 : ref;    
-var countSource7 : int;    
-var cce21 : ref;    
-var temp$311 : ref;    
-var temp$210 : int;    
 var this5 : ref;    
+var temp$08 : ref;    
+var temp$917 : ref;    
+var temp$816 : int;    
+var temp$1119 : int;    
+var countSource7 : int;    
+var temp$412 : int;    
+var temp$19 : int;    
+var temp$1220 : int;    
+var temp$715 : ref;    
+var temp$614 : int;    
+var cce21 : ref;    
 var temp$1018 : ref;    
-var hit6 : int;
+var temp$210 : int;    
+var hit6 : int;    
+var temp$513 : ref;    
+var temp$311 : ref;
     assume { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } $this != $null;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",26,2,52,2 } true;
     this5 := $this;
@@ -210,8 +207,8 @@ var hit6 : int;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",44,6,44,15 } temp$917 != $null;
     call temp$1018, $exception := java.lang.String$java.lang.String$toString$124(temp$917);
     if ($exception != $null) {
-        if ($heap[$exception,$type] <: java.lang.ClassCastException) {
-            goto block9;
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
         }
     }
   block8:
@@ -228,8 +225,8 @@ var hit6 : int;
   block4:
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",32,4,46,4 } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",28,3,51,3 } true;
-    goto block10;
-  block9:
+    goto block9;
+  block10:
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",28,3,51,3 } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",48,3,51,3 } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",48,3,51,3 } $exception != $null;
@@ -237,8 +234,8 @@ var hit6 : int;
     cce21 := $exception;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",48,3,51,3 } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",48,3,51,3 } true;
-    goto block10;
-  block10:
+    goto block9;
+  block9:
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",48,3,51,3 } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",48,3,51,3 } true;
     return;
@@ -247,14 +244,14 @@ var hit6 : int;
 
 implementation void$FalsePositives01$FalsePositive01$1892($this:ref) returns ($exception:ref){
     
-var temp$227 : int;    
-var hit23 : int;    
-var temp$126 : int;    
-var temp$429 : int;    
-var this22 : ref;    
-var counter24 : int;    
 var temp$025 : int;    
+var hit23 : int;    
+var temp$429 : int;    
+var temp$126 : int;    
+var temp$227 : int;    
 var temp$530 : int;    
+var counter24 : int;    
+var this22 : ref;    
 var temp$328 : int;
     assume { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } $this != $null;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",55,2,72,2 } true;
@@ -332,17 +329,17 @@ var temp$328 : int;
 
 implementation void$FalsePositives01$FalsePositive02$1893($this:ref, $in_parameter__0:ref) returns ($exception:ref){
     
-var temp$134 : int;    
-var temp$740 : int;    
 var htmlTag32 : ref;    
 var this31 : ref;    
+var temp$235 : int;    
 var temp$538 : int;    
+var temp$437 : int;    
+var temp$639 : ref;    
 var temp$841 : int;    
 var temp$336 : ref;    
-var temp$235 : int;    
-var temp$437 : int;    
+var temp$134 : int;    
 var temp$033 : ref;    
-var temp$639 : ref;
+var temp$740 : int;
     assume { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } $this != $null;
     assume $heap[$in_parameter__0,$type] <: java.lang.Object;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",74,2,87,2 } true;
@@ -353,11 +350,17 @@ var temp$639 : ref;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",75,7,75,47 } { :clone } htmlTag32 != $null;
     call temp$033, $exception := java.lang.String$java.lang.Object$toString$44(htmlTag32);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",75,7,75,47 } { :clone } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",75,7,75,47 } { :clone } temp$033 != $null;
     call temp$134 := int$java.lang.String$compareTo$87(temp$033, $StringConst1);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",75,7,75,47 } { :clone } true;
     if (temp$134 == 0) {
@@ -379,14 +382,19 @@ var temp$639 : ref;
   block18:
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",75,3,86,3 } { :clone } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",79,12,79,49 } { :clone } true;
-    assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",79,12,79,49 } { :clone } htmlTag32 != $null;
     call temp$336, $exception := java.lang.String$java.lang.Object$toString$44(htmlTag32);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",79,12,79,49 } { :clone } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",79,12,79,49 } { :clone } temp$336 != $null;
     call temp$437 := int$java.lang.String$compareTo$87(temp$336, $StringConst2);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",79,12,79,49 } { :clone } true;
     if (temp$437 == 0) {
@@ -408,14 +416,19 @@ var temp$639 : ref;
   block21:
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",79,8,86,3 } { :clone } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",83,12,83,49 } true;
-    assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",83,12,83,49 } htmlTag32 != $null;
     call temp$639, $exception := java.lang.String$java.lang.Object$toString$44(htmlTag32);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",83,12,83,49 } true;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",83,12,83,49 } temp$639 != $null;
     call temp$740 := int$java.lang.String$compareTo$87(temp$639, $StringConst3);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",83,12,83,49 } true;
     if (temp$740 == 0) {
@@ -445,22 +458,22 @@ var temp$639 : ref;
 
 implementation void$FalsePositives01$FalsePositive03$1894($this:ref, $in_parameter__0:ref, $in_parameter__1:ref, $in_parameter__2:int) returns ($exception:ref){
     
+var flaghitup47 : int;    
+var source43 : ref;    
+var temp$453 : int;    
+var interncaret45 : int;    
+var temp$150 : int;    
+var temp$655 : int;    
+var temp$857 : int;    
+var searchString44 : ref;    
+var hitUp48 : int;    
+var temphitpoint46 : int;    
 var temp$251 : int;    
 var temp$554 : int;    
-var this42 : ref;    
-var temphitpoint46 : int;    
-var temp$756 : int;    
-var hitUp48 : int;    
-var temp$150 : int;    
-var searchString44 : ref;    
-var temp$352 : int;    
-var interncaret45 : int;    
-var source43 : ref;    
-var temp$857 : int;    
-var temp$453 : int;    
 var temp$049 : int;    
-var temp$655 : int;    
-var flaghitup47 : int;
+var temp$756 : int;    
+var this42 : ref;    
+var temp$352 : int;
     assume { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",-1,-1,-1,-1 } $this != $null;
     assume $heap[$in_parameter__1,$type] <: java.lang.String;
     assume $heap[$in_parameter__0,$type] <: java.lang.String;
@@ -488,6 +501,9 @@ var flaghitup47 : int;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",97,4,97,60 } source43 != $null;
     call temp$150, $exception := int$java.lang.String$indexOf$102(source43, searchString44, interncaret45);
     if ($exception != $null) {
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",97,4,97,15 } true;
     temphitpoint46 := temp$150;
@@ -574,10 +590,12 @@ var this58 : ref;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",4,-1,-1,-1 } true;
     this58 := $this;
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",4,-1,-1,-1 } true;
-    assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",4,-1,-1,-1 } this58 != $null;
     call $exception := void$java.lang.Object$$la$init$ra$$38(this58);
     if ($exception != $null) {
         this58 := $null;
+        if ($heap[$exception,$type] <: java.lang.Throwable) {
+            return;
+        }
     }
     assert { :sourceloc "/Users/schaef/git/jar2bpl/jar2bpl_test/regression/false_positives/fp01/FalsePositives01.java",4,-1,-1,-1 } true;
     return;

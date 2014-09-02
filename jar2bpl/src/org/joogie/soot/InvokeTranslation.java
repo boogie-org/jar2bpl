@@ -12,8 +12,11 @@ import org.joogie.GlobalsCache;
 import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
+import soot.Immediate;
+import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.Trap;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.InstanceInvokeExpr;
@@ -30,7 +33,6 @@ import boogie.ast.expression.Expression;
 import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
-import boogie.type.BoogieType;
 
 /**
  * @author schaef
@@ -87,7 +89,10 @@ public class InvokeTranslation {
 			Expression base = valueswitch.getExpression();
 			// add the "this" variable to the list of args
 			args.addFirst(base);
-			if (base != ss.getProcInfo().getThisReference()) {
+			
+			if (iivk.getBase() instanceof Immediate && procInfo.getNullnessAnalysis().isAlwaysNonNullBefore(statement, (Immediate)iivk.getBase())) {
+				//do not check
+			} else {
 				ss.getErrorModel().createNonNullViolationException(base);
 			}
 
@@ -116,7 +121,7 @@ public class InvokeTranslation {
 
 		// now check if the procedure returned exceptional
 		// and jump to the appropriate location
-		translateCalleeExceptions(ss, procInfo.getThrowsClasses(), statement,
+		translateCalleeExceptions(ss, statement,
 				constructorInstance);
 
 		/*
@@ -260,14 +265,15 @@ public class InvokeTranslation {
 	 *            to set the instance to Null if the constructor returned an
 	 *            exception.
 	 */
-	static private void translateCalleeExceptions(SootStmtSwitch ss,
-			List<SootClass> maxThrowSet, Unit statement,
+	static private void translateCalleeExceptions_old(SootStmtSwitch ss,
+			 Unit statement,
 			Expression constructorInstance) {
-
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		SootProcedureInfo procInfo = ss.getProcInfo();
 
+		List<SootClass> maxThrowSet = procInfo.getThrowsClasses();
+		
 		// first we collect all possible exceptions.
 		LinkedList<Statement> statements = new LinkedList<Statement>();
 
@@ -372,7 +378,7 @@ public class InvokeTranslation {
 		}
 		// TODO: the part above is pretty hacky and can be improved using
 		// TrapManager.
-
+		if (statements.size()==0) return;
 		// if the call was a constructor, add an assignment that sets
 		// the created variable back to null
 		if (constructorInstance != null
@@ -392,5 +398,85 @@ public class InvokeTranslation {
 				new Statement[] {}));
 
 	}
+	
+	
+	static private void translateCalleeExceptions(SootStmtSwitch ss,
+			Unit statement,
+			Expression constructorInstance) {
+		SootValueSwitch valueswitch = ss.getValueSwitch();
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		SootProcedureInfo procInfo = ss.getProcInfo();
+
+		// first we collect all possible exceptions.
+		//then we create one statement if($exception!=null) statements
+		LinkedList<Statement> statements = new LinkedList<Statement>();
+		List<Trap> traps = TranslationHelpers.getReachableTraps(statement, procInfo.getSootMethod());
+		
+		List<SootClass> possibleExceptions = procInfo.getThrowsClasses();
+		//in case the method throws something unexpected, we
+		//add Throwable to the list of possible exceptions.
+		SootClass throwableException = Scene.v().loadClass("java.lang.Throwable",
+				SootClass.SIGNATURES);
+		if (!possibleExceptions.contains(throwableException)) {
+			possibleExceptions.add(throwableException);
+		}
+
+		
+		for (SootClass c : possibleExceptions) {
+			String transferlabel = null;
+			//for each possible exception, check if there is a catch block.
+			for (Trap trap : traps) {
+				if (GlobalsCache.v().isSubTypeOrEqual(c,
+						trap.getException())) {
+					transferlabel = GlobalsCache.v().getUnitLabel(
+							(Stmt) trap.getHandlerUnit());				
+					break;
+				}				
+			}
+			Statement transferStatement;
+			if (transferlabel == null) {
+				// if the exception is not caught, leave the procedure 
+				// that is, re-throw.
+				transferStatement = pf.mkReturnStatement();
+			} else {
+				// if the exception is caught, create a goto
+				 transferStatement = pf.mkGotoStatement(transferlabel);
+			}
+						
+			//now make a statement of the form
+			//if($exception<:c) transferStatement
+			//and add it to the list statements
+			Expression condition = pf.mkBinaryExpression(
+					pf.getBoolType(),
+					BinaryOperator.COMPPO,
+					valueswitch.getClassTypeFromExpression(
+							procInfo.getExceptionVariable(), false),
+					GlobalsCache.v().lookupClassVariable(c));
+			Statement[] thenPart = { transferStatement };
+			Statement[] elsePart = {};
+			statements.add(pf.mkIfStatement(condition, thenPart, elsePart));						
+		}
+		
+		if (statements.size()==0) return;
+		// if the call was a constructor, add an assignment that sets
+		// the created variable back to null
+		if (constructorInstance != null
+				&& constructorInstance != procInfo.getThisReference()) {
+			statements.addFirst(pf.mkAssignmentStatement(constructorInstance,
+					SootPrelude.v().getNullConstant()));
+		}
+
+		// now add all the exceptional checks in a block where
+		// we ensure that $excpeiton was not null
+		Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
+				BinaryOperator.COMPNEQ, procInfo.getExceptionVariable(),
+				SootPrelude.v().getNullConstant());
+
+		ss.addStatement(pf.mkIfStatement(condition,
+				statements.toArray(new Statement[statements.size()]),
+				new Statement[] {}));
+
+	}	
+	
 
 }

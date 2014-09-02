@@ -20,6 +20,7 @@
 package org.joogie.util;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.joogie.GlobalsCache;
@@ -30,6 +31,9 @@ import soot.Local;
 import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
+import soot.Trap;
+import soot.TrapManager;
+import soot.Unit;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.Stmt;
 import soot.tagkit.LineNumberTag;
@@ -53,6 +57,31 @@ public class TranslationHelpers {
 		return new SootLocation(-1);
 	}
 
+	public static List<Trap> getReachableTraps(Unit s, SootMethod m) {
+		if (m.getActiveBody()==null) {
+			throw new RuntimeException("cannot look into "+m.getSignature());
+		}
+		List<Trap> traps = TrapManager.getTrapsAt(s, m.getActiveBody());
+
+		Unit trap_begin = null;
+		Unit trap_end = null;
+		SootClass trap_exception = null;
+		for (Trap trap : new LinkedList<Trap>(traps)) {
+			if (trap.getBeginUnit() == trap_begin
+					&& trap.getEndUnit() == trap_end
+					&& trap.getException() == trap_exception) {
+				System.err.println("useless trap found");
+				traps.remove(trap);
+			} else {
+				//everything fine.
+			}
+			trap_begin = trap.getBeginUnit();
+			trap_end = trap.getEndUnit();
+			trap_exception = trap.getException();
+		}		
+		return traps;
+	}	
+	
 	public static Statement mkLocationAssertion(Stmt s) {
 		return mkLocationAssertion(s, false);
 	}

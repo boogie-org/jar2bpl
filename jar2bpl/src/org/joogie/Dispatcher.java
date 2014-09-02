@@ -116,7 +116,11 @@ public class Dispatcher {
 			sootRunner.runWithJar(input, output);
 		} else if (input.endsWith(".apk")) {
 			// run with Android file
-			sootRunner.runWithApk(input, output);			
+			sootRunner.runWithApk(input, output);
+		} else if (input.endsWith(".classpath")) {
+			sootRunner.runWithEclipseClasspath(input, output);
+		} else if (input.endsWith(".xml")) {
+			
 		} else {
 			File file = new File(input);
 			if (file.isDirectory()) {
