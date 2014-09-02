@@ -70,7 +70,6 @@ public class TranslationHelpers {
 			if (trap.getBeginUnit() == trap_begin
 					&& trap.getEndUnit() == trap_end
 					&& trap.getException() == trap_exception) {
-				System.err.println("useless trap found");
 				traps.remove(trap);
 			} else {
 				//everything fine.

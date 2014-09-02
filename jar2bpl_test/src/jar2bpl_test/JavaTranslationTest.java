@@ -6,15 +6,17 @@ import org.joogie.Dispatcher;
 import org.joogie.Options;
 import org.junit.Test;
 
+import bixie.Bixie;
+
 public class JavaTranslationTest {
 	
 	@Test
 	public void testJavaDirectory() {
 		//TODO: design one test case for each sort of input to the translation.
-		String javaFileDir = "regression/false_positives/fp05/";
+		String javaFileDir = "regression/false_positives/fp08/";
 		Options.v().setClasspath(javaFileDir);
-		String bplFile = "test_tmp_boogiefiles/fp05.bpl";
-		String output = "test_output/fp05.txt";
+		String bplFile = "test_tmp_boogiefiles/fp08.bpl";
+		String output = "test_output/fp08.txt";
 
 		try {
 			Dispatcher.run(javaFileDir,
@@ -24,8 +26,8 @@ public class JavaTranslationTest {
 			fail("Translation Error " + e.toString());
 		}
 		
-//		Bixie bx = new Bixie();
-//		bx.run(bplFile, output);
+		Bixie bx = new Bixie();
+		bx.run(bplFile, output);
 		
 		org.junit.Assert.assertTrue(true);
 	}

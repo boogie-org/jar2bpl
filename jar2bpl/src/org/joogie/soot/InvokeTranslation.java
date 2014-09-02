@@ -4,7 +4,6 @@
 package org.joogie.soot;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
 import soot.Immediate;
-import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Trap;
@@ -25,7 +23,6 @@ import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.VirtualInvokeExpr;
-import soot.toolkits.graph.ExceptionalUnitGraph.ExceptionDest;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.VarList;
@@ -265,140 +262,140 @@ public class InvokeTranslation {
 	 *            to set the instance to Null if the constructor returned an
 	 *            exception.
 	 */
-	static private void translateCalleeExceptions_old(SootStmtSwitch ss,
-			 Unit statement,
-			Expression constructorInstance) {
-		SootValueSwitch valueswitch = ss.getValueSwitch();
-		ProgramFactory pf = GlobalsCache.v().getPf();
-		SootProcedureInfo procInfo = ss.getProcInfo();
-
-		List<SootClass> maxThrowSet = procInfo.getThrowsClasses();
-		
-		// first we collect all possible exceptions.
-		LinkedList<Statement> statements = new LinkedList<Statement>();
-
-		// keep track of the caught exceptions so that we can add the uncaught
-		// ones later
-		HashSet<SootClass> caughtExceptions = new HashSet<SootClass>();
-		// now collect all exceptions that are in the exceptional unit graph
-		// and their associated traps
-		if (procInfo.getExceptionalUnitGraph().getExceptionalSuccsOf(statement)
-				.size() != 0) {
-			for (ExceptionDest dest : procInfo.getExceptionalUnitGraph()
-					.getExceptionDests(statement)) {
-				if (dest.getTrap() != null
-						&& dest.getTrap().getException() != null) {
-					caughtExceptions.add(dest.getTrap().getException());
-					Statement transitionStmt;
-					// the exception is caught somewhere in this procedure
-					transitionStmt = pf.mkGotoStatement(GlobalsCache.v()
-							.getUnitLabel(
-									(Stmt) dest.getTrap().getHandlerUnit()));
-
-					// add a conjunct to check if that the type of the exception
-					// is <: than the one caught
-					// by the catch block
-					Expression condition = pf.mkBinaryExpression(
-							pf.getBoolType(),
-							BinaryOperator.COMPPO,
-							valueswitch.getClassTypeFromExpression(
-									procInfo.getExceptionVariable(), false),
-							GlobalsCache.v().lookupClassVariable(
-									dest.getTrap().getException()));
-					Statement[] thenPart = { transitionStmt };
-					Statement[] elsePart = {};
-					statements.add(pf.mkIfStatement(condition, thenPart,
-							elsePart));
-				} else {
-					// Log.error("NO CATCH FOR "+ dest);
-				}
-			}
-		}
-		// now create a list of all exceptions that are thrown by the callee
-		// but not caught by the procedure
-		HashSet<SootClass> uncaughtException = new HashSet<SootClass>();
-		for (SootClass sc : maxThrowSet) {
-			boolean caught = false;
-			for (SootClass other : caughtExceptions) {
-				if (GlobalsCache.v().isSubTypeOrEqual(sc, other)) {
-					caught = true;
-					break;
-				}
-			}
-			if (!caught && !uncaughtException.contains(sc)) {
-				uncaughtException.add(sc);
-			}
-		}
-		// now always pick the uncaught exception which has
-		// no subclass in the hashset, create a conditional choice,
-		// and remove it. This ordering is necessary, otherwise,
-		// we might create dead code.
-		LinkedList<SootClass> todo = new LinkedList<SootClass>(
-				uncaughtException);
-		while (!todo.isEmpty()) {
-			SootClass current = todo.removeFirst();
-			boolean good = true;
-			for (SootClass other : todo) {
-				if (current == other) {
-					throw new RuntimeException("can't be");
-				}
-				if (GlobalsCache.v().isSubTypeOrEqual(other, current)) {
-					good = false;
-					break;
-				}
-			}
-			if (!good) {
-				todo.addLast(current);
-				continue;
-			}
-
-			if (GlobalsCache.v().inThrowsClause(current, procInfo)
-					|| org.joogie.Options.v().isRuntimeExceptionReturns()) {
-
-				Statement transitionStmt;
-				// add a conjunct to check if that the type of the exception
-				// is <: than the one caught
-				// by the catch block
-				Expression condition = pf.mkBinaryExpression(
-						pf.getBoolType(),
-						BinaryOperator.COMPPO,
-						valueswitch.getClassTypeFromExpression(
-								procInfo.getExceptionVariable(), false),
-						GlobalsCache.v().lookupClassVariable(current));
-
-				transitionStmt = pf.mkReturnStatement();
-				Statement[] thenPart = { transitionStmt };
-				Statement[] elsePart = {};
-				statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
-
-			} else {
-				Log.debug("The exception: " + current
-						+ " is not handeled and treated as RuntimeException.");
-			}
-		}
-		// TODO: the part above is pretty hacky and can be improved using
-		// TrapManager.
-		if (statements.size()==0) return;
-		// if the call was a constructor, add an assignment that sets
-		// the created variable back to null
-		if (constructorInstance != null
-				&& constructorInstance != ss.getProcInfo().getThisReference()) {
-			statements.addFirst(pf.mkAssignmentStatement(constructorInstance,
-					SootPrelude.v().getNullConstant()));
-		}
-
-		// now add all the exceptional checks in a block where
-		// we ensure that $excpeiton was not null
-		Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
-				BinaryOperator.COMPNEQ, procInfo.getExceptionVariable(),
-				SootPrelude.v().getNullConstant());
-
-		ss.addStatement(pf.mkIfStatement(condition,
-				statements.toArray(new Statement[statements.size()]),
-				new Statement[] {}));
-
-	}
-	
+//	static private void translateCalleeExceptions_old(SootStmtSwitch ss,
+//			 Unit statement,
+//			Expression constructorInstance) {
+//		SootValueSwitch valueswitch = ss.getValueSwitch();
+//		ProgramFactory pf = GlobalsCache.v().getPf();
+//		SootProcedureInfo procInfo = ss.getProcInfo();
+//
+//		List<SootClass> maxThrowSet = procInfo.getThrowsClasses();
+//		
+//		// first we collect all possible exceptions.
+//		LinkedList<Statement> statements = new LinkedList<Statement>();
+//
+//		// keep track of the caught exceptions so that we can add the uncaught
+//		// ones later
+//		HashSet<SootClass> caughtExceptions = new HashSet<SootClass>();
+//		// now collect all exceptions that are in the exceptional unit graph
+//		// and their associated traps
+//		if (procInfo.getExceptionalUnitGraph().getExceptionalSuccsOf(statement)
+//				.size() != 0) {
+//			for (ExceptionDest dest : procInfo.getExceptionalUnitGraph()
+//					.getExceptionDests(statement)) {
+//				if (dest.getTrap() != null
+//						&& dest.getTrap().getException() != null) {
+//					caughtExceptions.add(dest.getTrap().getException());
+//					Statement transitionStmt;
+//					// the exception is caught somewhere in this procedure
+//					transitionStmt = pf.mkGotoStatement(GlobalsCache.v()
+//							.getUnitLabel(
+//									(Stmt) dest.getTrap().getHandlerUnit()));
+//
+//					// add a conjunct to check if that the type of the exception
+//					// is <: than the one caught
+//					// by the catch block
+//					Expression condition = pf.mkBinaryExpression(
+//							pf.getBoolType(),
+//							BinaryOperator.COMPPO,
+//							valueswitch.getClassTypeFromExpression(
+//									procInfo.getExceptionVariable(), false),
+//							GlobalsCache.v().lookupClassVariable(
+//									dest.getTrap().getException()));
+//					Statement[] thenPart = { transitionStmt };
+//					Statement[] elsePart = {};
+//					statements.add(pf.mkIfStatement(condition, thenPart,
+//							elsePart));
+//				} else {
+//					// Log.error("NO CATCH FOR "+ dest);
+//				}
+//			}
+//		}
+//		// now create a list of all exceptions that are thrown by the callee
+//		// but not caught by the procedure
+//		HashSet<SootClass> uncaughtException = new HashSet<SootClass>();
+//		for (SootClass sc : maxThrowSet) {
+//			boolean caught = false;
+//			for (SootClass other : caughtExceptions) {
+//				if (GlobalsCache.v().isSubTypeOrEqual(sc, other)) {
+//					caught = true;
+//					break;
+//				}
+//			}
+//			if (!caught && !uncaughtException.contains(sc)) {
+//				uncaughtException.add(sc);
+//			}
+//		}
+//		// now always pick the uncaught exception which has
+//		// no subclass in the hashset, create a conditional choice,
+//		// and remove it. This ordering is necessary, otherwise,
+//		// we might create dead code.
+//		LinkedList<SootClass> todo = new LinkedList<SootClass>(
+//				uncaughtException);
+//		while (!todo.isEmpty()) {
+//			SootClass current = todo.removeFirst();
+//			boolean good = true;
+//			for (SootClass other : todo) {
+//				if (current == other) {
+//					throw new RuntimeException("can't be");
+//				}
+//				if (GlobalsCache.v().isSubTypeOrEqual(other, current)) {
+//					good = false;
+//					break;
+//				}
+//			}
+//			if (!good) {
+//				todo.addLast(current);
+//				continue;
+//			}
+//
+//			if (GlobalsCache.v().inThrowsClause(current, procInfo)
+//					|| org.joogie.Options.v().isRuntimeExceptionReturns()) {
+//
+//				Statement transitionStmt;
+//				// add a conjunct to check if that the type of the exception
+//				// is <: than the one caught
+//				// by the catch block
+//				Expression condition = pf.mkBinaryExpression(
+//						pf.getBoolType(),
+//						BinaryOperator.COMPPO,
+//						valueswitch.getClassTypeFromExpression(
+//								procInfo.getExceptionVariable(), false),
+//						GlobalsCache.v().lookupClassVariable(current));
+//
+//				transitionStmt = pf.mkReturnStatement();
+//				Statement[] thenPart = { transitionStmt };
+//				Statement[] elsePart = {};
+//				statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
+//
+//			} else {
+//				Log.debug("The exception: " + current
+//						+ " is not handeled and treated as RuntimeException.");
+//			}
+//		}
+//		// TODO: the part above is pretty hacky and can be improved using
+//		// TrapManager.
+//		if (statements.size()==0) return;
+//		// if the call was a constructor, add an assignment that sets
+//		// the created variable back to null
+//		if (constructorInstance != null
+//				&& constructorInstance != ss.getProcInfo().getThisReference()) {
+//			statements.addFirst(pf.mkAssignmentStatement(constructorInstance,
+//					SootPrelude.v().getNullConstant()));
+//		}
+//
+//		// now add all the exceptional checks in a block where
+//		// we ensure that $excpeiton was not null
+//		Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
+//				BinaryOperator.COMPNEQ, procInfo.getExceptionVariable(),
+//				SootPrelude.v().getNullConstant());
+//
+//		ss.addStatement(pf.mkIfStatement(condition,
+//				statements.toArray(new Statement[statements.size()]),
+//				new Statement[] {}));
+//
+//	}
+//	
 	
 	static private void translateCalleeExceptions(SootStmtSwitch ss,
 			Unit statement,
@@ -413,13 +410,17 @@ public class InvokeTranslation {
 		List<Trap> traps = TranslationHelpers.getReachableTraps(statement, procInfo.getSootMethod());
 		
 		List<SootClass> possibleExceptions = procInfo.getThrowsClasses();
+
 		//in case the method throws something unexpected, we
 		//add Throwable to the list of possible exceptions.
-		SootClass throwableException = Scene.v().loadClass("java.lang.Throwable",
-				SootClass.SIGNATURES);
-		if (!possibleExceptions.contains(throwableException)) {
-			possibleExceptions.add(throwableException);
-		}
+		//NOTE: this causes a ridiculous blow-up of the boogie program
+		//and we don't gain anything for the infeasible code detection,
+		//so we're not doing it for now.
+//		SootClass throwableException = Scene.v().loadClass("java.lang.Throwable",
+//				SootClass.SIGNATURES);
+//		if (!possibleExceptions.contains(throwableException)) {
+//			possibleExceptions.add(throwableException);
+//		}
 
 		
 		for (SootClass c : possibleExceptions) {
