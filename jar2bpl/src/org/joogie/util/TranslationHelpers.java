@@ -28,6 +28,7 @@ import org.joogie.soot.SootLocation;
 import org.joogie.soot.SootPrelude;
 
 import soot.Local;
+import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
@@ -57,20 +58,29 @@ public class TranslationHelpers {
 		return new SootLocation(-1);
 	}
 
-	public static List<Trap> getReachableTraps(Unit s, SootMethod m) {
+	public static void getReachableTraps(Unit s, SootMethod m, List<Trap> out_traps, List<Trap> out_finally) {
 		if (m.getActiveBody()==null) {
 			throw new RuntimeException("cannot look into "+m.getSignature());
 		}
-		List<Trap> traps = TrapManager.getTrapsAt(s, m.getActiveBody());
+		out_traps.addAll(TrapManager.getTrapsAt(s, m.getActiveBody()));
 
+		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
+				SootClass.SIGNATURES);
+		
 		Unit trap_begin = null;
 		Unit trap_end = null;
 		SootClass trap_exception = null;
-		for (Trap trap : new LinkedList<Trap>(traps)) {
+		for (Trap trap : new LinkedList<Trap>(out_traps)) {
 			if (trap.getBeginUnit() == trap_begin
 					&& trap.getEndUnit() == trap_end
 					&& trap.getException() == trap_exception) {
-				traps.remove(trap);
+				out_traps.remove(trap);
+				if (trap.getException()==throwable) {
+					//in that case the second trap was most likely
+					//of type "any" and thus is a finally block, but
+					//soot translated that into Throwable.
+					out_finally.add(trap);
+				}
 			} else {
 				//everything fine.
 			}
@@ -78,7 +88,7 @@ public class TranslationHelpers {
 			trap_end = trap.getEndUnit();
 			trap_exception = trap.getException();
 		}		
-		return traps;
+		
 	}	
 	
 	public static Statement mkLocationAssertion(Stmt s) {

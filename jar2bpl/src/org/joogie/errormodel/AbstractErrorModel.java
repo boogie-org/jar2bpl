@@ -3,6 +3,7 @@
  */
 package org.joogie.errormodel;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.joogie.GlobalsCache;
@@ -127,7 +128,9 @@ public abstract class AbstractErrorModel {
 	
 	protected void createException(Expression guard, SootClass exception) {
 
-		List<Trap> traps = TranslationHelpers.getReachableTraps(this.stmtSwitch.getCurrentStatement(), this.procInfo.getSootMethod());
+		List<Trap> traps =  new LinkedList<Trap>();
+		List<Trap> finally_traps =  new LinkedList<Trap>(); //TODO: do we have to use them here?
+		TranslationHelpers.getReachableTraps(this.stmtSwitch.getCurrentStatement(), this.procInfo.getSootMethod(), traps, finally_traps);
 
 		String transferlabel = null;
 		for (Trap trap : traps) {

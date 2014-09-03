@@ -1,0 +1,6 @@
+In file: /Users/schaef/git/jar2bpl/jar2bpl_test/terpword/EkitCore.java
+	line 2138
+	line 3636
+	line 2622
+In file: /Users/schaef/git/jar2bpl/jar2bpl_test/terpword/UnicodeDialog.java
+	line 287

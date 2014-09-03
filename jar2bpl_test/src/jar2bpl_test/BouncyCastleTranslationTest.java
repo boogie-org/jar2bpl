@@ -15,7 +15,7 @@ public class BouncyCastleTranslationTest {
 	public void testJarInputFile() {
 		//TODO: design one test case for each sort of input to the translation.
 		String bplFile = "regression/test_output/bc.bpl";
-		String output_file = "regression/test_output/bc.bpl.report.txt";
+		String output_file = "regression/test_output/bc.bpl.report2.txt";
 		try {
 			String javaFileDir = System.getProperty("user.dir")+"/regression/bc/java";
 			Options.v().setClasspath(javaFileDir);			

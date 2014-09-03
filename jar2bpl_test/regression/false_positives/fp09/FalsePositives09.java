@@ -75,5 +75,16 @@ public class FalsePositives09 {
         	
         }
     }
+
+    private FalsePositives09 impl;
+    private boolean foo(int svc) {return true;}
+    
+    public void stop(int svc) {
+        try  {
+            if ( impl != null && impl.foo(svc) ) impl = null;
+        } catch ( Exception x)  {
+        	return;
+        }
+    }
     
 }

@@ -57,24 +57,6 @@ public class InfeasibleCode02 {
 		}
 	}
 
-	int x;
-	public void infeasible02() {
-		boolean hit = false;
-		int counter = 0;
-		do
-		{
-			hit = false;			
-			if(x==counter)
-			{
-				counter++;
-				hit = true;
-				if(counter > 10000)
-				{
-					return;
-				}
-			}
-		} while(hit);		
-	}
 
 	public void infeasible03(char[] temp) {
 	int repos = -1;

@@ -544,10 +544,12 @@ public class SootStmtSwitch implements StmtSwitch {
 		AssignmentTranslation.translateAssignment(this,
 				this.procInfo.getExceptionVariable(), right);
 		// Add a goto statement to the exceptional successors.
-		List<Trap> traps = TranslationHelpers.getReachableTraps(arg0,
-				this.procInfo.getSootMethod());
-		//TODO, maybe we need to consider the case that
-		//we don't know the exact type of arg0.getOp at this point?
+		List<Trap> traps = new LinkedList<Trap>();
+		List<Trap> finally_traps = new LinkedList<Trap>(); // TODO: do we have
+		TranslationHelpers.getReachableTraps(arg0,
+				this.procInfo.getSootMethod(), traps, finally_traps);
+		// TODO, maybe we need to consider the case that
+		// we don't know the exact type of arg0.getOp at this point?
 		for (Trap trap : traps) {
 			if (GlobalsCache.v().isSubTypeOrEqual(c, trap.getException())) {
 				this.boogieStatements.add(this.pf.mkGotoStatement(GlobalsCache
