@@ -276,7 +276,9 @@ public class SootProcedureInfo {
 			this.nullnessAnalysis = null;
 		}
 	}
+	
 
+	
 	public SootMethod getSootMethod() {
 		return this.sootMethod;
 	}

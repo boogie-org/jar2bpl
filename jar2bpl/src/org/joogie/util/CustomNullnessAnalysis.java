@@ -19,7 +19,7 @@ public class CustomNullnessAnalysis extends NullnessAnalysis {
 	}
 
 	@Override
-	protected boolean isAlwaysNonNull(Value v) {
+	protected boolean isAlwaysNonNull(Value v) {	
 		if (v instanceof CaughtExceptionRef) {
 			return true;
 		}

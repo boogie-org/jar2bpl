@@ -35,7 +35,10 @@ import soot.BodyTransformer;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.GotoStmt;
+import soot.jimple.ReturnStmt;
 import soot.jimple.Stmt;
+import soot.jimple.ThrowStmt;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceLnNamePosTag;
 import soot.tagkit.Tag;
@@ -88,7 +91,7 @@ public class SootBodyTransformer extends BodyTransformer {
 	 *            Body
 	 */
 	private void transformStmtList(Body body) {
-		
+				
 		SootProcedureInfo procInfo = GlobalsCache.v().lookupProcedure(
 				body.getMethod());
 
@@ -182,7 +185,7 @@ public class SootBodyTransformer extends BodyTransformer {
 			Stmt s = (Stmt) stmtIt.next();
 			
 			//now check for finally blocks
-			int line=-1;			
+			int line=-2;			
 			for (Tag tag : s.getTags()) {
 				if (tag instanceof LineNumberTag) {
 					LineNumberTag t = (LineNumberTag)tag;					
@@ -192,6 +195,8 @@ public class SootBodyTransformer extends BodyTransformer {
 					line = t.startLn();
 				}	
 			}
+			
+//			System.err.println(line+": "+s);
 			if (line==old_line) {
 				subprog.add(s);
 			} else {
@@ -200,12 +205,12 @@ public class SootBodyTransformer extends BodyTransformer {
 						subprogs.put(old_line, subprog);
 					} else {
 						if (compareSubprogs(subprog, subprogs.get(old_line))) {
-//							System.err.println("P1 " + line);
+//							System.err.println("P1 " + old_line);
 							for (Stmt st : subprogs.get(old_line)) {
 //								System.err.println("\t"+st);
 								duplicates.add(st);
 							}
-//							System.err.println("P2 " + line);
+//							System.err.println("P2 " + old_line);
 							for (Stmt st : subprog) {
 //								System.err.println("\t"+st);
 								duplicates.add(st);
@@ -255,7 +260,16 @@ public class SootBodyTransformer extends BodyTransformer {
 		if (s1.getClass() == s2.getClass()) {
 			return true;
 		}
+		//also consider the case that throw, return, and goto might have been changed in the
+		//copies. so do not compare them
+		if (isJumpStmt(s1) && isJumpStmt(s2)) {
+			return true;
+		}
 		return false;
+	}
+	
+	private boolean isJumpStmt(Stmt st) {
+		return ( st instanceof ThrowStmt || st instanceof GotoStmt || st instanceof ReturnStmt);	
 	}
 	
 }

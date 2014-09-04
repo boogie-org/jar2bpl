@@ -27,12 +27,10 @@ import org.joogie.GlobalsCache;
 import org.joogie.errormodel.AbstractErrorModel;
 import org.joogie.errormodel.AssertionErrorModel;
 import org.joogie.errormodel.ExceptionErrorModel;
-import org.joogie.util.CustomNullnessAnalysis;
 import org.joogie.util.Log;
 import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
-import soot.Immediate;
 import soot.Local;
 import soot.RefType;
 import soot.Scene;
@@ -40,9 +38,7 @@ import soot.SootClass;
 import soot.Trap;
 import soot.Type;
 import soot.Unit;
-import soot.Value;
 import soot.jimple.AssignStmt;
-import soot.jimple.BinopExpr;
 import soot.jimple.BreakpointStmt;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.ExitMonitorStmt;
@@ -277,34 +273,56 @@ public class SootStmtSwitch implements StmtSwitch {
 				arg0.getRightOp(), arg0);
 	}
 
-	private boolean isTrivialFalseNullCheck(Value v) {
-		if (v instanceof BinopExpr && this.getProcInfo() != null
-				&& this.getProcInfo().getNullnessAnalysis() != null) {
-			BinopExpr boe = (BinopExpr) v;
-			if (boe.getSymbol().contains("==")) {
-				CustomNullnessAnalysis nna = this.getProcInfo()
-						.getNullnessAnalysis();
-				if (boe.getOp1() instanceof Immediate
-						&& boe.getOp2() instanceof Immediate)
-					if (nna.isAlwaysNonNullBefore(currentStatement,
-							(Immediate) boe.getOp1())
-							&& nna.isAlwaysNullBefore(currentStatement,
-									(Immediate) boe.getOp2())) {
-						System.err.println("trivial");
-						return true;
-					} else if (nna.isAlwaysNullBefore(currentStatement,
-							(Immediate) boe.getOp1())
-							&& nna.isAlwaysNonNullBefore(currentStatement,
-									(Immediate) boe.getOp2())) {
-						System.err.println("trivial");
-						return true;
-					}
-
-			}
-		}
-		return false;
-	}
-
+	
+//	private boolean isTriviallyTrue(Value v) {
+//		if (v instanceof BinopExpr) {
+//			if (isAlwaysNull(((BinopExpr) v).getOp1()) && isAlwaysNull(((BinopExpr) v).getOp2())) {
+//				return true;
+//			}
+//			if (isNeverNull(((BinopExpr) v).getOp1()) && isNeverNull(((BinopExpr) v).getOp2())) {
+//				return true;
+//			}			
+//		}
+//		return false;
+//	}	
+//	
+//	private boolean isTriviallyFalse(Value v) {
+//		if (v instanceof BinopExpr) {
+//			if (isAlwaysNull(((BinopExpr) v).getOp1()) && isNeverNull(((BinopExpr) v).getOp2())) {
+//				return true;
+//			}			
+//			if (isNeverNull(((BinopExpr) v).getOp1()) && isAlwaysNull(((BinopExpr) v).getOp2())) {
+//				return true;
+//			}			
+//			
+//		}
+//		return false;
+//	}	
+//	
+//	private boolean isAlwaysNull(Value v) {
+//		if (v instanceof NullConstant) {		
+//			return true;
+//		}
+//		if (v instanceof Immediate && this.getProcInfo().getNullnessAnalysis() != null) {
+//			return this.getProcInfo().getNullnessAnalysis().isAlwaysNullBefore(currentStatement, (Immediate)v);
+//		} 
+//		return false;
+//	}
+//
+//	private boolean isNeverNull(Value v) {
+//		if ( v instanceof NewExpr || v instanceof NewArrayExpr
+//				|| v instanceof NewMultiArrayExpr || v instanceof ThisRef
+//				|| v instanceof StringConstant || v instanceof ClassConstant
+//				|| v instanceof CaughtExceptionRef)	{
+//			return true;
+//		}
+//		if (v instanceof Immediate && this.getProcInfo().getNullnessAnalysis() != null) {			
+//			return this.getProcInfo().getNullnessAnalysis().isAlwaysNonNullBefore(currentStatement, (Immediate)v);
+//		}
+//		return false;
+//	}
+	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -328,20 +346,29 @@ public class SootStmtSwitch implements StmtSwitch {
 		// now check if we can find a source location for the else block.
 		Stmt else_loc = findSuccessorStatement(arg0);
 		if (else_loc != null) {
-			elsePart = new Statement[] { TranslationHelpers
-					.mkLocationAssertion(else_loc, forceCloneAttibute) };
+//			elsePart = new Statement[] { TranslationHelpers
+//					.mkLocationAssertion(else_loc, forceCloneAttibute) };
+			
+			elsePart = new Statement[] {  }; //TODO: test
 		}
 
 		arg0.getCondition().apply(this.valueswitch);
 		Expression cond = TranslationHelpers.castBoogieTypes(
 				this.valueswitch.getExpression(), this.pf.getBoolType());
-		if (isTrivialFalseNullCheck(arg0.getCondition())) {
-			// ignore the check
-			Log.info("Ignored trivial false check: " + arg0);
-		} else {
+//		if (isTriviallyTrue(arg0.getCondition())) {
+//			// ignore the check
+//			Log.info("Ignored trivial true check: " + arg0);
+//			for (Statement s : thenPart) {
+//				this.boogieStatements.add(s);
+//			}
+//		} else if (isTriviallyFalse(arg0.getCondition())) {
+//			
+//			Log.info("Ignored trivial false check: " + arg0);
+//			
+//		} else {
 			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
 					elsePart));
-		}
+//		}
 	}
 
 	/*

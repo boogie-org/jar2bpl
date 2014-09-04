@@ -66,10 +66,11 @@ public class TranslationHelpers {
 
 		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
 				SootClass.SIGNATURES);
-		
+			
 		Unit trap_begin = null;
 		Unit trap_end = null;
 		SootClass trap_exception = null;
+//		Unit trap_handler = null;
 		for (Trap trap : new LinkedList<Trap>(out_traps)) {
 			if (trap.getBeginUnit() == trap_begin
 					&& trap.getEndUnit() == trap_end
@@ -80,6 +81,8 @@ public class TranslationHelpers {
 					//of type "any" and thus is a finally block, but
 					//soot translated that into Throwable.
 					out_finally.add(trap);
+//					System.err.println("unreachable finally "+GlobalsCache.v().getUnitLabel((Stmt) trap.getHandlerUnit()));
+//					System.err.println("\t\t"+GlobalsCache.v().getUnitLabel((Stmt) trap_handler));
 				}
 			} else {
 				//everything fine.
@@ -87,6 +90,7 @@ public class TranslationHelpers {
 			trap_begin = trap.getBeginUnit();
 			trap_end = trap.getEndUnit();
 			trap_exception = trap.getException();
+//			trap_handler = trap.getHandlerUnit();
 		}		
 		
 	}	

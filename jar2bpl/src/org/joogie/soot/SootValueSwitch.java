@@ -926,6 +926,8 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					nullCheckNeeded = false;		
 				}
 			}
+		} else if (arg0.getBase()==this.stmtSwitch.getProcInfo().getSootMethod().getActiveBody().getThisLocal() || arg0.getBase() instanceof ThisRef) {
+			nullCheckNeeded = false; //TODO: check if this is actually needed.
 		}
 		// We are checking if this is a @NonNull field
 		// if so, we add an assume to ensure that it actually is
