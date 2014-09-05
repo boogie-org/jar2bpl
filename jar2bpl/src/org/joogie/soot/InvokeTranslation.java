@@ -121,7 +121,7 @@ public class InvokeTranslation {
 
 		// now check if the procedure returned exceptional
 		// and jump to the appropriate location
-		translateCalleeExceptions(ss, statement, constructorInstance);
+		translateCalleeExceptions(ss, statement, constructorInstance, m);
 
 		/*
 		 * if the left-hand side was an array access and we introduced a helper
@@ -400,7 +400,7 @@ public class InvokeTranslation {
 	//
 
 	static private void translateCalleeExceptions(SootStmtSwitch ss,
-			Unit statement, Expression constructorInstance) {
+			Unit statement, Expression constructorInstance, SootMethod calledMethod) {
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		SootProcedureInfo procInfo = ss.getProcInfo();
@@ -414,7 +414,7 @@ public class InvokeTranslation {
 		TranslationHelpers.getReachableTraps(statement,
 				procInfo.getSootMethod(), traps, finally_traps);
 
-		List<SootClass> possibleExceptions = procInfo.getThrowsClasses();
+		List<SootClass> possibleExceptions = calledMethod.getExceptions();
 
 		// in case the method throws something unexpected, we
 		// add Throwable to the list of possible exceptions.
@@ -472,9 +472,11 @@ public class InvokeTranslation {
 		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
 				SootClass.SIGNATURES);
 		for (Trap trap : traps) {
+			
 			if (trap.getException() == exception
 					|| trap.getException() == throwable
-					|| !procInfo.getSootMethod().hasActiveBody()) {
+					|| !calledMethod.hasActiveBody()) {
+
 				Expression condition = pf.mkBinaryExpression(
 						pf.getBoolType(),
 						BinaryOperator.COMPPO,
