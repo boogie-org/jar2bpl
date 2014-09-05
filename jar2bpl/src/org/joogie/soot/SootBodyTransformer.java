@@ -36,6 +36,7 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
 import soot.jimple.GotoStmt;
+import soot.jimple.IfStmt;
 import soot.jimple.ReturnStmt;
 import soot.jimple.Stmt;
 import soot.jimple.ThrowStmt;
@@ -250,7 +251,9 @@ public class SootBodyTransformer extends BodyTransformer {
 					break;
 				}
 			}
-			if (sublist) return true;
+			if (sublist) {
+				return true;
+			}
 		}
 		
 		return false;
@@ -271,5 +274,7 @@ public class SootBodyTransformer extends BodyTransformer {
 	private boolean isJumpStmt(Stmt st) {
 		return ( st instanceof ThrowStmt || st instanceof GotoStmt || st instanceof ReturnStmt);	
 	}
+	
+
 	
 }

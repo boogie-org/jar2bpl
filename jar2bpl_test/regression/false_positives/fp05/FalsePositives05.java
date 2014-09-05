@@ -23,41 +23,41 @@ public abstract class FalsePositives05 {
     abstract Object foo();
     abstract InputStream bar();
 	
+//    
+//    public String[] ex01() {
+//        synchronized (welcomeFilesLock) {
+//            return (welcomeFiles);
+//        }
+//    }
+//    
+//    
+////    private ReadWriteLock loaderLock;
+////	private Loader loader;
+//	
+//    
+//    public Object ex02() {
+////        Lock readLock = loaderLock.readLock();
+////        readLock.lock();
+//    	foo();
+//        try {
+//            return lock;
+//        } finally {
+//            bar();
+//        }
+//    }   
+//    
+//    private Object lock;
+//    private Object[] array = new Object[0];
+//    public Object[] ex03() {
+//        synchronized (lock) {
+//            return array;
+//        }
+//    }
+//    
     
-    public String[] ex01() {
-        synchronized (welcomeFilesLock) {
-            return (welcomeFiles);
-        }
-    }
-    
-    
-//    private ReadWriteLock loaderLock;
-//	private Loader loader;
-	
-    
-    public Object ex02() {
-//        Lock readLock = loaderLock.readLock();
-//        readLock.lock();
-    	foo();
-        try {
-            return lock;
-        } finally {
-            bar();
-        }
-    }   
-    
-    private Object lock;
-    private Object[] array = new Object[0];
-    public Object[] ex03() {
-        synchronized (lock) {
-            return array;
-        }
-    }
-    
-    
-//    public String ex04() {
-//
-//        InputStream stream = null;
+    public String ex04() {
+
+        InputStream stream = null;
 //        Object servletContext = foo();
 //        if (servletContext != null) {
 //            stream = bar();
@@ -66,46 +66,46 @@ public abstract class FalsePositives05 {
 //            return "";
 //        }
 //        StringBuilder sb = new StringBuilder();
-//        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
-//            String strRead = "";
-//            while (strRead != null) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stream))) {
+            String strRead = "";
+            while (strRead != null) {
 //                sb.append(strRead);
-//                strRead = br.readLine();
-//            }
-//        } catch (IOException e) {
-//            return "";
-//        }
-//
+                strRead = br.readLine();
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
 //        return sb.toString();
+    }
+    
+//    abstract int integer() throws Exception;
+//    public void ex05() {
+//        boolean success = false;
+//        try {
+//            if (integer() < 10) {
+//                foo();
+//            }
+//            success = true;
+//
+//        } catch (Exception e) {
+//        	foo();
+//        } finally {
+//            // detect other types of Throwable and cancel this Timer
+//            if (!success) {
+//            	foo();
+//            }
+//        }
 //    }
     
-    abstract int integer() throws Exception;
-    public void ex05() {
-        boolean success = false;
-        try {
-            if (integer() < 10) {
-                foo();
-            }
-            success = true;
-
-        } catch (Exception e) {
-        	foo();
-        } finally {
-            // detect other types of Throwable and cancel this Timer
-            if (!success) {
-            	foo();
-            }
-        }
-    }
-    
-    public void ex06(String name) throws Exception {
-    	File config = new File(name);
-        try (FileOutputStream fos = new FileOutputStream(config);
-                PrintWriter writer = new PrintWriter(new OutputStreamWriter(
-                        fos , "rw"))) {
-            bar();
-            
-        }
-    }
+//    public void ex06(String name) throws Exception {
+//    	File config = new File(name);
+//        try (FileOutputStream fos = new FileOutputStream(config);
+//                PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+//                        fos , "rw"))) {
+//            bar();
+//            
+//        }
+//    }
     
 }
