@@ -13,7 +13,7 @@ public class JavaTranslationTest {
 	@Test
 	public void testJavaDirectory() {
 		//TODO: design one test case for each sort of input to the translation.
-		String javaFileDir = "regression/true_positives/tp04/";
+		String javaFileDir = "regression/false_positives/fp13/";
 		Options.v().setClasspath(javaFileDir);
 		String bplFile = "test_tmp_boogiefiles/fp10.bpl";
 		String output = "test_output/fp10.txt";
