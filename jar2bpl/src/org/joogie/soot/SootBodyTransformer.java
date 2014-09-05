@@ -34,9 +34,9 @@ import soot.Body;
 import soot.BodyTransformer;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.Trap;
 import soot.Unit;
 import soot.jimple.GotoStmt;
-import soot.jimple.IfStmt;
 import soot.jimple.ReturnStmt;
 import soot.jimple.Stmt;
 import soot.jimple.ThrowStmt;
@@ -114,7 +114,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		//in the bytecode, e.g. for finally-blocks, which is used
 		//later to generate attributes that suppress false alarms
 		//during infeasible code detection.				
-		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(stmtIt);
+		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(stmtIt, body.getMethod());
 		
 		//reset the iterator
 		stmtIt = tug.iterator();
@@ -169,7 +169,25 @@ public class SootBodyTransformer extends BodyTransformer {
 	 * This is certainly unsound but seems to work so far.
 	 * @param stmtIt
 	 */
-	private HashSet<Stmt> detectDuplicatedFinallyBlocksAndCheckForSynchronizedStuff(Iterator<Unit> stmtIt) {
+	private HashSet<Stmt> detectDuplicatedFinallyBlocks(Iterator<Unit> stmtIt, SootMethod sootMethod) {
+		int first_trap_line = 1000000;
+		for (Trap trap : sootMethod.getActiveBody().getTraps()) {
+			for (Tag tag : trap.getHandlerUnit().getTags()) {
+				if (tag instanceof LineNumberTag) {
+					LineNumberTag t = (LineNumberTag)tag;
+					if (first_trap_line > t.getLineNumber()) {
+						first_trap_line = t.getLineNumber();
+					}
+				} else if (tag instanceof SourceLnNamePosTag) {
+					SourceLnNamePosTag t = (SourceLnNamePosTag)tag;
+					if (first_trap_line > t.startLn()) {
+						first_trap_line = t.startLn();
+					}
+				}	
+			}
+
+		}
+		
 		//TODO: instead of just returning the set of stmts that have duplicates
 		//we could group them so that we can still report infeasible code
 		//if all duplicates of one statement are infeasible.
@@ -205,7 +223,8 @@ public class SootBodyTransformer extends BodyTransformer {
 					if (!subprogs.containsKey(old_line)) {
 						subprogs.put(old_line, subprog);
 					} else {
-						if (compareSubprogs(subprog, subprogs.get(old_line))) {
+						if (compareSubprogs(subprog, subprogs.get(old_line))
+								&& old_line>first_trap_line) {
 //							System.err.println("P1 " + old_line);
 							for (Stmt st : subprogs.get(old_line)) {
 //								System.err.println("\t"+st);

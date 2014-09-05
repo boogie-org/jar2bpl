@@ -46,5 +46,23 @@ public class TruePositive04 {
 		}
 	}
 
-
+	/** snippet from terpword that is reported but not obviously a true positive.
+	 * The infeasible code is 
+	 * j >= 0 in  "while (end == -1 && j >= 0)";
+	 * The reason why it is infeasible is that the loop can never terminate if
+	 * end == -1 because if j would be less than 0, the deref of temp throw an
+	 * exception before reachen the check.
+	 * @param temp
+	 */
+	public void foo(char[] temp) {
+		int end = -1;
+		int j = temp.length;
+		do {
+			j--;
+			if (new Character(temp[j]).isLetterOrDigit(temp[j])) {
+				end = j;
+			}
+		} while (end == -1 && j >= 0);
+		j = end;		
+	}
 }
