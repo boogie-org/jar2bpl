@@ -89,8 +89,6 @@ private int degree() {
 //	line 222  
     public static void computeSystematicForm(Object h, SecureRandom sr, int n)
     {        
-        Object hp, sInv;
-        Object s = null;
 //        Permutation p;
         boolean found = false;
 
@@ -98,10 +96,11 @@ private int degree() {
         {
 //            p = new Permutation(n, sr);
 //            hp = (GF2Matrix)h.rightMultiply(p);
-            sInv =getLeftSubMatrix();
+//            sInv =getLeftSubMatrix();
             try
             {
                 found = true;
+                getLeftSubMatrix();
 //                s = (GF2Matrix)sInv.computeInverse();
             }
             catch (ArithmeticException ae)
@@ -119,30 +118,5 @@ private int degree() {
     
  
 
-	//GF2nPolynomialField
-	//line 537
-    private boolean testRandom()
-    {
-        int l;
-        boolean done = false;
 
-        l = 0;
-        while (!done)
-        {
-            l++;
-            if (isIrreducible())
-            {
-                done = true;
-                return done;
-            }
-        }
-
-        return done;
-    }
-
-
-	private boolean isIrreducible() {
-		// TODO Auto-generated method stub
-		return false;
-	}	
 }

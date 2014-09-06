@@ -13,10 +13,12 @@ public class JavaTranslationTest {
 	@Test
 	public void testJavaDirectory() {
 		//TODO: design one test case for each sort of input to the translation.
-		String javaFileDir = "regression/false_positives/fp11/";
+		String base="fp15";
+		
+		String javaFileDir = "regression/false_positives/"+base+"/";
 		Options.v().setClasspath(javaFileDir);
-		String bplFile = "test_tmp_boogiefiles/fp10.bpl";
-		String output = "test_output/fp10.txt";
+		String bplFile = "test_tmp_boogiefiles/"+base+".bpl";
+		String output = "test_output/"+base+".txt";
 
 		try {
 			Dispatcher.run(javaFileDir,

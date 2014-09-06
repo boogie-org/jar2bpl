@@ -68,4 +68,36 @@ public class CornerCases01 {
 	}
 	
 	
+	//GF2nPolynomialField
+	//line 537
+	/*
+	 * the loop can only be left through the return
+	 * statement. On any other path through the loop
+	 * done remains false.
+	 */
+    private boolean testRandom()
+    {
+        int l;
+        boolean done = false;
+
+        l = 0;
+        while (!done)
+        {
+            l++;
+            if (isIrreducible())
+            {
+                done = true;
+                return done;
+            }
+        }
+
+        return done;
+    }
+
+
+	private boolean isIrreducible() {
+		// TODO Auto-generated method stub
+		return false;
+	}		
+	
 }
