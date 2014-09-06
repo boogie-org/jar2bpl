@@ -151,7 +151,6 @@ public class SootProcedureInfo {
 			this.thisVariable = pf.mkIdentifierExpression(SootPrelude.v()
 					.getReferenceType(), "$this", false, false, false);
 			this.inParameters.add(this.thisVariable);
-			this.guaranteedNonNullVariables.add(thisVariable);
 		} else {
 			this.thisVariable = null;
 		}
@@ -338,24 +337,6 @@ public class SootProcedureInfo {
 
 	//public IdentifierExpression thisRefLocal = null;
 	
-	/**
-	 * the set of all variables that are guaranteed to be non-null.
-	 * This includes aliases of this and caught exceptions.
-	 */
-	private HashSet<IdentifierExpression> guaranteedNonNullVariables = new HashSet<IdentifierExpression>();
-	
-	public void addGuaranteedNonNullVariable(IdentifierExpression id) {
-		this.guaranteedNonNullVariables.add(id);
-	}
-	
-	public boolean isGuaranteedNonNullVariable(IdentifierExpression id) {
-		for (IdentifierExpression other : this.guaranteedNonNullVariables) {
-			if (id.getIdentifier().equals(other.getIdentifier())) {
-				return true;
-			}
-		}
-		return false;
-	}
 	
 	public IdentifierExpression lookupLocalVariable(Local local) {
 		if (!this.localVariable.containsKey(local)) {

@@ -168,9 +168,9 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	@Override
 	public void caseLongConstant(LongConstant arg0) {
 		long value = arg0.value;
-		if (value >= Integer.MAX_VALUE || value<= Integer.MIN_VALUE) {
+		if (value >= Integer.MAX_VALUE || value <= Integer.MIN_VALUE) {
 			Log.debug("Used abstract value for long constant that didn't fit in int");
-			this.expressionStack.push(GlobalsCache.v().lookupInternLong(arg0));	
+			this.expressionStack.push(GlobalsCache.v().lookupInternLong(arg0));
 		} else {
 			expressionStack.push(this.pf.mkIntLiteral(String.valueOf(value)));
 		}
@@ -240,11 +240,13 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		} else if (op.compareTo("/") == 0) {
 			// make sure that "right" is an Integer
 			// then assert that it is different from 0
-			if (this.stmtSwitch!=null) this.stmtSwitch.getErrorModel().createDivByZeroGuard(right);
+			if (this.stmtSwitch != null)
+				this.stmtSwitch.getErrorModel().createDivByZeroGuard(right);
 			rettype = left.getType();
 			operator = BinaryOperator.ARITHDIV;
 		} else if (op.compareTo("%") == 0) {
-			if (this.stmtSwitch!=null)  this.stmtSwitch.getErrorModel().createDivByZeroGuard(right);
+			if (this.stmtSwitch != null)
+				this.stmtSwitch.getErrorModel().createDivByZeroGuard(right);
 			rettype = left.getType();
 			operator = BinaryOperator.ARITHMOD;
 		} else if (op.compareTo("cmp") == 0 || op.compareTo("cmpl") == 0
@@ -356,10 +358,11 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				this.expressionStack.push(exp);
 			} else if (arg0.getOp().getType() instanceof RefType) {
 				// Guard that typeof(exp) <: targetType
-				if (this.stmtSwitch!=null)  this.stmtSwitch.getErrorModel().createClassCastGuard(
-						this.getClassTypeFromExpression(exp, false),
-						GlobalsCache.v().lookupClassVariable(
-								targetType.getSootClass()));
+				if (this.stmtSwitch != null)
+					this.stmtSwitch.getErrorModel().createClassCastGuard(
+							this.getClassTypeFromExpression(exp, false),
+							GlobalsCache.v().lookupClassVariable(
+									targetType.getSootClass()));
 				this.expressionStack.push(exp);
 			} else if (arg0.getOp().getType() instanceof NullType) {
 				// should always be ok, nothing to assert
@@ -378,9 +381,10 @@ public class SootValueSwitch implements JimpleValueSwitch {
 		} else if (arg0.getCastType() instanceof ArrayType) {
 
 			final ArrayType targetType = (ArrayType) arg0.getCastType();
-			if (this.stmtSwitch!=null)  this.stmtSwitch.getErrorModel().createClassCastGuard(
-					this.getClassTypeFromExpression(exp, false),
-					GlobalsCache.v().lookupArrayType(targetType));
+			if (this.stmtSwitch != null)
+				this.stmtSwitch.getErrorModel().createClassCastGuard(
+						this.getClassTypeFromExpression(exp, false),
+						GlobalsCache.v().lookupArrayType(targetType));
 
 			this.expressionStack.push(exp);
 
@@ -393,10 +397,11 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			if (arg0.getCastType() instanceof RefType) {
 				RefType rtype = (RefType) arg0.getCastType();
 				// Guard that typeof(exp) <: targetType
-				if (this.stmtSwitch!=null)  this.stmtSwitch.getErrorModel().createClassCastGuard(
-						this.getClassTypeFromExpression(exp, false),
-						GlobalsCache.v().lookupClassVariable(
-								rtype.getSootClass()));
+				if (this.stmtSwitch != null)
+					this.stmtSwitch.getErrorModel().createClassCastGuard(
+							this.getClassTypeFromExpression(exp, false),
+							GlobalsCache.v().lookupClassVariable(
+									rtype.getSootClass()));
 				this.expressionStack.push(exp);
 				return;
 			} else {
@@ -495,18 +500,18 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			RefType rtype = (RefType) arg0.getCheckType();
 			Expression rhs = GlobalsCache.v().lookupClassVariable(
 					rtype.getSootClass());
-			
+
 			Expression isNonNull = this.pf.mkBinaryExpression(
-					this.pf.getBoolType(), BinaryOperator.COMPNEQ,
-					lhs, SootPrelude.v().getNullConstant());
-			
+					this.pf.getBoolType(), BinaryOperator.COMPNEQ, lhs,
+					SootPrelude.v().getNullConstant());
+
 			Expression isSubtype = this.pf.mkBinaryExpression(
 					this.pf.getBoolType(), BinaryOperator.COMPPO,
 					this.getClassTypeFromExpression(lhs, false), rhs);
-			
-			this.expressionStack.push( this.pf.mkBinaryExpression(
-					this.pf.getBoolType(), BinaryOperator.LOGICAND,
-					isNonNull, isSubtype) );
+
+			this.expressionStack.push(this.pf.mkBinaryExpression(
+					this.pf.getBoolType(), BinaryOperator.LOGICAND, isNonNull,
+					isSubtype));
 		} else {
 			Log.error("instanceof for arrays not implemented");
 			this.expressionStack.push(createHavocedExpression(GlobalsCache.v()
@@ -523,13 +528,15 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	private IdentifierExpression createHavocedExpression(BoogieType t) {
 		Attribute[] arrtibutes = {};
-		if (this.stmtSwitch!=null) {
+		if (this.stmtSwitch != null) {
 			arrtibutes = TranslationHelpers
-					.javaLocation2Attribute(this.stmtSwitch.getCurrentStatement());
+					.javaLocation2Attribute(this.stmtSwitch
+							.getCurrentStatement());
 		}
 		IdentifierExpression ide = GlobalsCache.v().getHavocGlobal(t);
-		if (this.stmtSwitch!=null) {
-			this.stmtSwitch.addStatement(this.pf.mkHavocStatement(arrtibutes, ide));
+		if (this.stmtSwitch != null) {
+			this.stmtSwitch.addStatement(this.pf.mkHavocStatement(arrtibutes,
+					ide));
 		}
 		return ide;
 	}
@@ -812,23 +819,24 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 * )
 	 */
 	@Override
-	public void caseCaughtExceptionRef(CaughtExceptionRef arg0) {		
+	public void caseCaughtExceptionRef(CaughtExceptionRef arg0) {
 		if (arg0.getType() instanceof RefType) {
 			RefType rtype = (RefType) arg0.getType();
 			// assume that the exception variable now has the type of the caught
 			// exception
 			// assume $heap[$exception,$type] <: arg0.getType()
 
-			if (this.stmtSwitch!=null) {
+			if (this.stmtSwitch != null) {
 				// ensure that $exception is not null.
-				this.stmtSwitch.getErrorModel().createNonNullViolationException(
-						this.procInfo.getExceptionVariable());
-	
+				this.stmtSwitch.getErrorModel()
+						.createNonNullViolationException(
+								this.procInfo.getExceptionVariable());
+
 				Expression typefield = this.getClassTypeFromExpression(
 						this.procInfo.getExceptionVariable(), false);
-	
+
 				this.stmtSwitch.addStatement(pf.mkAssumeStatement(
-						new Attribute[] { },
+						new Attribute[] {},
 						GlobalsCache.v().compareTypeExpressions(
 								typefield,
 								GlobalsCache.v().lookupClassVariable(
@@ -913,27 +921,34 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	public void caseInstanceFieldRef(InstanceFieldRef arg0) {
 		boolean islhs = this.isLeftHandSide;
 		this.isLeftHandSide = false;
+
 		arg0.getBase().apply(this);
 		Expression base = this.getExpression();
 		Expression field = GlobalsCache.v().lookupSootField(arg0.getField());
-		
+
 		boolean nullCheckNeeded = true;
 		// check if the field may be modified by another thread.
 		if (!islhs && checkSharedField(arg0, field)) {
 			havocField(field, base);
 			nullCheckNeeded = false;
 		}
-		
-		//check if base is trivially non-null
-		if (this.stmtSwitch.getProcInfo()!=null) {
-			CustomNullnessAnalysis nna = this.stmtSwitch.getProcInfo().getNullnessAnalysis();
-			if (nna!=null && arg0.getBase() instanceof Immediate) {
-				if (nna.isAlwaysNonNullBefore(this.stmtSwitch.getCurrentStatement(), (Immediate)arg0.getBase())) {
-					nullCheckNeeded = false;		
+
+		// check if base is trivially non-null
+		if (this.stmtSwitch.getProcInfo() != null) {
+			CustomNullnessAnalysis nna = this.stmtSwitch.getProcInfo()
+					.getNullnessAnalysis();
+			if (nna != null && arg0.getBase() instanceof Immediate) {
+				if (nna.isAlwaysNonNullBefore(
+						this.stmtSwitch.getCurrentStatement(),
+						(Immediate) arg0.getBase())) {
+					nullCheckNeeded = false;
 				}
 			}
-		} else if (arg0.getBase()==this.stmtSwitch.getProcInfo().getSootMethod().getActiveBody().getThisLocal() || arg0.getBase() instanceof ThisRef) {
-			nullCheckNeeded = false; //TODO: check if this is actually needed.
+		} 
+		if (nullCheckNeeded && arg0.getBase() == this.stmtSwitch.getProcInfo()
+				.getSootMethod().getActiveBody().getThisLocal()
+				|| arg0.getBase() instanceof ThisRef) {
+			nullCheckNeeded = false; // TODO: check if this is actually needed.
 		}
 		// We are checking if this is a @NonNull field
 		// if so, we add an assume to ensure that it actually is
@@ -1016,7 +1031,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	public Expression makeHeapAccessExpression(Expression base,
 			Expression field, boolean guarded) {
-		if (guarded && this.stmtSwitch!=null) {
+		if (guarded && this.stmtSwitch != null) {
 			this.stmtSwitch.getErrorModel().createNonNullGuard(base);
 		}
 		// Assemble the $heap[base, field] expression
