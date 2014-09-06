@@ -48,6 +48,7 @@ import soot.jimple.ClassConstant;
 import soot.jimple.DoubleConstant;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.FloatConstant;
+import soot.jimple.LongConstant;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import boogie.ProgramFactory;
@@ -82,6 +83,7 @@ public class GlobalsCache {
 	private HashMap<String, IdentifierExpression> stringInternMap = new HashMap<String, IdentifierExpression>();
 	private HashMap<String, IdentifierExpression> floatInternMap = new HashMap<String, IdentifierExpression>();
 	private HashMap<String, IdentifierExpression> doubleInternMap = new HashMap<String, IdentifierExpression>();
+	private HashMap<String, IdentifierExpression> longInternMap = new HashMap<String, IdentifierExpression>();
 	
 	private long unitLabelCounter = 0L;
 	private final String blockPrefix = "block";
@@ -158,7 +160,7 @@ public class GlobalsCache {
 		}
 		return floatInternMap.get(s.toString());
 	}
-
+	
 	public IdentifierExpression lookupInternDouble(DoubleConstant s) {
 		if (!doubleInternMap.containsKey(s.toString())) {
 			String name = "$DoubleConst"+doubleInternMap.size();
@@ -167,6 +169,15 @@ public class GlobalsCache {
 		return doubleInternMap.get(s.toString());
 	}
 
+	public IdentifierExpression lookupInternLong(LongConstant s) {
+		if (!longInternMap.containsKey(s.toString())) {
+			String name = "$LongConst"+longInternMap.size();
+			longInternMap.put(s.toString(), this.pf.mkIdentifierExpression(this.getBoogieType(s.getType()), name, true, true, true));
+		}
+		return longInternMap.get(s.toString());
+	}
+	
+	
 	/**
 	 * Lookup a filed in a class.
 	 * 

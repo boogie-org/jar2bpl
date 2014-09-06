@@ -167,7 +167,13 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseLongConstant(LongConstant arg0) {
-		expressionStack.push(this.pf.mkIntLiteral(String.valueOf(arg0.value)));
+		long value = arg0.value;
+		if (value >= Integer.MAX_VALUE || value<= Integer.MIN_VALUE) {
+			Log.debug("Used abstract value for long constant that didn't fit in int");
+			this.expressionStack.push(GlobalsCache.v().lookupInternLong(arg0));	
+		} else {
+			expressionStack.push(this.pf.mkIntLiteral(String.valueOf(value)));
+		}
 	}
 
 	/*
