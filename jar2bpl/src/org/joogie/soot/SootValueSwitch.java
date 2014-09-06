@@ -614,14 +614,13 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseNegExpr(NegExpr arg0) {
+		//this is arithmetic negative!
+		//logic neg is already translated by soot
 		this.isLeftHandSide = false;
 		arg0.getOp().apply(this);
 		Expression e = this.expressionStack.pop();
-		if (e.getType() == this.pf.getIntType()) {
-			e = SootPrelude.v().intToBool(e);
-		}
 		this.expressionStack.push(this.pf.mkUnaryExpression(
-				this.pf.getBoolType(), UnaryOperator.LOGICNEG, e));
+				e.getType(), UnaryOperator.ARITHNEGATIVE, e));
 	}
 
 	/*

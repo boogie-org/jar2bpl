@@ -20,7 +20,7 @@ public class FalsePositive14 {
 		int written;
 
 		do {
-			if (isSSLEnabled()) {
+			if (!isSSLEnabled()) {
 				if (sslOutputBuffer.remaining() == 0) {
 					// Buffer was fully written last time around
 					sslOutputBuffer.clear();
