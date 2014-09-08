@@ -614,13 +614,13 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	 */
 	@Override
 	public void caseNegExpr(NegExpr arg0) {
-		//this is arithmetic negative!
-		//logic neg is already translated by soot
+		// this is arithmetic negative!
+		// logic neg is already translated by soot
 		this.isLeftHandSide = false;
 		arg0.getOp().apply(this);
 		Expression e = this.expressionStack.pop();
-		this.expressionStack.push(this.pf.mkUnaryExpression(
-				e.getType(), UnaryOperator.ARITHNEGATIVE, e));
+		this.expressionStack.push(this.pf.mkUnaryExpression(e.getType(),
+				UnaryOperator.ARITHNEGATIVE, e));
 	}
 
 	/*
@@ -932,8 +932,10 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			nullCheckNeeded = false;
 		}
 
+		SootProcedureInfo pinfo = this.stmtSwitch.getProcInfo();
+
 		// check if base is trivially non-null
-		if (this.stmtSwitch.getProcInfo() != null) {
+		if (pinfo != null) {
 			CustomNullnessAnalysis nna = this.stmtSwitch.getProcInfo()
 					.getNullnessAnalysis();
 			if (nna != null && arg0.getBase() instanceof Immediate) {
@@ -943,10 +945,16 @@ public class SootValueSwitch implements JimpleValueSwitch {
 					nullCheckNeeded = false;
 				}
 			}
-		} 
-		if (nullCheckNeeded && arg0.getBase() == this.stmtSwitch.getProcInfo()
-				.getSootMethod().getActiveBody().getThisLocal()
-				|| arg0.getBase() instanceof ThisRef) {
+		}
+		
+		Local thislocal = null;
+		try {
+			thislocal =  pinfo.getSootMethod().getActiveBody().getThisLocal();
+		} catch (Exception e) {
+			thislocal = null;
+		}
+		
+		if (arg0.getBase() ==thislocal || arg0.getBase() instanceof ThisRef) {
 			nullCheckNeeded = false; // TODO: check if this is actually needed.
 		}
 		// We are checking if this is a @NonNull field

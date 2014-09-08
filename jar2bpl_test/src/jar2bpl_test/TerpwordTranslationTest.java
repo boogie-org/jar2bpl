@@ -8,9 +8,14 @@ import org.junit.Test;
 
 import bixie.Bixie;
 
-public class TerpwordTranslationTest {
+public class TerpwordTranslationTest extends AbstractTest {
 
 	
+	public TerpwordTranslationTest() {
+		super("terpword", "terpword");
+
+	}
+
 	@Test
 	public void testJarInputFile() {
 		//TODO: design one test case for each sort of input to the translation.
@@ -30,10 +35,10 @@ public class TerpwordTranslationTest {
 		}
 		
 		Bixie bx = new Bixie();
-		bx.run(bplFile, "regression/test_output/terpword.txt");
+		bx.run(bplFile, this.output_file);
 
 		
-		org.junit.Assert.assertTrue(true);
+		org.junit.Assert.assertTrue(compareFiles(output_file, gold_output));
 	}
 	
 

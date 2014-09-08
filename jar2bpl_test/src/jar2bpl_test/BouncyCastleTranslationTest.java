@@ -8,14 +8,18 @@ import org.junit.Test;
 
 import bixie.Bixie;
 
-public class BouncyCastleTranslationTest {
+public class BouncyCastleTranslationTest extends AbstractTest {
 
 	
+	public BouncyCastleTranslationTest() {
+		super("bc", "bc");
+	}
+
 	@Test
 	public void testJarInputFile() {
 		//TODO: design one test case for each sort of input to the translation.
-		String bplFile = "regression/test_output/bc.bpl";
-		String output_file = "regression/test_output/bc.bpl.report2.txt";
+//		String bplFile = "regression/test_output/bc.bpl";
+//		String output_file = "regression/test_output/bc.bpl.report2.txt";
 		try {
 			String javaFileDir = System.getProperty("user.dir")+"/regression/bc/java";
 			Options.v().setClasspath(javaFileDir);			
@@ -32,7 +36,7 @@ public class BouncyCastleTranslationTest {
 		Bixie bx = new Bixie();
 		bx.run(bplFile, output_file);
 		
-		org.junit.Assert.assertTrue(true);
+		org.junit.Assert.assertTrue(compareFiles(output_file, gold_output));
 	}
 	
 

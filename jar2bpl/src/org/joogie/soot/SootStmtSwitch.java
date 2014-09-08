@@ -225,9 +225,6 @@ public class SootStmtSwitch implements StmtSwitch {
 		for (IdentifierExpression id : this.getProcInfo().getLocalVariables()) {
 			havoc_var.add(id);
 		}
-		for (IdentifierExpression id : this.getProcInfo().getInParamters()) {
-			havoc_var.add(id);
-		}
 		for (IdentifierExpression id : this.getProcInfo().getOutParamters()) {
 			havoc_var.add(id);
 		}

@@ -13,7 +13,7 @@ public class JavaTranslationTest {
 	@Test
 	public void testJavaDirectory() {
 		//TODO: design one test case for each sort of input to the translation.
-		String base="fp14";
+		String base="fp18_class";
 		
 		String javaFileDir = "regression/false_positives/"+base+"/";
 		Options.v().setClasspath(javaFileDir);
