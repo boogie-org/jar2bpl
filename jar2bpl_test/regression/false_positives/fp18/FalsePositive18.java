@@ -183,7 +183,7 @@ public class FalsePositive18 {
 	}
 	
 	private Socket pstmtPool, connection;
-	private boolean buffered;
+	
 	private URL myResourceBaseURL;
 	private Object logWriter;
 
@@ -211,48 +211,6 @@ public class FalsePositive18 {
         }
     }
 	
-	public void fp05(PrintWriter writer) {
-        // Log this message
-        try {
-            synchronized(this) {
-                if (writer != null) {
-                    writeTo(writer);
-                    writer.println("");
-                    if (!buffered) {
-                        writer.flush();
-                    }
-                }
-            }
-        } catch (IOException ioe) {
-        	System.err.println();
-        }
-
-	}
-
-	private void writeTo(PrintWriter writer) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	
-    public URL getResource(String path) throws MalformedURLException {
-
-        if (!path.startsWith("/"))
-            throw new MalformedURLException("Path '" + path +
-                                            "' does not start with '/'");
-        URL url = new URL(myResourceBaseURL, path.substring(1));
-        try (InputStream is = url.openStream()) {
-        } catch (Throwable t) {
-            handleThrowable(t);
-            url = null;
-        }
-        return url;
-    }
-
-	private void handleThrowable(Throwable t) {
-		// TODO Auto-generated method stub
-		
-	}
 	
 	//-------------------------------------------------
 	public void fp06() throws SQLException {
