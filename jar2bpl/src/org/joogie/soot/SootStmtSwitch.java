@@ -32,13 +32,16 @@ import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
 import soot.Local;
+import soot.NullType;
 import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
 import soot.Trap;
 import soot.Type;
 import soot.Unit;
+import soot.Value;
 import soot.jimple.AssignStmt;
+import soot.jimple.BinopExpr;
 import soot.jimple.BreakpointStmt;
 import soot.jimple.EnterMonitorStmt;
 import soot.jimple.ExitMonitorStmt;
@@ -49,6 +52,7 @@ import soot.jimple.InvokeStmt;
 import soot.jimple.LookupSwitchStmt;
 import soot.jimple.NewExpr;
 import soot.jimple.NopStmt;
+import soot.jimple.NullConstant;
 import soot.jimple.RetStmt;
 import soot.jimple.ReturnStmt;
 import soot.jimple.ReturnVoidStmt;
@@ -221,17 +225,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		// to avoid false positives that we encountered in Tomcat.
 		// For example: if (A) synchronized() { if (A) ...
 		// havoc everything.
-		LinkedList<IdentifierExpression> havoc_var = new LinkedList<IdentifierExpression>();
-		for (IdentifierExpression id : this.getProcInfo().getLocalVariables()) {
-			havoc_var.add(id);
-		}
-		for (IdentifierExpression id : this.getProcInfo().getOutParamters()) {
-			havoc_var.add(id);
-		}
-		havoc_var.add(SootPrelude.v().getHeapVariable());
-		this.boogieStatements.add(this.pf.mkHavocStatement(
-				TranslationHelpers.javaLocation2Attribute(arg0),
-				havoc_var.toArray(new IdentifierExpression[havoc_var.size()])));
+		this.boogieStatements.add(TranslationHelpers.havocEverything(this.getProcInfo(), this.valueswitch));
+
 	}
 
 	/*
@@ -280,63 +275,6 @@ public class SootStmtSwitch implements StmtSwitch {
 				arg0.getRightOp(), arg0);
 	}
 
-	// private boolean isTriviallyTrue(Value v) {
-	// if (v instanceof BinopExpr) {
-	// if (isAlwaysNull(((BinopExpr) v).getOp1()) && isAlwaysNull(((BinopExpr)
-	// v).getOp2())) {
-	// return true;
-	// }
-	// if (isNeverNull(((BinopExpr) v).getOp1()) && isNeverNull(((BinopExpr)
-	// v).getOp2())) {
-	// return true;
-	// }
-	// }
-	// return false;
-	// }
-	//
-	// private boolean isTriviallyFalse(Value v) {
-	// if (v instanceof BinopExpr) {
-	// if (isAlwaysNull(((BinopExpr) v).getOp1()) && isNeverNull(((BinopExpr)
-	// v).getOp2())) {
-	// return true;
-	// }
-	// if (isNeverNull(((BinopExpr) v).getOp1()) && isAlwaysNull(((BinopExpr)
-	// v).getOp2())) {
-	// return true;
-	// }
-	//
-	// }
-	// return false;
-	// }
-	//
-	// private boolean isAlwaysNull(Value v) {
-	// if (v instanceof NullConstant) {
-	// return true;
-	// }
-	// if (v instanceof Immediate && this.getProcInfo().getNullnessAnalysis() !=
-	// null) {
-	// return
-	// this.getProcInfo().getNullnessAnalysis().isAlwaysNullBefore(currentStatement,
-	// (Immediate)v);
-	// }
-	// return false;
-	// }
-	//
-	// private boolean isNeverNull(Value v) {
-	// if ( v instanceof NewExpr || v instanceof NewArrayExpr
-	// || v instanceof NewMultiArrayExpr || v instanceof ThisRef
-	// || v instanceof StringConstant || v instanceof ClassConstant
-	// || v instanceof CaughtExceptionRef) {
-	// return true;
-	// }
-	// if (v instanceof Immediate && this.getProcInfo().getNullnessAnalysis() !=
-	// null) {
-	// return
-	// this.getProcInfo().getNullnessAnalysis().isAlwaysNonNullBefore(currentStatement,
-	// (Immediate)v);
-	// }
-	// return false;
-	// }
 
 	/*
 	 * (non-Javadoc)
@@ -370,20 +308,41 @@ public class SootStmtSwitch implements StmtSwitch {
 		arg0.getCondition().apply(this.valueswitch);
 		Expression cond = TranslationHelpers.castBoogieTypes(
 				this.valueswitch.getExpression(), this.pf.getBoolType());
-		// if (isTriviallyTrue(arg0.getCondition())) {
-		// // ignore the check
-		// Log.info("Ignored trivial true check: " + arg0);
-		// for (Statement s : thenPart) {
-		// this.boogieStatements.add(s);
-		// }
-		// } else if (isTriviallyFalse(arg0.getCondition())) {
-		//
-		// Log.info("Ignored trivial false check: " + arg0);
-		//
-		// } else {
-		this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
-				elsePart));
-		// }
+		
+		if (isTrivialNullCheck(arg0.getCondition())) {
+			Log.debug("Ignore trivial check "+arg0);
+			for (Statement s : thenPart) {
+				this.boogieStatements.add(s);
+			}
+		} else {
+			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
+					elsePart));
+		}
+	}
+	
+	
+	/**
+	 * This is a helper function to suppress false positives: Sometimes,
+	 * when try-catch with resources is being used
+	 * @param v
+	 * @return
+	 */
+	private boolean isTrivialNullCheck(Value v) {
+		 if (v instanceof BinopExpr) {
+			 BinopExpr bo = (BinopExpr)v;
+			 if (bo.getOp2() instanceof NullConstant && bo.getSymbol().equals(" == ")) {
+				 //now it gets itchy. We want to catch only that case
+				 //where the bytecode introduces a renaming of null and
+				 //does this unreachable null check.
+				 if (bo.getOp1() instanceof Local) {
+					 Local l = (Local)bo.getOp1();
+					 if (l.getType() instanceof NullType) {						 
+						 return true;
+					 } 
+				 }
+			 }
+		 }
+		 return false;
 	}
 
 	/*

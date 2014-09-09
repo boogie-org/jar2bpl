@@ -247,7 +247,7 @@ public class SootRunner extends Runner {
 			args.add(cp);
 			
 			args.add("-src-prec");
-			args.add("java");
+			args.add("class");
 			
 			// add path to be processed
 			args.add("-process-path");

@@ -37,6 +37,7 @@ import soot.SootMethod;
 import soot.Type;
 import soot.VoidType;
 import soot.jimple.ParameterRef;
+import soot.jimple.StaticFieldRef;
 import soot.tagkit.Tag;
 import soot.tagkit.VisibilityAnnotationTag;
 import soot.toolkits.exceptions.UnitThrowAnalysis;
@@ -82,6 +83,8 @@ public class SootProcedureInfo {
 	public Expression returnTypeVariable = null;
 	
 	public HashSet<AssumeStatement> typeAssumptions = new HashSet<AssumeStatement>();
+	
+	public HashSet<StaticFieldRef> usedStaticFields = new HashSet<StaticFieldRef>();  
 
 	private LinkedList<IdentifierExpression> idexpFromVarlist(VarList[] vla) {
 		LinkedList<IdentifierExpression> ret = new LinkedList<IdentifierExpression>();

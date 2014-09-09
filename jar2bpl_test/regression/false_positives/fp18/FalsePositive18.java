@@ -187,6 +187,12 @@ public class FalsePositive18 {
 	private URL myResourceBaseURL;
 	private Object logWriter;
 
+	
+	/* Tomcat 
+	 * In file: PooledConnectionImpl.java
+	line 147
+	line 149
+	 */
     public void close() throws SQLException {
         
         boolean isClosed = true;

@@ -59,8 +59,6 @@ public class CornerCases01 {
 	automatically leaves the loop before reaching this check. 
  */
 	public void bar(Object[] constraints) {
-		// Since authenticate modifies the response on failure,
-		// we have to check for allow-from-all first.
 		boolean authRequired;
 		authRequired = true;
 		for (int i = 0; i < constraints.length && authRequired; i++) {
@@ -143,7 +141,7 @@ public class CornerCases01 {
         if (!path.startsWith("/"))
             throw new MalformedURLException("Path '" + path +
                                             "' does not start with '/'");
-        URL url = new URL(myResourceBaseURL, path.substring(1));
+        URL url = new URL( path.substring(1));
         try (InputStream is = url.openStream()) {
         } catch (Throwable t) {
         	//the catch block is unreachable

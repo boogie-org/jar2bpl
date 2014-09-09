@@ -13,7 +13,7 @@ public class JavaTranslationTest {
 	@Test
 	public void testJavaDirectory() {
 		//TODO: design one test case for each sort of input to the translation.
-		String base="fp18_class";
+		String base="fp05";
 		
 		String javaFileDir = "regression/false_positives/"+base+"/";
 		Options.v().setClasspath(javaFileDir);
@@ -28,9 +28,12 @@ public class JavaTranslationTest {
 			fail("Translation Error " + e.toString());
 		}
 		
+		try {
 		Bixie bx = new Bixie();
 		bx.run(bplFile, output);
-		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		org.junit.Assert.assertTrue(true);
 	}
 

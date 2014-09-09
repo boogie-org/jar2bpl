@@ -26,6 +26,8 @@ import java.util.List;
 import org.joogie.GlobalsCache;
 import org.joogie.soot.SootLocation;
 import org.joogie.soot.SootPrelude;
+import org.joogie.soot.SootProcedureInfo;
+import org.joogie.soot.SootValueSwitch;
 
 import soot.Local;
 import soot.Scene;
@@ -44,6 +46,7 @@ import soot.tagkit.Tag;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.expression.Expression;
+import boogie.ast.expression.IdentifierExpression;
 import boogie.ast.location.ILocation;
 import boogie.ast.statement.Statement;
 import boogie.type.BoogieType;
@@ -58,98 +61,133 @@ public class TranslationHelpers {
 		return new SootLocation(-1);
 	}
 
-	public static void getReachableTraps(Unit s, SootMethod m, List<Trap> out_traps, List<Trap> out_finally) {
-		if (m.getActiveBody()==null) {
-			throw new RuntimeException("cannot look into "+m.getSignature());
+	
+	public static Statement havocEverything(SootProcedureInfo procInfo,
+			SootValueSwitch valueswitch) {
+		LinkedList<IdentifierExpression> havoc_var = new LinkedList<IdentifierExpression>();
+		for (IdentifierExpression id : procInfo.getLocalVariables()) {
+			havoc_var.add(id);
+		}
+		for (IdentifierExpression id : procInfo.getOutParamters()) {
+			havoc_var.add(id);
+		}
+		for (StaticFieldRef sr : procInfo.usedStaticFields) {
+			sr.apply(valueswitch);
+			IdentifierExpression ide = (IdentifierExpression) valueswitch
+					.getExpression();
+			havoc_var.add(ide);
+		}
+
+		havoc_var.add(SootPrelude.v().getHeapVariable());
+		return GlobalsCache
+				.v()
+				.getPf()
+				.mkHavocStatement(
+						new Attribute[] {},
+						havoc_var.toArray(new IdentifierExpression[havoc_var
+								.size()]));
+	}
+
+	public static void getReachableTraps(Unit s, SootMethod m,
+			List<Trap> out_traps, List<Trap> out_finally) {
+		if (m.getActiveBody() == null) {
+			throw new RuntimeException("cannot look into " + m.getSignature());
 		}
 		out_traps.addAll(TrapManager.getTrapsAt(s, m.getActiveBody()));
 
 		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
 				SootClass.SIGNATURES);
-			
+
 		Unit trap_begin = null;
 		Unit trap_end = null;
 		SootClass trap_exception = null;
-//		Unit trap_handler = null;
+		// Unit trap_handler = null;
 		for (Trap trap : new LinkedList<Trap>(out_traps)) {
 			if (trap.getBeginUnit() == trap_begin
 					&& trap.getEndUnit() == trap_end
 					&& trap.getException() == trap_exception) {
 				out_traps.remove(trap);
-				if (trap.getException()==throwable) {
-					//in that case the second trap was most likely
-					//of type "any" and thus is a finally block, but
-					//soot translated that into Throwable.
+				if (trap.getException() == throwable) {
+					// in that case the second trap was most likely
+					// of type "any" and thus is a finally block, but
+					// soot translated that into Throwable.
 					out_finally.add(trap);
-//					System.err.println("unreachable finally "+GlobalsCache.v().getUnitLabel((Stmt) trap.getHandlerUnit()));
-//					System.err.println("\t\t"+GlobalsCache.v().getUnitLabel((Stmt) trap_handler));
+					// System.err.println("unreachable finally "+GlobalsCache.v().getUnitLabel((Stmt)
+					// trap.getHandlerUnit()));
+					// System.err.println("\t\t"+GlobalsCache.v().getUnitLabel((Stmt)
+					// trap_handler));
 				}
 			} else {
-				//everything fine.
+				// everything fine.
 			}
 			trap_begin = trap.getBeginUnit();
 			trap_end = trap.getEndUnit();
 			trap_exception = trap.getException();
-//			trap_handler = trap.getHandlerUnit();
-		}		
-		
-	}	
-	
+			// trap_handler = trap.getHandlerUnit();
+		}
+
+	}
+
 	public static Statement mkLocationAssertion(Stmt s) {
 		return mkLocationAssertion(s, false);
 	}
-	
-	public static Statement mkLocationAssertion(Stmt s, boolean forceCloneAttribute) {
+
+	public static Statement mkLocationAssertion(Stmt s,
+			boolean forceCloneAttribute) {
 		return GlobalsCache
 				.v()
 				.getPf()
-				.mkAssertStatement(javaLocation2Attribute(s, forceCloneAttribute),
+				.mkAssertStatement(
+						javaLocation2Attribute(s, forceCloneAttribute),
 						GlobalsCache.v().getPf().mkBooleanLiteral(true));
 	}
-	
+
 	public static HashSet<Stmt> clonedFinallyBlocks = new HashSet<Stmt>();
 
 	public static Attribute[] javaLocation2Attribute(Stmt s) {
 		return javaLocation2Attribute(s, false);
 	}
-	
-	public static Attribute[] javaLocation2Attribute(Stmt s, boolean forceCloneAttribute) {
-		return javaLocation2Attribute(s.getTags(), clonedFinallyBlocks.contains(s) || forceCloneAttribute);
+
+	public static Attribute[] javaLocation2Attribute(Stmt s,
+			boolean forceCloneAttribute) {
+		return javaLocation2Attribute(s.getTags(),
+				clonedFinallyBlocks.contains(s) || forceCloneAttribute);
 	}
-	
+
 	public static Attribute[] javaLocation2Attribute(List<Tag> list) {
-		return javaLocation2Attribute(list, false);	
+		return javaLocation2Attribute(list, false);
 	}
-	
-	
+
 	private static String getFileName(SootClass sc) {
-		if (sc.hasOuterClass()) return getFileName(sc.getOuterClass());
+		if (sc.hasOuterClass())
+			return getFileName(sc.getOuterClass());
 		String filename = null;
 		for (Tag t_ : sc.getTags()) {
-			if (t_ instanceof SourceFileTag) {							
-				filename = ((SourceFileTag)t_).getSourceFile();
-				if (((SourceFileTag)t_).getAbsolutePath()!=null) {
-					filename = ((SourceFileTag)t_).getAbsolutePath();
+			if (t_ instanceof SourceFileTag) {
+				filename = ((SourceFileTag) t_).getSourceFile();
+				if (((SourceFileTag) t_).getAbsolutePath() != null) {
+					filename = ((SourceFileTag) t_).getAbsolutePath();
 				}
 				break;
 			} else if (t_ instanceof SourceLnNamePosTag) {
-				filename = ((SourceLnNamePosTag)t_).getFileName();
-				//don't break, mybe there is still a source file tag.
+				filename = ((SourceLnNamePosTag) t_).getFileName();
+				// don't break, mybe there is still a source file tag.
 			}
 		}
 		return filename;
 	}
-	
+
 	public static Statement createClonedAttribAssert() {
 		ProgramFactory pf = GlobalsCache.v().getPf();
-		Attribute[] res = new Attribute[]{ pf.mkCustomAttribute(ProgramFactory.Cloned) };		
+		Attribute[] res = new Attribute[] { pf
+				.mkCustomAttribute(ProgramFactory.Cloned) };
 		return pf.mkAssertStatement(res, pf.mkBooleanLiteral(true));
 	}
-	
-	public static Attribute[] javaLocation2Attribute(List<Tag> list, boolean isCloned) {
+
+	public static Attribute[] javaLocation2Attribute(List<Tag> list,
+			boolean isCloned) {
 		// if the taglist is empty return no location
 		int startln, endln, startcol, endcol;
-		
 
 		startln = -1;
 		endln = -1;
@@ -157,56 +195,59 @@ public class TranslationHelpers {
 		endcol = -1;
 		String filename = null;
 
-		if (GlobalsCache.v().currentMethod!=null) {
-			filename = getFileName(GlobalsCache.v().currentMethod.getDeclaringClass());
-		}				
+		if (GlobalsCache.v().currentMethod != null) {
+			filename = getFileName(GlobalsCache.v().currentMethod
+					.getDeclaringClass());
+		}
 
-		
 		for (Tag tag : list) {
 			if (tag instanceof LineNumberTag) {
 				startln = ((LineNumberTag) tag).getLineNumber();
 				break;
 			} else if (tag instanceof SourceLnNamePosTag) {
-				if (filename==null) {
+				if (filename == null) {
 					filename = ((SourceLnNamePosTag) tag).getFileName();
 				}
 				startln = ((SourceLnNamePosTag) tag).startLn();
-				endln = ((SourceLnNamePosTag) tag).endLn();				
+				endln = ((SourceLnNamePosTag) tag).endLn();
 				startcol = ((SourceLnNamePosTag) tag).startPos();
 				endcol = ((SourceLnNamePosTag) tag).endPos();
 				break;
 			} else if (tag instanceof SourceFileTag) {
-				if (filename==null) {
+				if (filename == null) {
 					filename = ((SourceFileTag) tag).getSourceFile();
-					if (((SourceFileTag) tag).getAbsolutePath()!=null) {
-						filename = ((SourceFileTag)tag).getAbsolutePath();
+					if (((SourceFileTag) tag).getAbsolutePath() != null) {
+						filename = ((SourceFileTag) tag).getAbsolutePath();
 					}
 				}
 				break;
 			} else {
-//				Log.info("Tag ignored: " + tag.getClass().toString());
+				// Log.info("Tag ignored: " + tag.getClass().toString());
 			}
 		}
 
-		if (filename == null && startln == -1 && endln == -1 && startcol == -1 && endcol == -1) {			
+		if (filename == null && startln == -1 && endln == -1 && startcol == -1
+				&& endcol == -1) {
 			return new Attribute[0];
-		}    
-		
-		if (filename == null && GlobalsCache.v().currentMethod!=null) {
-			filename = GlobalsCache.v().currentMethod.getDeclaringClass().getName();
 		}
-		
+
+		if (filename == null && GlobalsCache.v().currentMethod != null) {
+			filename = GlobalsCache.v().currentMethod.getDeclaringClass()
+					.getName();
+		}
+
 		ProgramFactory pf = GlobalsCache.v().getPf();
-		Attribute loc = pf.mkLocationAttribute(filename, startln, endln, startcol, endcol);
-		
+		Attribute loc = pf.mkLocationAttribute(filename, startln, endln,
+				startcol, endcol);
+
 		Attribute[] res;
-		if (isCloned) {			
-			res = new Attribute[]{ loc, pf.mkCustomAttribute(ProgramFactory.Cloned) };
+		if (isCloned) {
+			res = new Attribute[] { loc,
+					pf.mkCustomAttribute(ProgramFactory.Cloned) };
 		} else {
-			res = new Attribute[]{ loc };
+			res = new Attribute[] { loc };
 		}
- 		
-		
+
 		return res;
 	}
 
@@ -228,7 +269,7 @@ public class TranslationHelpers {
 	public static String getQualifiedName(Local l) {
 		// TODO: check if the name is really unique
 		StringBuilder sb = new StringBuilder();
-		sb.append(l.getName());
+		sb.append(replaceIllegalChars(l.getName()));
 
 		sb.append(l.getNumber());
 		return sb.toString();
@@ -249,6 +290,7 @@ public class TranslationHelpers {
 
 	public static String replaceIllegalChars(String s) {
 		String ret = s.replace("<", "$la$");
+		ret = ret.replace("@", "$at$");
 		ret = ret.replace(">", "$ra$");
 		ret = ret.replace("[", "$lp$");
 		ret = ret.replace("]", "$rp$");

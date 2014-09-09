@@ -24,6 +24,7 @@ import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.VirtualInvokeExpr;
+import soot.options.Options;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.VarList;
@@ -184,6 +185,14 @@ public class InvokeTranslation {
 			ss.addStatement(pf.mkReturnStatement());
 			return true;
 		}
+		
+		if (ivk.getMethod().getSignature().contains("<java.lang.Throwable: void addSuppressed(java.lang.Throwable)>")) {
+			Log.debug("Ignoring call to adSuppressed");
+			TranslationHelpers.mkLocationAssertion(ss.getCurrentStatement(), true);		
+			return false;
+		}
+
+		
 		return false;
 	}
 
@@ -279,7 +288,8 @@ public class InvokeTranslation {
 		// if (!possibleExceptions.contains(throwableException)) {
 		// possibleExceptions.add(throwableException);
 		// }
-
+		SootClass interuptException = Scene.v().loadClass("java.lang.InterruptedException",SootClass.SIGNATURES);
+		
 		for (SootClass c : possibleExceptions) {
 			String transferlabel = null;
 			// for each possible exception, check if there is a catch block.
@@ -310,7 +320,14 @@ public class InvokeTranslation {
 					valueswitch.getClassTypeFromExpression(
 							procInfo.getExceptionVariable(), false),
 					GlobalsCache.v().lookupClassVariable(c));
+			
 			Statement[] thenPart = { transferStatement };
+			//Small hack to avoid false positives form
+			//code that is only reachable if an interleaving happens
+			if (interuptException==c && !org.joogie.Options.v().useSoundThreads()) {
+				thenPart = new Statement[]{TranslationHelpers.havocEverything(procInfo, valueswitch), transferStatement};
+			}
+			
 			Statement[] elsePart = {};
 			statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
 		}

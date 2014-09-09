@@ -36,8 +36,10 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Trap;
 import soot.Unit;
+import soot.ValueBox;
 import soot.jimple.GotoStmt;
 import soot.jimple.ReturnStmt;
+import soot.jimple.StaticFieldRef;
 import soot.jimple.Stmt;
 import soot.jimple.ThrowStmt;
 import soot.tagkit.LineNumberTag;
@@ -114,7 +116,7 @@ public class SootBodyTransformer extends BodyTransformer {
 		//in the bytecode, e.g. for finally-blocks, which is used
 		//later to generate attributes that suppress false alarms
 		//during infeasible code detection.				
-		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(stmtIt, body.getMethod());
+		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(stmtIt, procInfo);
 		
 		//reset the iterator
 		stmtIt = tug.iterator();
@@ -169,7 +171,8 @@ public class SootBodyTransformer extends BodyTransformer {
 	 * This is certainly unsound but seems to work so far.
 	 * @param stmtIt
 	 */
-	private HashSet<Stmt> detectDuplicatedFinallyBlocks(Iterator<Unit> stmtIt, SootMethod sootMethod) {
+	private HashSet<Stmt> detectDuplicatedFinallyBlocks(Iterator<Unit> stmtIt, SootProcedureInfo procInfo) {
+		SootMethod sootMethod = procInfo.getSootMethod();
 		int first_trap_line = 1000000;
 		for (Trap trap : sootMethod.getActiveBody().getTraps()) {
 			for (Tag tag : trap.getHandlerUnit().getTags()) {
@@ -202,6 +205,17 @@ public class SootBodyTransformer extends BodyTransformer {
 		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
+			
+			//check for used static fields. 
+			//we need to collect them to havoc them later when
+			//entering a monitor.
+			for (ValueBox vb : s.getUseBoxes()) {
+				if (vb.getValue() instanceof StaticFieldRef) {
+					StaticFieldRef sr = (StaticFieldRef)vb.getValue();
+					procInfo.usedStaticFields.add(sr);
+				}
+			}
+			
 			
 			//now check for finally blocks
 			int line=-2;			

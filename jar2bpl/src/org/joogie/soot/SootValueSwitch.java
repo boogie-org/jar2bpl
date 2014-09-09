@@ -35,6 +35,8 @@ import soot.Immediate;
 import soot.Local;
 import soot.NullType;
 import soot.RefType;
+import soot.Scene;
+import soot.SootClass;
 import soot.jimple.AddExpr;
 import soot.jimple.AndExpr;
 import soot.jimple.ArrayRef;
@@ -821,6 +823,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 	public void caseCaughtExceptionRef(CaughtExceptionRef arg0) {
 		if (arg0.getType() instanceof RefType) {
 			RefType rtype = (RefType) arg0.getType();
+						
 			// assume that the exception variable now has the type of the caught
 			// exception
 			// assume $heap[$exception,$type] <: arg0.getType()
