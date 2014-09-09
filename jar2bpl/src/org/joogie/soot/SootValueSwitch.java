@@ -35,8 +35,6 @@ import soot.Immediate;
 import soot.Local;
 import soot.NullType;
 import soot.RefType;
-import soot.Scene;
-import soot.SootClass;
 import soot.jimple.AddExpr;
 import soot.jimple.AndExpr;
 import soot.jimple.ArrayRef;

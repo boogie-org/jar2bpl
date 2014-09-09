@@ -24,7 +24,6 @@ import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.VirtualInvokeExpr;
-import soot.options.Options;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.VarList;

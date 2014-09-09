@@ -36,6 +36,7 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Type;
 import soot.VoidType;
+import soot.jimple.IfStmt;
 import soot.jimple.ParameterRef;
 import soot.jimple.StaticFieldRef;
 import soot.tagkit.Tag;
@@ -84,7 +85,11 @@ public class SootProcedureInfo {
 	
 	public HashSet<AssumeStatement> typeAssumptions = new HashSet<AssumeStatement>();
 	
-	public HashSet<StaticFieldRef> usedStaticFields = new HashSet<StaticFieldRef>();  
+	public HashSet<StaticFieldRef> usedStaticFields = new HashSet<StaticFieldRef>(); 
+	
+	//this is used to suppress false positives originating from
+	//else if cases.
+	public HashSet<IfStmt> duplicatedIfStatement = new HashSet<IfStmt>(); 
 
 	private LinkedList<IdentifierExpression> idexpFromVarlist(VarList[] vla) {
 		LinkedList<IdentifierExpression> ret = new LinkedList<IdentifierExpression>();

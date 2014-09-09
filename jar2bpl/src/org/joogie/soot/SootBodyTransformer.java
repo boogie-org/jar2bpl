@@ -38,6 +38,7 @@ import soot.Trap;
 import soot.Unit;
 import soot.ValueBox;
 import soot.jimple.GotoStmt;
+import soot.jimple.IfStmt;
 import soot.jimple.ReturnStmt;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.Stmt;
@@ -203,6 +204,8 @@ public class SootBodyTransformer extends BodyTransformer {
 				
 		//GlobalsCache.v().modifiedInMonitor = new HashMap<EnterMonitorStmt, HashSet<Value>>();
 		
+		HashSet<IfStmt> ifstmts = new HashSet<IfStmt>();
+		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
 			
@@ -214,6 +217,20 @@ public class SootBodyTransformer extends BodyTransformer {
 					StaticFieldRef sr = (StaticFieldRef)vb.getValue();
 					procInfo.usedStaticFields.add(sr);
 				}
+			}
+			
+			if (s instanceof IfStmt) {
+				IfStmt is = (IfStmt)s;
+				for (IfStmt is2 : ifstmts) {
+					if (is.getCondition().equivTo(is2.getCondition())) {
+						//note that we do not add the first occurrence
+						//this is a somewhat arbitrary optimization attempt.
+//						procInfo.duplicatedIfStatement.add(is2);
+						procInfo.duplicatedIfStatement.add(is);
+						break;
+					}
+				}
+				ifstmts.add(is);
 			}
 			
 			

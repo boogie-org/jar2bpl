@@ -288,6 +288,8 @@ public class SootStmtSwitch implements StmtSwitch {
 		boolean forceCloneAttibute = false;
 		if (TranslationHelpers.clonedFinallyBlocks.contains(arg0)) {
 			forceCloneAttibute = true;
+		} else if (this.procInfo.duplicatedIfStatement.contains(arg0)) {
+			forceCloneAttibute = true;
 		}
 		Statement[] thenPart = {
 				TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
@@ -318,6 +320,11 @@ public class SootStmtSwitch implements StmtSwitch {
 			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
 					elsePart));
 		}
+		if (forceCloneAttibute) {
+			//TODO: test
+			this.boogieStatements.add(TranslationHelpers.createClonedAttribAssert());
+		}
+		
 	}
 	
 	
