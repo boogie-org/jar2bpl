@@ -289,6 +289,8 @@ public class InvokeTranslation {
 		// }
 		SootClass interuptException = Scene.v().loadClass("java.lang.InterruptedException",SootClass.SIGNATURES);
 		
+		SootClass largestCaughtException = null;
+		
 		for (SootClass c : possibleExceptions) {
 			String transferlabel = null;
 			// for each possible exception, check if there is a catch block.
@@ -300,6 +302,14 @@ public class InvokeTranslation {
 					break;
 				}
 			}
+			
+			if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, c)) {
+				largestCaughtException=c;
+			} else {
+//				System.err.println("Not catching "+c.getName() + " because we already caught "+largestCaughtException.getName());
+				continue;
+			}
+			
 			Statement transferStatement;
 			if (transferlabel == null) {
 				// if the exception is not caught, leave the procedure
@@ -351,6 +361,14 @@ public class InvokeTranslation {
 					|| !calledMethod.hasActiveBody()
 					|| GlobalsCache.v().isSubTypeOrEqual(trap.getException(), runtimeexception)) {
 
+				if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, trap.getException())) {
+					largestCaughtException=trap.getException();
+				} else {
+//					System.err.println("Not catching "+trap.getException().getName() + " because we already caught "+largestCaughtException.getName());
+					continue;
+				}
+				
+				
 				Expression condition = pf.mkBinaryExpression(
 						pf.getBoolType(),
 						BinaryOperator.COMPPO,
@@ -376,8 +394,15 @@ public class InvokeTranslation {
 						+ procInfo.getBoogieName());
 			}
 			Trap trap = finally_traps.get(0);
-			statements.add(pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
-					(Stmt) trap.getHandlerUnit())));
+			
+			if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, trap.getException())) {
+				largestCaughtException=trap.getException();
+				statements.add(pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
+						(Stmt) trap.getHandlerUnit())));
+			} else {
+//				System.err.println("Not catching finally "+trap.getException().getName() + " because we already caught "+largestCaughtException.getName());
+			}
+			
 		}
 
 		if (statements.size() == 0)

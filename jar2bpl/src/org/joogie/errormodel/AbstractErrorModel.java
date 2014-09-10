@@ -63,69 +63,7 @@ public abstract class AbstractErrorModel {
 	abstract public void createdUnExpectedException(Expression guard,
 			SootClass exception);
 
-//	protected void createException2(Expression guard, SootClass exception) {
-//		
-//		String transferlabel = null;
-//		// check if there is a trap catching this exception
-//		Collection<ExceptionDest> exceptionalSuccs = this.procInfo
-//				.getExceptionalUnitGraph().getExceptionDests(
-//						this.stmtSwitch.getCurrentStatement());
-//
-//		for (ExceptionDest dest : exceptionalSuccs) {
-//			if (dest.getTrap() != null) {
-//				// check if this trap can actually handle this exception
-//				if (GlobalsCache.v().isSubTypeOrEqual(exception,
-//						dest.getTrap().getException())) {
-//					transferlabel = GlobalsCache.v().getUnitLabel(
-//							(Stmt) dest.getTrap().getHandlerUnit());
-//					break;
-//				}
-//			}
-//		}
-//		if (transferlabel == null) {
-//			// if not, check if the exception is in the throws clause
-//			if (GlobalsCache.v().inThrowsClause(exception, this.procInfo)) {
-//				createdExpectedException(guard, exception);
-//			} else {
-//				createdUnExpectedException(guard, exception);
-//			}
-//		} else {
-//			if (isThisNonNullCheck(guard)) {
-//				// we can ignore that.
-//				return;
-//			}
-//
-//			// if the exception is caught, create a goto
-//			Statement transferStatement = this.pf
-//					.mkGotoStatement(transferlabel);
-//
-//			// now assign the exception variable to make sure that the catch
-//			// block
-//			// is feasible when we transfer there.
-//			Expression exception_type = GlobalsCache.v().lookupClassVariable(
-//					exception);
-//			Statement raise = SootPrelude.v().newObject(new Attribute[] {},
-//					this.procInfo.getExceptionVariable(), exception_type);
-//			// if the exception is guarded create a conditional choice,
-//			// otherwise just throw it.
-//			if (guard != null) {
-//				Statement[] elsePart = {
-//						this.pf.mkAssertStatement(
-//								new Attribute[] { pf.mkNoVerifyAttribute() },
-//								pf.mkBooleanLiteral(true)), raise,
-//						transferStatement };
-//				Statement[] thenPart = { TranslationHelpers
-//						.mkLocationAssertion(this.stmtSwitch
-//								.getCurrentStatement()) };
-//				this.stmtSwitch.addStatement(this.pf.mkIfStatement(guard,
-//						thenPart, elsePart));
-//			} else {
-//				this.stmtSwitch.addStatement(raise);
-//				this.stmtSwitch.addStatement(transferStatement);
-//			}
-//		}
-//	}
-	
+
 	protected void createException(Expression guard, SootClass exception) {
 
 		List<Trap> traps =  new LinkedList<Trap>();
@@ -141,7 +79,6 @@ public abstract class AbstractErrorModel {
 				break;
 			}
 		}
-		
 
 		if (transferlabel == null) {
 			// if not, check if the exception is in the throws clause
@@ -183,24 +120,7 @@ public abstract class AbstractErrorModel {
 		}
 	}
 
-	protected boolean isThisNonNullCheck(Expression guard) {
 
-		// if (guard instanceof BinaryExpression) {
-		// BinaryExpression boe = (BinaryExpression)guard;
-		// if (boe.getOperator()==BinaryOperator.COMPNEQ) {
-		// if (boe.getLeft() instanceof IdentifierExpression) {
-		// IdentifierExpression id = (IdentifierExpression)boe.getLeft();
-		// if (this.procInfo.isGuaranteedNonNullVariable(id)
-		// || this.procInfo.getThisReference()==id) {
-		// if (boe.getRight() == SootPrelude.v().getNullConstant()) {
-		// return true;
-		// }
-		// }
-		// }
-		// }
-		// }
-		return false;
-	}
 
 	public Statement createAssumeNonNull(Expression expr) {
 		Expression guard = this.pf

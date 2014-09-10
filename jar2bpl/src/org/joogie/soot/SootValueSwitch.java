@@ -828,9 +828,12 @@ public class SootValueSwitch implements JimpleValueSwitch {
 
 			if (this.stmtSwitch != null) {
 				// ensure that $exception is not null.
-				this.stmtSwitch.getErrorModel()
-						.createNonNullViolationException(
-								this.procInfo.getExceptionVariable());
+				//TODO: actually don't! Because this creates
+				//a dead else branch in some cases.
+				//the non-nullness is ensured by the compiler.
+//				this.stmtSwitch.getErrorModel()
+//						.createNonNullViolationException(
+//								this.procInfo.getExceptionVariable());
 
 				Expression typefield = this.getClassTypeFromExpression(
 						this.procInfo.getExceptionVariable(), false);

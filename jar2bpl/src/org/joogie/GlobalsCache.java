@@ -354,7 +354,12 @@ public class GlobalsCache {
 						compareTypeExpressions(typeB, typeA));
 	}
 	
-
+	public boolean isProperSubType(SootClass sub, SootClass sup) {
+		if (isSubTypeOrEqual(sub,sup) && sup!=sub) {
+			return true;
+		}
+		return false;
+	}
 		
 	public boolean isSubTypeOrEqual(SootClass sub, SootClass sup) {
 		SootClass c = sub; 
