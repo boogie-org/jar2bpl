@@ -19,6 +19,9 @@ For a quick test of the translation, go to the dist sub-directory and execute:
   java -jar jar2bpl.jar -j ../lib/log4j-1.2.16.jar -b out.bpl
 
 ####Android files:
+
+*** Android support is currently disabled because of some issues with soot. It can be reanbaled by linking jar2bl against the latest soot-trunk rather than soot-2.5.0 *** 
+
 To translate Android apps you will need the android-platform jars from the Soot folks. We have a copy of them in jar2bpl_test/data, but the original (and latest) version is available [here](https://github.com/Sable/android-platforms). More information on how apk's are analyzed and papers about the underpinnings are available [here](http://www.abartel.net/dexpler/) and [here](http://www.bodden.de/2013/01/08/soot-android-instrumentation/). If you just want to run the translation use:
 
   java -jar jar2bpl.jar -j [apk file to translate] -android-jars [path to androids jars] -b [boogie output file]
