@@ -36,13 +36,18 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Trap;
 import soot.Unit;
+import soot.Value;
 import soot.ValueBox;
+import soot.jimple.BinopExpr;
 import soot.jimple.GotoStmt;
 import soot.jimple.IfStmt;
+import soot.jimple.NeExpr;
+import soot.jimple.NegExpr;
 import soot.jimple.ReturnStmt;
 import soot.jimple.StaticFieldRef;
 import soot.jimple.Stmt;
 import soot.jimple.ThrowStmt;
+import soot.jimple.internal.JEqExpr;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceLnNamePosTag;
 import soot.tagkit.Tag;
@@ -228,6 +233,13 @@ public class SootBodyTransformer extends BodyTransformer {
 //						procInfo.duplicatedIfStatement.add(is2);
 						procInfo.duplicatedIfStatement.add(is);
 						break;
+					} else {
+						Value nonneg1 = normalizeNegations(is.getCondition());
+						Value nonneg2 = normalizeNegations(is2.getCondition());						
+						if (nonneg1.equivTo(nonneg2)) {
+							procInfo.duplicatedIfStatement.add(is2);
+							procInfo.duplicatedIfStatement.add(is);
+						}
 					}
 				}
 				ifstmts.add(is);
@@ -307,6 +319,18 @@ public class SootBodyTransformer extends BodyTransformer {
 		}
 		
 		return false;
+	}
+	
+	private Value normalizeNegations(Value v) {
+		if (v instanceof NegExpr) {
+			return ((NegExpr)v).getOp();
+		} else if (v instanceof BinopExpr) {
+			BinopExpr bo = (BinopExpr)v;
+			if (bo instanceof NeExpr) {
+				return new JEqExpr(bo.getOp1(), bo.getOp2());
+			}
+		}
+		return v;
 	}
 	
 	private boolean shallowCompareStatements(Stmt s1, Stmt s2) {
