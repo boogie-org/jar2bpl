@@ -25,6 +25,10 @@ public abstract class AbstractTest {
 	protected String bplFile, output_file, gold_output;
 
 	public AbstractTest(String input, String shortname) {
+			updateNames(input, shortname);
+	}
+
+	protected void updateNames(String input, String shortname) {
 		this.input = input;
 		this.shortname = shortname;
 		String basename = this.shortname.replace('/', '_');
@@ -33,7 +37,7 @@ public abstract class AbstractTest {
 		gold_output = "test_gold/" + basename + ".txt";
 
 	}
-
+	
 	protected boolean parseInputProgram(String dir, String cp) throws Exception {
 		System.out.println("Test: " + dir);
 		System.out.println("  output: " + bplFile);
