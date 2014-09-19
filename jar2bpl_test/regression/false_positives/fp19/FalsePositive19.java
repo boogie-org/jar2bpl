@@ -3,8 +3,6 @@ import java.io.IOException;
 
 import javax.xml.ws.Response;
 
-import org.junit.runner.Request;
-
 public class FalsePositive19 {
 
 ////	In file: PooledMultiSender.java
@@ -210,7 +208,7 @@ private static Object makeObject() {
 
 //    In file: CometConnectionManagerValve.java
 //	line 225
-    public void event(Request request, FalsePositive19 response, FalsePositive19 event)
+    public void event(Object request, FalsePositive19 response, FalsePositive19 event)
             throws IOException, Exception {
 
             // Perform the request

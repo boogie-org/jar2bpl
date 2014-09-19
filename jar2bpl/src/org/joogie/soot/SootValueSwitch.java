@@ -62,6 +62,7 @@ import soot.jimple.LeExpr;
 import soot.jimple.LengthExpr;
 import soot.jimple.LongConstant;
 import soot.jimple.LtExpr;
+import soot.jimple.MethodHandle;
 import soot.jimple.MulExpr;
 import soot.jimple.NeExpr;
 import soot.jimple.NegExpr;
@@ -1075,6 +1076,11 @@ public class SootValueSwitch implements JimpleValueSwitch {
 			boolean guarded) {
 		return makeHeapAccessExpression(expr, SootPrelude.v()
 				.getFieldClassVariable(), guarded);
+	}
+
+	@Override
+	public void caseMethodHandle(MethodHandle arg0) {
+		throw new RuntimeException("Not implemented "+arg0);
 	}
 
 }

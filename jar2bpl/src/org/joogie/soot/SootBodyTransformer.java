@@ -230,7 +230,7 @@ public class SootBodyTransformer extends BodyTransformer {
 					if (is.getCondition().equivTo(is2.getCondition())) {
 						//note that we do not add the first occurrence
 						//this is a somewhat arbitrary optimization attempt.
-//						procInfo.duplicatedIfStatement.add(is2);
+						procInfo.duplicatedIfStatement.add(is2);
 						procInfo.duplicatedIfStatement.add(is);
 						break;
 					} else {

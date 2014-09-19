@@ -185,13 +185,14 @@ public class InvokeTranslation {
 			return true;
 		}
 		
-		if (ivk.getMethod().getSignature().contains("<java.lang.Throwable: void addSuppressed(java.lang.Throwable)>")) {
-			Log.debug("Ignoring call to adSuppressed");
-			TranslationHelpers.mkLocationAssertion(ss.getCurrentStatement(), true);		
-			return false;
+		if (ivk.getMethod().getSignature().contains("java.lang.Throwable: void addSuppressed(java.lang.Throwable)")) {
+			ss.addStatement(TranslationHelpers.mkLocationAssertion(ss.getCurrentStatement(), true));		
+			return true;
 		}
 
-		
+		if (ivk.getMethod().getSignature().contains("addSuppressed")) {
+			System.err.println(ivk.getMethod().getSignature());
+		}
 		return false;
 	}
 

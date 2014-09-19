@@ -129,33 +129,38 @@ public class TranslationHelpers {
 	}
 
 	public static Statement mkLocationAssertion(Stmt s) {
-		return mkLocationAssertion(s, false);
+		return mkLocationAssertion(s, false, null);
 	}
 
 	public static Statement mkLocationAssertion(Stmt s,
 			boolean forceCloneAttribute) {
+		return mkLocationAssertion(s, forceCloneAttribute, null);
+	}	
+	
+	public static Statement mkLocationAssertion(Stmt s,
+			boolean forceCloneAttribute, String comment) {
 		return GlobalsCache
 				.v()
 				.getPf()
 				.mkAssertStatement(
-						javaLocation2Attribute(s, forceCloneAttribute),
+						javaLocation2Attribute(s, forceCloneAttribute, comment),
 						GlobalsCache.v().getPf().mkBooleanLiteral(true));
 	}
 
 	public static HashSet<Stmt> clonedFinallyBlocks = new HashSet<Stmt>();
 
 	public static Attribute[] javaLocation2Attribute(Stmt s) {
-		return javaLocation2Attribute(s, false);
+		return javaLocation2Attribute(s, false, null);
 	}
 
 	public static Attribute[] javaLocation2Attribute(Stmt s,
-			boolean forceCloneAttribute) {
+			boolean forceCloneAttribute, String comment) {
 		return javaLocation2Attribute(s.getTags(),
-				clonedFinallyBlocks.contains(s) || forceCloneAttribute);
+				clonedFinallyBlocks.contains(s) || forceCloneAttribute, comment);
 	}
 
 	public static Attribute[] javaLocation2Attribute(List<Tag> list) {
-		return javaLocation2Attribute(list, false);
+		return javaLocation2Attribute(list, false, null);
 	}
 
 	private static String getFileName(SootClass sc) {
@@ -185,7 +190,7 @@ public class TranslationHelpers {
 	}
 
 	public static Attribute[] javaLocation2Attribute(List<Tag> list,
-			boolean isCloned) {
+			boolean isCloned, String comment) {
 		// if the taglist is empty return no location
 		int startln, endln, startcol, endcol;
 
@@ -242,10 +247,20 @@ public class TranslationHelpers {
 
 		Attribute[] res;
 		if (isCloned) {
-			res = new Attribute[] { loc,
-					pf.mkCustomAttribute(ProgramFactory.Cloned) };
+			if (comment!=null)  {				
+				res = new Attribute[] { loc,
+						pf.mkCustomAttribute(ProgramFactory.Cloned), pf.mkCommentAttribute(comment)};
+				
+			} else {
+				res = new Attribute[] { loc,
+						pf.mkCustomAttribute(ProgramFactory.Cloned) };
+			}			
 		} else {
-			res = new Attribute[] { loc };
+			if (comment!=null)  {
+				res = new Attribute[] { loc, pf.mkCommentAttribute(comment) };
+			} else {
+				res = new Attribute[] { loc };
+			}
 		}
 
 		return res;

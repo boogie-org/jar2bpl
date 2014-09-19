@@ -293,7 +293,7 @@ public class SootStmtSwitch implements StmtSwitch {
 		}
 		Statement[] thenPart = {
 				TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
-						forceCloneAttibute),
+						forceCloneAttibute, "thenblock"),
 				this.pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
 						arg0.getTarget())) };
 
@@ -320,11 +320,13 @@ public class SootStmtSwitch implements StmtSwitch {
 			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
 					elsePart));
 		}
-		if (forceCloneAttibute) {
-			//TODO: test
-			this.boogieStatements.add(TranslationHelpers.createClonedAttribAssert());
-		}
-		
+//		if (forceCloneAttibute) {
+//			//TODO: test
+//			this.boogieStatements.add(TranslationHelpers.createClonedAttribAssert());
+//		} 
+		this.boogieStatements.add(TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
+				forceCloneAttibute, "elseblock"));
+
 	}
 	
 	
