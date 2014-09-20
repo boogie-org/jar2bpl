@@ -6,6 +6,6 @@
 	<classpathentry kind="lib" path="lib/args4j-2.0.18.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
 	<classpathentry kind="lib" path="lib/sysout-over-slf4j-1.0.2.jar"/>
-	<classpathentry kind="lib" path="lib/soot-trunk.jar"/>
+	<classpathentry kind="lib" path="lib/soot-trunk.jar" sourcepath="/soot/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
