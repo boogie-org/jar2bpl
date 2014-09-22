@@ -1,5 +1,5 @@
 In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp02/InfeasibleCode02.java
 	line 12
-	line 70
-	line 71
+	line 14
+	line 66
 

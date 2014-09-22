@@ -112,6 +112,7 @@ public class GlobalsCache {
 			GlobalsCache.instance.stringInternMap.clear();
 			GlobalsCache.instance.floatInternMap.clear();
 			GlobalsCache.instance.doubleInternMap.clear();
+			if (GlobalsCache.instance.modifiedInMonitor!=null) GlobalsCache.instance.modifiedInMonitor.clear();
 		}
 		GlobalsCache.instance = null;
 	}

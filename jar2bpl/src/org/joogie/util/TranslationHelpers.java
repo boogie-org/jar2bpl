@@ -97,7 +97,7 @@ public class TranslationHelpers {
 
 		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
 				SootClass.SIGNATURES);
-
+		
 		Unit trap_begin = null;
 		Unit trap_end = null;
 		SootClass trap_exception = null;
@@ -164,7 +164,7 @@ public class TranslationHelpers {
 	}
 
 	private static String getFileName(SootClass sc) {
-		if (sc.hasOuterClass())
+		if (sc.hasOuterClass() && sc.getOuterClass()!=sc)
 			return getFileName(sc.getOuterClass());
 		String filename = null;
 		for (Tag t_ : sc.getTags()) {

@@ -57,6 +57,9 @@ public class Options {
 	public boolean isDebug() {
 		return debug;
 	}
+	public void setDebug(boolean val) {
+		debug=val;;
+	}
 	
 	
 	@Option(name = "-vcalls", usage = "Use sound translation for abstract and virtual calls.", required = false)

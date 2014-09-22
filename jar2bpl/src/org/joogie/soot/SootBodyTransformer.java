@@ -116,16 +116,16 @@ public class SootBodyTransformer extends BodyTransformer {
 		boogieStatements.addAll(procInfo.typeAssumptions);
 		
 		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
-		Iterator<Unit> stmtIt = tug.iterator();
+		
 		
 		//in a first pass, check if statements have been duplicated
 		//in the bytecode, e.g. for finally-blocks, which is used
 		//later to generate attributes that suppress false alarms
 		//during infeasible code detection.				
-		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(stmtIt, procInfo);
+		TranslationHelpers.clonedFinallyBlocks = detectDuplicatedFinallyBlocks(tug.iterator(), procInfo);
 		
 		//reset the iterator
-		stmtIt = tug.iterator();
+		Iterator<Unit> stmtIt = tug.iterator();
 		
 		while (stmtIt.hasNext()) {
 			Stmt s = (Stmt) stmtIt.next();
@@ -258,6 +258,8 @@ public class SootBodyTransformer extends BodyTransformer {
 				}	
 			}
 			
+			
+			
 //			System.err.println(line+": "+s);
 			if (line==old_line) {
 				subprog.add(s);
@@ -267,7 +269,7 @@ public class SootBodyTransformer extends BodyTransformer {
 						subprogs.put(old_line, subprog);
 					} else {
 						if (compareSubprogs(subprog, subprogs.get(old_line))
-								&& old_line>first_trap_line) {
+								&& old_line>=first_trap_line) {
 //							System.err.println("P1 " + old_line);
 							for (Stmt st : subprogs.get(old_line)) {
 //								System.err.println("\t"+st);
@@ -287,9 +289,79 @@ public class SootBodyTransformer extends BodyTransformer {
 			}
 
 		}
+
 		return duplicates;
 	}
 	
+	
+//	private HashSet<Stmt> detectDuplicatedFinallyBlocks(Iterator<Unit> stmtIt, SootProcedureInfo procInfo) {
+//		
+//		HashSet<Stmt> duplicates = new HashSet<Stmt>();
+//		LinkedList<CommonSubsequences.JimpleLine> lines = new LinkedList<CommonSubsequences.JimpleLine>();
+//
+//		HashSet<IfStmt> ifstmts = new HashSet<IfStmt>();
+//		
+//		while (stmtIt.hasNext()) {
+//			Stmt s = (Stmt) stmtIt.next();
+//			
+//			
+//			//check for used static fields. 
+//			//we need to collect them to havoc them later when
+//			//entering a monitor.
+//			for (ValueBox vb : s.getUseBoxes()) {
+//				if (vb.getValue() instanceof StaticFieldRef) {
+//					StaticFieldRef sr = (StaticFieldRef)vb.getValue();
+//					procInfo.usedStaticFields.add(sr);
+//				}
+//			}
+//			
+//			if (s instanceof IfStmt) {
+//				IfStmt is = (IfStmt)s;
+//				for (IfStmt is2 : ifstmts) {
+//					if (is.getCondition().equivTo(is2.getCondition())) {
+//						//note that we do not add the first occurrence
+//						//this is a somewhat arbitrary optimization attempt.
+//						procInfo.duplicatedIfStatement.add(is2);
+//						procInfo.duplicatedIfStatement.add(is);
+//						break;
+//					} else {
+//						Value nonneg1 = normalizeNegations(is.getCondition());
+//						Value nonneg2 = normalizeNegations(is2.getCondition());						
+//						if (nonneg1.equivTo(nonneg2)) {
+//							procInfo.duplicatedIfStatement.add(is2);
+//							procInfo.duplicatedIfStatement.add(is);
+//						}
+//					}
+//				}
+//				ifstmts.add(is);
+//			}			
+//			
+//			int line=-2;			
+//			for (Tag tag : s.getTags()) {
+//				if (tag instanceof LineNumberTag) {
+//					LineNumberTag t = (LineNumberTag)tag;					
+//					line = t.getLineNumber();
+//				} else if (tag instanceof SourceLnNamePosTag) {
+//					SourceLnNamePosTag t = (SourceLnNamePosTag)tag;
+//					line = t.startLn();
+//				}	
+//			}
+//			//only consider statements that have an actual source
+//			//line. Ignore all initializing code.
+//			if (line<0) continue;
+//			
+//			lines.add(new JimpleLine(line, s));
+//		}		
+//		duplicates = CommonSubsequences.collectDuplicatedStatements(lines, procInfo);
+////		System.err.print("Longest subsequence: ");
+////		for (CommonSubsequences.JimpleLine i : CommonSubsequences.lrs(lines)) {
+////			System.err.print(i+", ");
+////		}
+////		System.err.println();
+//		return duplicates;
+//	}
+	
+
 	
 	private boolean compareSubprogs(LinkedList<Stmt> p1, LinkedList<Stmt> p2) {		
 		LinkedList<Stmt> l1, l2;
