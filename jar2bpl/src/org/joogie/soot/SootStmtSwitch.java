@@ -292,20 +292,21 @@ public class SootStmtSwitch implements StmtSwitch {
 			forceCloneAttibute = true;
 		}
 		Statement[] thenPart = {
-				TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
+				TranslationHelpers.mkLocationAssertion(arg0,
 						forceCloneAttibute, "thenblock"),
 				this.pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
 						arg0.getTarget())) };
 
-		Statement[] elsePart = {};
+		Statement[] elsePart = {TranslationHelpers.mkLocationAssertion(arg0,
+				forceCloneAttibute, "elseblock")};
 		// now check if we can find a source location for the else block.
-		Stmt else_loc = findSuccessorStatement(arg0);
-		if (else_loc != null) {
-			// elsePart = new Statement[] { TranslationHelpers
-			// .mkLocationAssertion(else_loc, forceCloneAttibute) };
-
-			elsePart = new Statement[] {}; // TODO: test
-		}
+//		Stmt else_loc = findSuccessorStatement(arg0);
+//		if (else_loc != null) {
+//			// elsePart = new Statement[] { TranslationHelpers
+//			// .mkLocationAssertion(else_loc, forceCloneAttibute) };
+//
+//			elsePart = new Statement[] {}; // TODO: test
+//		}
 
 		arg0.getCondition().apply(this.valueswitch);
 		Expression cond = TranslationHelpers.castBoogieTypes(
@@ -320,12 +321,9 @@ public class SootStmtSwitch implements StmtSwitch {
 			this.boogieStatements.add(this.pf.mkIfStatement(cond, thenPart,
 					elsePart));
 		}
-//		if (forceCloneAttibute) {
-//			//TODO: test
-//			this.boogieStatements.add(TranslationHelpers.createClonedAttribAssert());
-//		} 
-		this.boogieStatements.add(TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
-				forceCloneAttibute, "elseblock"));
+
+//		this.boogieStatements.add(TranslationHelpers.mkLocationAssertion(arg0.getTarget(),
+//				forceCloneAttibute, "elseblock"));
 
 	}
 	

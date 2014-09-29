@@ -313,7 +313,7 @@ public class InvokeTranslation {
 			if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, c)) {
 				largestCaughtException=c;
 			} else {
-				System.err.println("Not catching "+c.getName() + " because we already caught "+largestCaughtException.getName());
+//				System.err.println("Not catching "+c.getName() + " because we already caught "+largestCaughtException.getName());
 				continue;
 			}
 			

@@ -13,6 +13,7 @@ import org.joogie.soot.SootProcedureInfo;
 
 import soot.Trap;
 import soot.jimple.AssignStmt;
+import soot.jimple.CaughtExceptionRef;
 import soot.jimple.GotoStmt;
 import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
@@ -111,7 +112,7 @@ public class CommonSubsequences {
 		if (procInfo.getSootMethod().getActiveBody()!=null) {
 			for (Trap t : procInfo.getSootMethod().getActiveBody().getTraps()) {
 				if (t.getHandlerUnit() instanceof Stmt) {
-					System.err.println ( ((Stmt)t.getHandlerUnit()).getJavaSourceStartLineNumber() );
+//					System.err.println ( ((Stmt)t.getHandlerUnit()).getJavaSourceStartLineNumber() );
 					handlerStmts.add((Stmt)t.getHandlerUnit());
 				}
 			}
@@ -136,14 +137,21 @@ public class CommonSubsequences {
 		List<JimpleLine> lrs = new LinkedList<JimpleLine>();
 		for (int i = 0; i < N - 1; i++) {
 			List<JimpleLine> x = lcp(suffixes.get(i), suffixes.get(i + 1));
-			
-			if (x.size()>0 && !allTheSame(x)) {
+
+			if (x.size()>0 ) {
 				repreatedStatements.addAll(collectAllOccurences(s, x));
-//				System.err.print("repeated subsequence: ");
+				System.err.print("repeated subsequence: ");
+				for (JimpleLine j : x) {
+					System.err.print(j.line+":"+j.statement+", ");
+				}
+				System.err.println();
+			} else {
+//				System.err.print("All the same ");
 //				for (JimpleLine j : x) {
 //					System.err.print(j+", ");
 //				}
 //				System.err.println();
+				
 			}
 						
 			if (x.size() > lrs.size()) {
@@ -154,20 +162,32 @@ public class CommonSubsequences {
 		return repreatedStatements;
 	}
 	
-	private static HashSet<Stmt> collectAllOccurences(List<JimpleLine> list, List<JimpleLine> seq) {
+	private static HashSet<Stmt> collectAllOccurences(List<JimpleLine> list, List<JimpleLine> seq) {		
 		HashSet<Stmt> stmts = new HashSet<Stmt>();
 		if (seq.size()<1) return stmts;
+		
 		for (int i=0; i<list.size()-seq.size();i++) {
 			if (seq.get(0).equals(list.get(i))) {
 				List<JimpleLine> sub = list.subList(i, i+seq.size());
 				if (compareLists(sub, seq)) {
+//					if (!looksLikeFinally && i>0 && (isCatchStmt(list.get(i-1).statement)) ) {
+//						looksLikeFinally = true;
+//					}
 					for (JimpleLine jl : sub) {
 						stmts.add(jl.statement);
 					}
 				}
 			}
 		}
+//		if (!looksLikeFinally) {
+//			return new HashSet<Stmt>();
+//		}
 		return stmts;
+	}
+	
+	private static boolean isCatchStmt(Stmt s) {
+		return s instanceof AssignStmt
+				&& ((AssignStmt)s).getRightOp() instanceof CaughtExceptionRef;
 	}
 	
 	private static boolean compareLists(List<JimpleLine> a, List<JimpleLine> b) {

@@ -5,6 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jar2bpl"/>
 	<classpathentry kind="lib" path="/jar2bpl/lib/boogieamp.jar"/>
-	<classpathentry kind="lib" path="lib/bixie.jar"/>
+	<classpathentry kind="lib" path="lib/bixie.jar" sourcepath="/gravy/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

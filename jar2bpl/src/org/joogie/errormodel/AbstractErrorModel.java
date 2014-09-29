@@ -103,9 +103,11 @@ public abstract class AbstractErrorModel {
 			// if the exception is guarded create a conditional choice,
 			// otherwise just throw it.
 			if (guard != null) {
-				Statement[] elsePart = {
+				Statement[] elsePart = {TranslationHelpers
+						.mkLocationAssertion(this.stmtSwitch
+								.getCurrentStatement()),
 						this.pf.mkAssertStatement(
-								new Attribute[] { pf.mkNoVerifyAttribute() },
+								new Attribute[] { pf.mkNoVerifyAttribute()  },
 								pf.mkBooleanLiteral(true)), raise,
 						transferStatement };
 				Statement[] thenPart = { TranslationHelpers
