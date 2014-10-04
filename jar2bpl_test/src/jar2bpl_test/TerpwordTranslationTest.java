@@ -35,6 +35,7 @@ public class TerpwordTranslationTest extends AbstractTest {
 		}
 		
 		Bixie bx = new Bixie();
+		bixie.Options.v().stopTime = true;
 		bx.run(bplFile, this.output_file);
 
 		

@@ -34,6 +34,7 @@ public class BouncyCastleTranslationTest extends AbstractTest {
 		}
 		
 		Bixie bx = new Bixie();
+		bixie.Options.v().stopTime = true;
 		bx.run(bplFile, output_file);
 		
 		org.junit.Assert.assertTrue(compareFiles(output_file, gold_output));

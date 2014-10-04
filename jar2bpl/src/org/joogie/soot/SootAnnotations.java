@@ -94,7 +94,7 @@ public class SootAnnotations {
 				Log.debug("Not sure what to do with this tag. Ignoring it: "+at.getType());
 				
 			} else {
-				Log.error("Unhandled Annotation "+at);
+//				Log.debug("Unhandled Annotation "+at);
 			}
 		} else {
 			//no annotation
