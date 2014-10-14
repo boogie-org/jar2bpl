@@ -1,4 +1,5 @@
-In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp04/TruePositive04.java
-	line 39
-	line 61
+File : /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp04/TruePositive04.java
+ Inconsistency detected between the following lines:
+	38, 39(then-block)
+	62, 65(else-block)
 

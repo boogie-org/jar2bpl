@@ -10,6 +10,7 @@ import java.io.FileReader;
 
 import org.joogie.Dispatcher;
 import org.joogie.Options;
+import org.junit.AfterClass;
 
 import bixie.Bixie;
 
@@ -18,12 +19,18 @@ import bixie.Bixie;
  * 
  */
 
-public abstract class AbstractTest {
+public abstract class AbstractTest  {
 
 	protected String input, shortname;
 
 	protected String bplFile, output_file, gold_output;
 
+	@AfterClass 
+	public static void tearDown() {
+		System.err.println("shutting down GlobalsCache...");
+		org.joogie.GlobalsCache.resetInstance();
+	}
+	
 	public AbstractTest(String input, String shortname) {
 			updateNames(input, shortname);
 	}

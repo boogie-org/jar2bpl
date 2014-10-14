@@ -1,12 +1,13 @@
-In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp01/InfeasibleCode01.java
-	line 12
-	line 27
-	line 34
-	line 42
-	line 49
-	line 51
-	line 56
-	line 65
-	line 69
-	line 78
+File : /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp01/InfeasibleCode01.java
+ Inconsistency detected between the following lines:
+	11(then-block), 16
+	28, 29
+	34(else-block), 37
+	42(then-block), 43
+	48, 50, 51(else-block)
+	48, 49, 50
+	55, 56(then-block)
+	63, 64(then-block)
+	69
+	79, 82(else-block)
 

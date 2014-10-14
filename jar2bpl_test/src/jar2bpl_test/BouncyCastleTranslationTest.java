@@ -12,7 +12,7 @@ public class BouncyCastleTranslationTest extends AbstractTest {
 
 	
 	public BouncyCastleTranslationTest() {
-		super("bc", "bc");
+		super("bc-source", "bc-source");
 	}
 
 	@Test

@@ -1,10 +1,4 @@
-In file: /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp03/NullPointerExceptions.java
-	line 33
-	line 49
-	line 58
-	line 67
-	line 69
-	line 76
-	line 86
-	line 90
+File : /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp03/NullPointerExceptions.java
+ Inconsistency detected between the following lines:
+	35, 36
 

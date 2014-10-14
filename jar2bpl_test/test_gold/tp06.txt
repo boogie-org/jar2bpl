@@ -1,0 +1,4 @@
+File : /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp06/TruePositive06.java
+ Inconsistency detected between the following lines:
+	19
+

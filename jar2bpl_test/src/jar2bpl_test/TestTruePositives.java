@@ -61,7 +61,7 @@ public class TestTruePositives extends AbstractTest {
 		} catch (Exception e) {
 			fail("Check failed: " + e.toString());
 		}
-
+		System.err.println("done - ");
 	}
 
 }

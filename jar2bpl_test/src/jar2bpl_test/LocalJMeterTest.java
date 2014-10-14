@@ -19,7 +19,7 @@ public class LocalJMeterTest extends AbstractTest {
 	private void runModule(String suffix) {
 		this.updateNames("jmeter-"+suffix, "jmeter-"+suffix);
 		try {
-			String javaFileDir = System.getProperty("user.dir")+"/local_tests/jmeter/build/"+suffix;
+			String javaFileDir = System.getProperty("user.dir")+"/local_tests/jmeter/"+suffix;
 			String cp = "";
 
 			Dispatcher.setClassPath(javaFileDir+File.pathSeparatorChar+cp );

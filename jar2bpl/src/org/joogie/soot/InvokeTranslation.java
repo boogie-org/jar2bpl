@@ -88,14 +88,17 @@ public class InvokeTranslation {
 			// add the "this" variable to the list of args
 			args.addFirst(base);
 
-			if (iivk.getBase() instanceof Immediate
-					&& procInfo.getNullnessAnalysis().isAlwaysNonNullBefore(
-							statement, (Immediate) iivk.getBase())) {
-				// do not check
-			} else {
-				ss.getErrorModel().createNonNullViolationException(base);
+			try {
+				if (iivk.getBase() instanceof Immediate
+						&& procInfo.getNullnessAnalysis().isAlwaysNonNullBefore(
+								statement, (Immediate) iivk.getBase())) {
+					// do not check
+				} else {
+					ss.getErrorModel().createNonNullViolationException(base);
+				}
+			} catch (Throwable e) {
+				
 			}
-
 		} else if (ivk instanceof StaticInvokeExpr) {
 			// Do nothing
 		} else {
@@ -184,9 +187,13 @@ public class InvokeTranslation {
 			ss.addStatement(pf.mkReturnStatement());
 			return true;
 		}
-		
-		if (ivk.getMethod().getSignature().contains("java.lang.Throwable: void addSuppressed(java.lang.Throwable)")) {
-			ss.addStatement(TranslationHelpers.mkLocationAssertion(ss.getCurrentStatement(), true));		
+
+		if (ivk.getMethod()
+				.getSignature()
+				.contains(
+						"java.lang.Throwable: void addSuppressed(java.lang.Throwable)")) {
+			ss.addStatement(TranslationHelpers.mkLocationAssertion(
+					ss.getCurrentStatement(), true));
 			return true;
 		}
 
@@ -258,10 +265,9 @@ public class InvokeTranslation {
 		return s;
 	}
 
-
-
 	static private void translateCalleeExceptions(SootStmtSwitch ss,
-			Unit statement, Expression constructorInstance, SootMethod calledMethod) {
+			Unit statement, Expression constructorInstance,
+			SootMethod calledMethod) {
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		SootProcedureInfo procInfo = ss.getProcInfo();
@@ -275,7 +281,8 @@ public class InvokeTranslation {
 		TranslationHelpers.getReachableTraps(statement,
 				procInfo.getSootMethod(), traps, finally_traps);
 
-		List<SootClass> possibleExceptions = sortExceptions(calledMethod.getExceptions());
+		List<SootClass> possibleExceptions = sortExceptions(calledMethod
+				.getExceptions());
 
 		// in case the method throws something unexpected, we
 		// add Throwable to the list of possible exceptions.
@@ -288,13 +295,13 @@ public class InvokeTranslation {
 		// if (!possibleExceptions.contains(throwableException)) {
 		// possibleExceptions.add(throwableException);
 		// }
-		SootClass interuptException = Scene.v().loadClass("java.lang.InterruptedException",SootClass.SIGNATURES);
-		
+		SootClass interuptException = Scene.v().loadClass(
+				"java.lang.InterruptedException", SootClass.SIGNATURES);
+
 		SootClass largestCaughtException = null;
-		
-		
+
 		LinkedList<Trap> usedTraps = new LinkedList<Trap>();
-		
+
 		for (SootClass c : possibleExceptions) {
 			String transferlabel = null;
 			// for each possible exception, check if there is a catch block.
@@ -302,21 +309,25 @@ public class InvokeTranslation {
 				if (GlobalsCache.v().isSubTypeOrEqual(c, trap.getException())) {
 					transferlabel = GlobalsCache.v().getUnitLabel(
 							(Stmt) trap.getHandlerUnit());
-					//mark that we used that trap already, so we don't
-					//add another transition for it later.
-//					System.err.println("Exception "+c.getName() + " is caught by "+trap.getException());
+					// mark that we used that trap already, so we don't
+					// add another transition for it later.
+					// System.err.println("Exception "+c.getName() +
+					// " is caught by "+trap.getException());
 					usedTraps.add(trap);
 					break;
 				}
 			}
-			
-			if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, c)) {
-				largestCaughtException=c;
+
+			if (largestCaughtException == null
+					|| GlobalsCache.v().isProperSubType(largestCaughtException,
+							c)) {
+				largestCaughtException = c;
 			} else {
-//				System.err.println("Not catching "+c.getName() + " because we already caught "+largestCaughtException.getName());
+				// System.err.println("Not catching "+c.getName() +
+				// " because we already caught "+largestCaughtException.getName());
 				continue;
 			}
-			
+
 			Statement transferStatement;
 			if (transferlabel == null) {
 				// if the exception is not caught, leave the procedure
@@ -337,22 +348,42 @@ public class InvokeTranslation {
 							procInfo.getExceptionVariable(), false),
 					GlobalsCache.v().lookupClassVariable(c));
 			
-			Statement[] thenPart = { transferStatement };
-			//Small hack to avoid false positives form
-			//code that is only reachable if an interleaving happens
-			if (interuptException==c && !org.joogie.Options.v().useSoundThreads()) {
-				thenPart = new Statement[]{TranslationHelpers.havocEverything(procInfo, valueswitch), transferStatement};
-			}
+			LinkedList<Statement> then = new LinkedList<Statement>();
 			
-			Statement[] elsePart = {};
+			// Small hack to avoid false positives form
+			// code that is only reachable if an interleaving happens
+			if (interuptException == c
+					&& !org.joogie.Options.v().useSoundThreads()) {
+				
+				then.add(TranslationHelpers.havocEverything(procInfo,
+								valueswitch));
+			} else {			
+				if (constructorInstance != null
+						&& constructorInstance != procInfo.getThisReference()) {
+					then.add(pf.mkAssignmentStatement(constructorInstance, SootPrelude.v()
+									.getNullConstant()));
+				}
+			}
+			then.add(transferStatement);
+			Statement[] thenPart = then.toArray(new Statement[then.size()]); 
+			
+//			Statement[] thenPart = { transferStatement };
+//			//Small hack to avoid false positives form
+//			//code that is only reachable if an interleaving happens
+//			if (interuptException==c && !org.joogie.Options.v().useSoundThreads()) {
+//				thenPart = new Statement[]{TranslationHelpers.havocEverything(procInfo, valueswitch), transferStatement};
+//			}			
+			
+			Statement[] elsePart = { TranslationHelpers
+					.createClonedAttribAssert()};
 			statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
 		}
 
-		//now remove all the traps that we have already used
-		//and generate transitions for the remaining ones if
-		//necessary.
+		// now remove all the traps that we have already used
+		// and generate transitions for the remaining ones if
+		// necessary.
 		traps.removeAll(usedTraps);
-		
+
 		// now check if there are traps of type Exception or Throwable left, or
 		// if we might not know the throws clause
 		// then we have to create an edge to them as well. Otherwise
@@ -363,24 +394,28 @@ public class InvokeTranslation {
 				SootClass.SIGNATURES);
 		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
 				SootClass.SIGNATURES);
-		SootClass runtimeexception = Scene.v().loadClass("java.lang.RuntimeException",
-				SootClass.SIGNATURES);
-		
+		SootClass runtimeexception = Scene.v().loadClass(
+				"java.lang.RuntimeException", SootClass.SIGNATURES);
+
 		for (Trap trap : traps) {
-			
+
 			if (trap.getException() == exception
 					|| trap.getException() == throwable
 					|| !calledMethod.hasActiveBody()
-					|| GlobalsCache.v().isSubTypeOrEqual(trap.getException(), runtimeexception)) {
+					|| GlobalsCache.v().isSubTypeOrEqual(trap.getException(),
+							runtimeexception)) {
 
-				if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, trap.getException())) {
-					largestCaughtException=trap.getException();
+				if (largestCaughtException == null
+						|| GlobalsCache.v().isProperSubType(
+								largestCaughtException, trap.getException())) {
+					largestCaughtException = trap.getException();
 				} else {
-//					System.err.println("Not catching "+trap.getException().getName() + " because we already caught "+largestCaughtException.getName());
+					// System.err.println("Not catching "+trap.getException().getName()
+					// +
+					// " because we already caught "+largestCaughtException.getName());
 					continue;
 				}
-				
-				
+
 				Expression condition = pf.mkBinaryExpression(
 						pf.getBoolType(),
 						BinaryOperator.COMPPO,
@@ -388,14 +423,26 @@ public class InvokeTranslation {
 								procInfo.getExceptionVariable(), false),
 						GlobalsCache.v().lookupClassVariable(
 								trap.getException()));
+				Statement transferStatement = pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
+						(Stmt) trap.getHandlerUnit()));
 				Statement[] thenPart = {
 						TranslationHelpers.createClonedAttribAssert(),
-						pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
-								(Stmt) trap.getHandlerUnit())) };
+						transferStatement };
+				
+				if (constructorInstance != null
+						&& constructorInstance != procInfo.getThisReference()) {					
+					thenPart = new Statement[]{
+							TranslationHelpers.createClonedAttribAssert(),
+							pf.mkAssignmentStatement(constructorInstance, SootPrelude.v()
+									.getNullConstant()),
+							transferStatement };
+				}
+				
+				
 				Statement[] elsePart = { TranslationHelpers
 						.createClonedAttribAssert() };
 				statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
-			} 
+			}
 		}
 
 		// finally check if there is a finally_trap that we didn't account for
@@ -406,42 +453,55 @@ public class InvokeTranslation {
 						+ procInfo.getBoogieName());
 			}
 			Trap trap = finally_traps.get(0);
-			
-			if (largestCaughtException==null || GlobalsCache.v().isProperSubType(largestCaughtException, trap.getException())) {
-				largestCaughtException=trap.getException();
-				statements.add(pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
-						(Stmt) trap.getHandlerUnit())));
+
+			if (largestCaughtException == null
+					|| GlobalsCache.v().isProperSubType(largestCaughtException,
+							trap.getException())) {
+				if (constructorInstance != null
+						&& constructorInstance != procInfo.getThisReference()) {
+					statements.addFirst(pf.mkAssignmentStatement(
+							constructorInstance, SootPrelude.v()
+									.getNullConstant()));
+				}				
+				
+				largestCaughtException = trap.getException();
+				statements.add(pf.mkGotoStatement(GlobalsCache.v()
+						.getUnitLabel((Stmt) trap.getHandlerUnit())));
 			} else {
-//				System.err.println("Not catching finally "+trap.getException().getName() + " because we already caught "+largestCaughtException.getName());
+				// System.err.println("Not catching finally "+trap.getException().getName()
+				// +
+				// " because we already caught "+largestCaughtException.getName());
 			}
-			
+
 		}
 
-		if (statements.size() == 0)
-			return;
-		// if the call was a constructor, add an assignment that sets
-		// the created variable back to null
-		if (constructorInstance != null
-				&& constructorInstance != procInfo.getThisReference()) {
-			statements.addFirst(pf.mkAssignmentStatement(constructorInstance,
-					SootPrelude.v().getNullConstant()));
-		}
+//		if (statements.size() == 0)
+//			return;
+//		// if the call was a constructor, add an assignment that sets
+//		// the created variable back to null
+//		if (constructorInstance != null
+//				&& constructorInstance != procInfo.getThisReference()) {
+//			statements.addFirst(pf.mkAssignmentStatement(constructorInstance,
+//					SootPrelude.v().getNullConstant()));
+//		}
 
 		// now add all the exceptional checks in a block where
 		// we ensure that $excpeiton was not null
-		Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
-				BinaryOperator.COMPNEQ, procInfo.getExceptionVariable(),
-				SootPrelude.v().getNullConstant());
-
-		ss.addStatement(pf.mkIfStatement(condition,
-				statements.toArray(new Statement[statements.size()]),
-				new Statement[] {}));
-
+		if (statements.size()>0) {
+			Expression condition = pf.mkBinaryExpression(pf.getBoolType(),
+					BinaryOperator.COMPNEQ, procInfo.getExceptionVariable(),
+					SootPrelude.v().getNullConstant());
+	
+			ss.addStatement(pf.mkIfStatement(condition,
+					statements.toArray(new Statement[statements.size()]),
+					new Statement[] {}));
+		}
 	}
 
-	
+
 	static public void translateCalleeExceptions2(SootStmtSwitch ss,
-			Unit statement, Expression constructorInstance, SootMethod calledMethod) {
+			Unit statement, Expression constructorInstance,
+			SootMethod calledMethod) {
 		SootValueSwitch valueswitch = ss.getValueSwitch();
 		ProgramFactory pf = GlobalsCache.v().getPf();
 		SootProcedureInfo procInfo = ss.getProcInfo();
@@ -457,22 +517,20 @@ public class InvokeTranslation {
 
 		List<SootClass> possibleExceptions = calledMethod.getExceptions();
 
-
-		SootClass interuptException = Scene.v().loadClass("java.lang.InterruptedException",SootClass.SIGNATURES);
+		SootClass interuptException = Scene.v().loadClass(
+				"java.lang.InterruptedException", SootClass.SIGNATURES);
 
 		SootClass exception = Scene.v().loadClass("java.lang.Exception",
 				SootClass.SIGNATURES);
 		SootClass throwable = Scene.v().loadClass("java.lang.Throwable",
 				SootClass.SIGNATURES);
-		SootClass runtimeexception = Scene.v().loadClass("java.lang.RuntimeException",
-				SootClass.SIGNATURES);
+		SootClass runtimeexception = Scene.v().loadClass(
+				"java.lang.RuntimeException", SootClass.SIGNATURES);
 
-		
 		LinkedList<SootClass> largestCaughtExceptions = new LinkedList<SootClass>();
-		
-		
+
 		LinkedList<Trap> usedTraps = new LinkedList<Trap>();
-		
+
 		for (SootClass c : possibleExceptions) {
 			String transferlabel = null;
 			// for each possible exception, check if there is a catch block.
@@ -480,18 +538,17 @@ public class InvokeTranslation {
 				if (GlobalsCache.v().isSubTypeOrEqual(c, trap.getException())) {
 					transferlabel = GlobalsCache.v().getUnitLabel(
 							(Stmt) trap.getHandlerUnit());
-					//mark that we used that trap already, so we don't
-					//add another transition for it later.
+					// mark that we used that trap already, so we don't
+					// add another transition for it later.
 					usedTraps.add(trap);
 					break;
 				}
 			}
-			
+
 			if (subsumedByLargestKnonwExceptions(largestCaughtExceptions, c)) {
 				continue;
 			}
-			
-			
+
 			Statement transferStatement;
 			if (transferlabel == null) {
 				// if the exception is not caught, leave the procedure
@@ -511,41 +568,46 @@ public class InvokeTranslation {
 					valueswitch.getClassTypeFromExpression(
 							procInfo.getExceptionVariable(), false),
 					GlobalsCache.v().lookupClassVariable(c));
-			
+
 			Statement[] thenPart = { transferStatement };
-			//Small hack to avoid false positives form
-			//code that is only reachable if an interleaving happens
-			if (interuptException==c && !org.joogie.Options.v().useSoundThreads()) {
-				thenPart = new Statement[]{TranslationHelpers.havocEverything(procInfo, valueswitch), transferStatement};
+			// Small hack to avoid false positives form
+			// code that is only reachable if an interleaving happens
+			if (interuptException == c
+					&& !org.joogie.Options.v().useSoundThreads()) {
+				thenPart = new Statement[] {
+						TranslationHelpers.havocEverything(procInfo,
+								valueswitch), transferStatement };
 			}
-			
+
 			Statement[] elsePart = {};
 			statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
 		}
 
-		//now remove all the traps that we have already used
-		//and generate transitions for the remaining ones if
-		//necessary.
+		// now remove all the traps that we have already used
+		// and generate transitions for the remaining ones if
+		// necessary.
 		traps.removeAll(usedTraps);
-		
+
 		// now check if there are traps of type Exception or Throwable left, or
 		// if we might not know the throws clause
 		// then we have to create an edge to them as well. Otherwise
 		// we might create unreachable catch blocks
 		// also check if runtime exceptions are caught. In that case,
 		// we have to allow a transition to them as well
-		
+
 		for (Trap trap : traps) {
-			
+
 			if (trap.getException() == exception
 					|| trap.getException() == throwable
 					|| !calledMethod.hasActiveBody()
-					|| GlobalsCache.v().isSubTypeOrEqual(trap.getException(), runtimeexception)) {
-				
-				if (subsumedByLargestKnonwExceptions(largestCaughtExceptions, trap.getException())) {
+					|| GlobalsCache.v().isSubTypeOrEqual(trap.getException(),
+							runtimeexception)) {
+
+				if (subsumedByLargestKnonwExceptions(largestCaughtExceptions,
+						trap.getException())) {
 					continue;
 				}
-				
+
 				Expression condition = pf.mkBinaryExpression(
 						pf.getBoolType(),
 						BinaryOperator.COMPPO,
@@ -560,7 +622,7 @@ public class InvokeTranslation {
 				Statement[] elsePart = { TranslationHelpers
 						.createClonedAttribAssert() };
 				statements.add(pf.mkIfStatement(condition, thenPart, elsePart));
-			} 
+			}
 		}
 
 		// finally check if there is a finally_trap that we didn't account for
@@ -571,12 +633,13 @@ public class InvokeTranslation {
 						+ procInfo.getBoogieName());
 			}
 			Trap trap = finally_traps.get(0);
-			
-			if (!subsumedByLargestKnonwExceptions(largestCaughtExceptions, trap.getException())) {
-				statements.add(pf.mkGotoStatement(GlobalsCache.v().getUnitLabel(
-						(Stmt) trap.getHandlerUnit())));
+
+			if (!subsumedByLargestKnonwExceptions(largestCaughtExceptions,
+					trap.getException())) {
+				statements.add(pf.mkGotoStatement(GlobalsCache.v()
+						.getUnitLabel((Stmt) trap.getHandlerUnit())));
 			}
-			
+
 		}
 
 		if (statements.size() == 0)
@@ -599,25 +662,26 @@ public class InvokeTranslation {
 				statements.toArray(new Statement[statements.size()]),
 				new Statement[] {}));
 
-	}	
+	}
 
-	
 	/**
-	 * Updates the list of largest known exceptions. 
-	 * It scans through the list and checks if it already contains a superclass of c.
-	 * If so, it returns true.
-	 * Otherwise, it adds c to the list and removes all sublcasses of c from the list,
-	 * and returns false
+	 * Updates the list of largest known exceptions. It scans through the list
+	 * and checks if it already contains a superclass of c. If so, it returns
+	 * true. Otherwise, it adds c to the list and removes all sublcasses of c
+	 * from the list, and returns false
+	 * 
 	 * @param largestCaughtExceptions
 	 * @param c
 	 */
-	private static boolean subsumedByLargestKnonwExceptions(List<SootClass> largestCaughtExceptions, SootClass c) {
+	private static boolean subsumedByLargestKnonwExceptions(
+			List<SootClass> largestCaughtExceptions, SootClass c) {
 		if (largestCaughtExceptions.isEmpty()) {
 			largestCaughtExceptions.add(c);
 		} else {
 			SootClass largerKnown = null;
 			boolean replacedOld = false;
-			for (SootClass large : new LinkedList<SootClass>(largestCaughtExceptions)) {
+			for (SootClass large : new LinkedList<SootClass>(
+					largestCaughtExceptions)) {
 				if (GlobalsCache.v().isProperSubType(c, large)) {
 					largerKnown = large;
 					break;
@@ -626,20 +690,22 @@ public class InvokeTranslation {
 					replacedOld = true;
 				}
 			}
-			if (largerKnown!=null) {
-//				System.err.println("Not catching "+c.getName() + " because we already caught "+largerKnown.getName());
-				return true;									
+			if (largerKnown != null) {
+				// System.err.println("Not catching "+c.getName() +
+				// " because we already caught "+largerKnown.getName());
+				return true;
 			}
 			if (replacedOld) {
 				largestCaughtExceptions.add(c);
-			}		
-		}	
+			}
+		}
 		return false;
 	}
-	
+
 	/**
 	 * Sort a list of exceptions such that a class always occurs before its
 	 * superclass.
+	 * 
 	 * @param excpetions
 	 * @return
 	 */
@@ -650,7 +716,7 @@ public class InvokeTranslation {
 			SootClass largest = null;
 			for (SootClass c : todo) {
 				if (largest == null) {
-					largest = c; 
+					largest = c;
 					continue;
 				}
 				if (GlobalsCache.v().isProperSubType(largest, c)) {
@@ -660,14 +726,14 @@ public class InvokeTranslation {
 			todo.remove(largest);
 			sorted.addFirst(largest);
 		}
-//		System.err.print("unsorted: " );
-//		for (SootClass c : exceptions) System.err.print(c.getName()+", ");
-//		System.err.println();
-//		System.err.print("sorted: " );
-//		for (SootClass c : sorted) System.err.print(c.getName()+", ");
-//		System.err.println();
-		
+		// System.err.print("unsorted: " );
+		// for (SootClass c : exceptions) System.err.print(c.getName()+", ");
+		// System.err.println();
+		// System.err.print("sorted: " );
+		// for (SootClass c : sorted) System.err.print(c.getName()+", ");
+		// System.err.println();
+
 		return sorted;
 	}
-	
+
 }
