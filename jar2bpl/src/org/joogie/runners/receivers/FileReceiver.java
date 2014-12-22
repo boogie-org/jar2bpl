@@ -22,6 +22,8 @@ package org.joogie.runners.receivers;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import util.Log;
+
 /**
  * File Output Receiver of a Runner
  * 
@@ -49,7 +51,7 @@ public class FileReceiver implements Receiver {
 		try {
 			fileWriter.write(text);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 
@@ -63,7 +65,7 @@ public class FileReceiver implements Receiver {
 		try {
 			fileWriter.flush();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 
 	}

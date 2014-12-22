@@ -52,14 +52,13 @@ public class Dispatcher {
 	public static void run(String input, String output) {
 		try {
 			//SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
-			
 			Log.debug("Running Soot");
 			swSoot = StopWatch.getInstanceAndStart();
 			runSoot(input, output);
 			swSoot.stop();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());;
 		} finally {			
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();
@@ -89,7 +88,7 @@ public class Dispatcher {
 			swSoot.stop();
 			pf = GlobalsCache.v().getPf();
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		} finally {
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();

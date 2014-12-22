@@ -13,7 +13,6 @@ import org.joogie.soot.SootProcedureInfo;
 
 import soot.Trap;
 import soot.jimple.AssignStmt;
-import soot.jimple.CaughtExceptionRef;
 import soot.jimple.GotoStmt;
 import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
@@ -185,11 +184,6 @@ public class CommonSubsequences {
 		return stmts;
 	}
 	
-	private static boolean isCatchStmt(Stmt s) {
-		return s instanceof AssignStmt
-				&& ((AssignStmt)s).getRightOp() instanceof CaughtExceptionRef;
-	}
-	
 	private static boolean compareLists(List<JimpleLine> a, List<JimpleLine> b) {
 		if (a.size()!=b.size()) {
 			System.err.println("Wrong size");
@@ -201,15 +195,6 @@ public class CommonSubsequences {
 		return true;
 	}
 	
-	private static boolean allTheSame(List<JimpleLine> list) {
-		if (list==null || list.size()<=1) return false;		
-		JimpleLine first = list.get(0);
-		for (JimpleLine jl : list) {
-			if (!jl.equals(first)) return false;
-		}
-		return true;
-	}
-
 	private static void sort(List<List<JimpleLine>> arr) {
 		Collections.sort(arr, new Comparator<List<JimpleLine>>() {
 			public int compare(List<JimpleLine> l1, List<JimpleLine> l2) {

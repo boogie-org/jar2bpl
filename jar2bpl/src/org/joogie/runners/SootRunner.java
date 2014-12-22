@@ -97,7 +97,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 
@@ -141,7 +141,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 	
@@ -178,7 +178,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 
@@ -213,7 +213,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}		
 	}
 	
@@ -259,7 +259,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 
@@ -321,9 +321,20 @@ public class SootRunner extends Runner {
 			}
 			Log.info("Running soot with "+sb.toString());
 			
-			// Finally, run Soot
+
+
+			//log everything soot has to say
+		    PrintStream origOut = System.out;
+		    PrintStream origErr = System.err;		    
+		    System.setOut(new Interceptor(origOut));
+		    System.setErr(new Interceptor(origErr));
+			// Finally, run Soot		    
 			soot.Main.main(args.toArray(new String[args.size()]));
 
+			//reset the pipes
+			System.setOut(origOut);
+		    System.setErr(origErr);
+			
 			//CallGraph cg = Scene.v().getCallGraph();
 //			StringBuilder sb = new StringBuilder();
 //			sb.append("Entrypoints: \n");
@@ -338,19 +349,34 @@ public class SootRunner extends Runner {
 			if (null != boogieFile && !boogieFile.isEmpty()) {
 				GlobalsCache.v().getPf().toFile(boogieFile);
 			}
-
+			
 			if (Options.v().getRunTypeChecker()) {
 				GlobalsCache.v().getPf().runTypeChecker();
 			}
-			
+			Log.info("Done parsing.");
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e);
 		} finally {
 			// reset stream redirection
 			resetStream();
 		}
 	}
 
+	
+	private class Interceptor extends PrintStream
+	{
+	    public Interceptor(OutputStream out)
+	    {
+	        super(out, true);
+	    }
+	    @Override
+	    public void print(String s)
+	    {
+	    	Log.info(s);
+//	        super.print(s);
+	    }
+	}	
+	
 	/**
 	 * Fills a list with the standard command-line arguments needed by Soot
 	 * 
@@ -446,7 +472,7 @@ public class SootRunner extends Runner {
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 
@@ -493,7 +519,7 @@ public class SootRunner extends Runner {
 			jarFile.close();
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());			
 		}
 	}
 

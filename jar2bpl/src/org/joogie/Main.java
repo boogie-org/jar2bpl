@@ -64,7 +64,7 @@ public class Main {
 					Options.v().getBoogieFile());
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 

@@ -58,7 +58,7 @@ public class FileIO {
 			fr.close();
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 			s = null;
 		}
 		return s;
@@ -83,7 +83,7 @@ public class FileIO {
 			fw.close();
 			success = true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 		return success;
 	}
@@ -181,7 +181,7 @@ public class FileIO {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.error(e.getMessage());
 		}
 	}
 

@@ -11,6 +11,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.joogie.util.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -84,11 +85,11 @@ public class EclipseClasspathFileReader {
 				}
 			}
 		}catch(ParserConfigurationException pce) {
-			pce.printStackTrace();
+			Log.error(pce.getMessage());;
 		}catch(SAXException se) {
-			se.printStackTrace();
+			Log.error(se.getMessage());
 		}catch(IOException ioe) {
-			ioe.printStackTrace();
+			Log.error(ioe.getMessage());
 		}
 		
 	}

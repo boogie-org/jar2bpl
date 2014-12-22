@@ -19,7 +19,6 @@
 
 package org.joogie.soot;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,7 +37,6 @@ import soot.Scene;
 import soot.SootClass;
 import soot.Trap;
 import soot.Type;
-import soot.Unit;
 import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.BinopExpr;
@@ -60,7 +58,6 @@ import soot.jimple.Stmt;
 import soot.jimple.StmtSwitch;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.ThrowStmt;
-import soot.toolkits.graph.ExceptionalUnitGraph;
 import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.expression.Expression;
@@ -677,29 +674,6 @@ public class SootStmtSwitch implements StmtSwitch {
 	@Override
 	public void defaultCase(Object arg0) {
 		assert (false);
-	}
-
-	/**
-	 * find the successor statement of a given statement. This is only used to
-	 * find proper source locations for else-blocks
-	 * 
-	 * @param stmt
-	 * @return
-	 */
-	private Stmt findSuccessorStatement(Stmt stmt) {
-		ExceptionalUnitGraph tug = procInfo.getExceptionalUnitGraph();
-		Iterator<Unit> stmtIt = tug.iterator();
-
-		while (stmtIt.hasNext()) {
-			Stmt s = (Stmt) stmtIt.next();
-			if (s == stmt) {
-				if (stmtIt.hasNext())
-					return (Stmt) stmtIt.next();
-				else
-					return null;
-			}
-		}
-		return null;
 	}
 
 }
