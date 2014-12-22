@@ -97,7 +97,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 
@@ -141,7 +141,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 	
@@ -178,7 +178,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 
@@ -213,7 +213,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}		
 	}
 	
@@ -259,7 +259,7 @@ public class SootRunner extends Runner {
 			run(args, boogieFile);
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 
@@ -472,7 +472,7 @@ public class SootRunner extends Runner {
 			}
 
 		} catch (IOException e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 
@@ -519,7 +519,7 @@ public class SootRunner extends Runner {
 			jarFile.close();
 
 		} catch (IOException e) {
-			Log.error(e.getMessage());			
+			Log.error(e.toString());			
 		}
 	}
 

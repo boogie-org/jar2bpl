@@ -93,7 +93,7 @@ public class SootBodyTransformer extends BodyTransformer {
 			transformStmtList(arg0);
 		} catch (Throwable e) {
 			Log.error("Failed to translate "+ arg0.getMethod().getName());
-			Log.debug(e.getMessage());
+			Log.debug(e.toString());
 			throw e;
 		}
 		GlobalsCache.v().currentMethod = null;

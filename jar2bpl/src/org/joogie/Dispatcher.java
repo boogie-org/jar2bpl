@@ -58,7 +58,7 @@ public class Dispatcher {
 			swSoot.stop();
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());;
+			Log.error(e.toString());;
 		} finally {			
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();
@@ -88,7 +88,7 @@ public class Dispatcher {
 			swSoot.stop();
 			pf = GlobalsCache.v().getPf();
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		} finally {
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();

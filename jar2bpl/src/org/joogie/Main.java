@@ -48,7 +48,7 @@ public class Main {
 			parser.parseArgument(args);
 			runConsoleMode();
 		} catch (CmdLineException e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 			Log.error("java -jar joogie.jar [options...] arguments...");
 			parser.printUsage(System.err);
 		}
@@ -64,7 +64,7 @@ public class Main {
 					Options.v().getBoogieFile());
 
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 

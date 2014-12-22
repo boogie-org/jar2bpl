@@ -51,7 +51,7 @@ public class FileReceiver implements Receiver {
 		try {
 			fileWriter.write(text);
 		} catch (IOException e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 	}
 
@@ -65,7 +65,7 @@ public class FileReceiver implements Receiver {
 		try {
 			fileWriter.flush();
 		} catch (IOException e) {
-			Log.error(e.getMessage());
+			Log.error(e.toString());
 		}
 
 	}
