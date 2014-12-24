@@ -320,7 +320,6 @@ public class SootRunner extends Runner {
 				sb.append(" "+s);
 			}
 			Log.info("Running soot with "+sb.toString());
-			
 
 
 			//log everything soot has to say

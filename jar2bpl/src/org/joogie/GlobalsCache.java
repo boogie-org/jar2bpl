@@ -138,6 +138,11 @@ public class GlobalsCache {
 		return this.unitLabelMap.get(u);
 	}
 
+	public String getBlockLabel() {
+		this.unitLabelCounter++;
+		return this.blockPrefix + (this.unitLabelCounter);
+	}
+	
 	public SootProcedureInfo lookupProcedure(SootMethod m) {
 		if (!this.procedureMap.containsKey(m)) {
 			SootProcedureInfo procinfo = new SootProcedureInfo(m);

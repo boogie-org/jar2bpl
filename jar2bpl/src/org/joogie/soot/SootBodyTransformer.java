@@ -52,8 +52,10 @@ import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceLnNamePosTag;
 import soot.tagkit.Tag;
 import soot.toolkits.graph.ExceptionalUnitGraph;
+import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.declaration.Implementation;
+import boogie.ast.statement.ReturnStatement;
 import boogie.ast.statement.Statement;
 import boogie.enums.BinaryOperator;
 
@@ -157,6 +159,11 @@ public class SootBodyTransformer extends BodyTransformer {
 						);		
 		}
 		
+		//to be compatible with Microsoft Boogie, we have
+		//to create a unified exit and only a single return
+		//per procedure.
+		boogieStatements = createUnifiedExit(boogieStatements);
+		
 		//now create the procedure implementation that combines
 		//the signature procInfo and the body.
 		Implementation proc = GlobalsCache
@@ -165,10 +172,28 @@ public class SootBodyTransformer extends BodyTransformer {
 				.mkProcedure(
 						procInfo.getProcedureDeclaration(),
 						boogieStatements.toArray(new Statement[boogieStatements
-								.size()]), procInfo.getLocalVariables());
-				
+								.size()]), procInfo.getLocalVariables());		
+		
 		procInfo.setProcedureImplementation(proc);
 		//GlobalsCache.v().modifiedInMonitor.clear();
+	}
+	
+	private LinkedList<Statement> createUnifiedExit(LinkedList<Statement> stmts) {
+		LinkedList<Statement> ret = new LinkedList<Statement>();
+		String label = GlobalsCache.v().getBlockLabel();	
+		ProgramFactory pf = GlobalsCache.v().getPf();
+		
+		for (Statement s : stmts) {
+			if (s instanceof ReturnStatement) {				
+				ret.add(pf.mkGotoStatement(label));
+			} else {
+				ret.add(s);
+			}
+			
+		}		
+		ret.add(pf.mkLabel(label));
+		ret.add(pf.mkReturnStatement());
+		return ret;
 	}
 	
 	/**
