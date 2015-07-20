@@ -1,5 +1,0 @@
-File : /Users/schaef/git/jar2bpl/jar2bpl_test/regression/true_positives/tp02/InfeasibleCode02.java
- Inconsistency detected between the following lines:
-	11, 12(else-block)
-	67, 70(else-block)
-
