@@ -12,6 +12,10 @@ import java.math.BigInteger;
  */
 public class Snippet01 {
 
+	public static void main(String[] args) {
+		
+	}
+	
 	public void updateUpperLowerSet(BigInteger coeff, LinVar nb) {
 		InfinitNumber ubound = nb.getUpperBound();
 		InfinitNumber lbound = nb.getLowerBound();

@@ -103,43 +103,7 @@ public class SootRunner extends Runner {
 		}
 	}
 
-	
-	/**
-	 * Runs Soot by using a class (e.g., from Joogie)
-	 * 
-	 * @param classFile
-	 *            Class file
-	 * @param boogieFile
-	 *            Boogie file
-	 */
-	public void runWithClass(String classFile, String boogieFile) {
-		try {
-			// dependent JAR files
-			List<File> jarFiles = new ArrayList<File>();
-			fillClassPath(jarFiles);
 
-			// additional classpath available?
-			String cp = buildClassPath(jarFiles);
-			if (Options.v().hasClasspath()) {
-				cp += File.pathSeparatorChar + Options.v().getClasspath();
-			}
-
-			// command-line arguments for Soot
-			List<String> args = new ArrayList<String>();
-			fillSootArgs(args);
-
-			// add soot-class-path
-			args.add("-cp");
-			args.add(cp);
-			args.add(classFile);		
-			
-			// finally, run soot
-			run(args, boogieFile);
-
-		} catch (Exception e) {
-			Log.error(e.toString());
-		}
-	}
 
 	public void runWithApk(String apkFile, String boogieFile) {
 		try {
@@ -212,6 +176,10 @@ public class SootRunner extends Runner {
 			args.add("-process-path");
 			args.add(path);
 
+			String mainClass = Options.v().getMainClassName();
+			if (mainClass!=null && !mainClass.isEmpty()) {
+				args.add(mainClass);
+			}
 			
 			
 			// finally, run soot

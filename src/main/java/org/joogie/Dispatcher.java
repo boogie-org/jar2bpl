@@ -124,8 +124,7 @@ public class Dispatcher {
 				// run with path
 				sootRunner.runWithPath(input, output);
 			} else {
-				// run with class file
-				sootRunner.runWithClass(input, output);
+				throw new RuntimeException("Don't know what to run on.");
 			}
 		}
 	}

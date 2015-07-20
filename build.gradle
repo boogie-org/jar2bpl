@@ -140,6 +140,7 @@ task coverityCheck {
     exec {
       workingDir '.'
       commandLine 'rm', 'cov-report.tgz'
+      commandLine 'rm', '-rf', 'cov-int/'
     }    
     println("Done")
   }

@@ -9,6 +9,11 @@ public class Snippet02 {
 	public Snippet02 bases;
 	// from org.openecard.bouncycastle.crypto.params.NTRUSigningPrivateKeyParameters	
 	
+	public static void main(String[] args) {
+		
+	}
+
+	
 	boolean foo(Snippet02 other) {
 		if (bases == null) {
 			if (other.bases != null) {

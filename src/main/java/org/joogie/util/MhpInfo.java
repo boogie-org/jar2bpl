@@ -6,6 +6,7 @@ package org.joogie.util;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -66,10 +67,15 @@ public class MhpInfo {
 				
 		MhpTester mhpt = MhpTransformer.v().getMhpTester();
 		
-		LinkedList<HashSet<SootField>> read_sets = new LinkedList<HashSet<SootField>>();
-		LinkedList<HashSet<SootField>> write_sets = new LinkedList<HashSet<SootField>>();
+		List<HashSet<SootField>> read_sets = new LinkedList<HashSet<SootField>>();
+		List<HashSet<SootField>> write_sets = new LinkedList<HashSet<SootField>>();
 		
-		for (AbstractRuntimeThread art : mhpt.getThreads()) {
+		List<AbstractRuntimeThread> arts = mhpt.getThreads();
+		if (arts == null) {
+			return;
+		}
+		
+		for (AbstractRuntimeThread art : arts) {
 			
 			HashSet<SootField> read_fields = new HashSet<SootField>();
 			HashSet<SootField> write_fields = new HashSet<SootField>();
@@ -105,9 +111,9 @@ public class MhpInfo {
 				}				
 			}	
 			
-			
-			for (int j=0;  j< mhpt.getThreads().get(i).methodCount(); j++) {
-				Object o =  mhpt.getThreads().get(i).getMethod(j);
+			AbstractRuntimeThread art = arts.get(i); 
+			for (int j=0;  j< art.methodCount(); j++) {
+				Object o =  art.getMethod(j);
 				
 				if (o instanceof SootMethod) {
 					SootMethod m = (SootMethod)o;

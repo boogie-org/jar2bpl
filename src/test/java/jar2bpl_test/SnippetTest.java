@@ -32,7 +32,8 @@ public class SnippetTest {
 			+ "/";
 	protected static final String testRoot = userDir + "src/test/resources/jar2bpl/";
 
-	private File sourceFile;
+	private final File sourceFile;
+	private final String name;
 //	private File goldenFile;
 
 	@Parameterized.Parameters(name = "{index}: check ({1})")
@@ -54,12 +55,34 @@ public class SnippetTest {
 
 	public SnippetTest(File source, String name) {
 		this.sourceFile = source;
+		this.name = name;
 //		this.goldenFile = new File(source.getAbsolutePath().replace(".java",
 //				".gold"));
 	}
 
 	@Test
-	public void test() {
+	public void testDefaultConfiguration() {
+		runTranslation();
+	}
+
+	@Test
+	public void test01() {		
+		Options o = Options.v();
+		
+		String name = "jar2bpl.test_snippets." + this.name.replace(".java", "");
+		System.out.println("Using main class: " + name);
+		o.setMainClassName(name);
+		o.setDebug(true);
+		o.setExceptionErrorModel(true);
+		o.setRuntimeExceptionReturns(true);
+		o.setRunTypeChecker(true);
+		o.setSoundThreads(true);
+		runTranslation();
+	}
+
+
+	
+	public void runTranslation() {
 		System.out.println("Running test: " + sourceFile.getName());
 		File classFileDir = null;
 		File outFile = null;
@@ -94,7 +117,7 @@ public class SnippetTest {
 		}
 		org.junit.Assert.assertTrue(true);
 	}
-
+	
 	@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "DM_DEFAULT_ENCODING")
 	protected String fileToString(File f) {
 		StringBuffer sb = new StringBuffer();

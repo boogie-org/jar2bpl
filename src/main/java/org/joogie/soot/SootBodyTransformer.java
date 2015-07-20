@@ -293,7 +293,7 @@ public class SootBodyTransformer extends BodyTransformer {
 			
 			
 //			System.err.println(line+": "+s);
-			if (line==old_line) {
+			if (line==old_line && subprog!=null) {
 				subprog.add(s);
 			} else {
 				if (subprog!=null) {
