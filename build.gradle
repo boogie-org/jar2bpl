@@ -1,0 +1,137 @@
+if(JavaVersion.current() < JavaVersion.VERSION_1_7){
+    println("\t************************")
+    println("\t*** Hello from Bixie ***")
+    println("\tYou will need Java 1.7 or higher if you want to continue.")
+    println("\tYour Java is really old. Found version " + JavaVersion.current())
+    println("\t************************")
+    throw new GradleException("Update your Java!")    
+}
+
+
+apply plugin: 'java'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'jacoco'
+apply plugin: 'com.github.kt3k.coveralls'
+apply plugin: 'application'
+apply plugin: 'findbugs'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
+
+sourceCompatibility = 1.7
+def version = '1.2'
+jar.archiveName = "jar2bpl.jar"
+mainClassName = "org.joogie.Main"
+
+repositories {
+  mavenCentral()
+}
+
+
+configurations{
+  common
+}
+
+dependencies {
+    compile 'args4j:args4j:2.32'    
+    compile 'log4j:log4j:1.2.17'
+    compile 'com.google.code.findbugs:annotations:3.0.0'
+    compile fileTree(dir: 'lib', include: '*.jar')
+    
+    testCompile "junit:junit:4.11"  // Or whatever version
+}
+
+
+
+// building the jar ---------------------
+jar {
+  baseName = 'jar2bpl'
+
+    manifest {
+        attributes 'Main-Class': mainClassName,
+                   'Class-Path': '.',
+                   'Implementation-Title': 'Jar2Bpl',
+                   'Implementation-Version': version
+    }
+
+    from('src/main/resorces'){ include('log4j.properties')}
+
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+
+// testing related activities -----------------
+tasks.withType(FindBugs) {
+    effort = "default"
+    reportLevel = "medium"
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+ }
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+        html.destination "${buildDir}/reports/coverage"
+    }
+}
+
+test {
+  jacoco {
+    enabled = true
+  }
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
+
+    useJUnit()
+}
+
+
+task coverityCheck {
+  group 'Verification'
+  description 'Send the build to coverity for analysis'
+
+  doLast {
+    println("REQUIRES cov-build TO BE IN YOUR PATH.")
+    println("Running coverity")
+    exec {
+      workingDir '.'
+      commandLine 'cov-build', '--dir', 'cov-int', 'gradle', 'clean', 'compileJava'
+    }
+    println("Packing the results")
+    exec {
+      workingDir '.'
+      commandLine 'tar', 'czvf', 'cov-report.tgz', 'cov-int'
+    }
+    println("Uploading to coverity")
+    exec {
+      workingDir '.'
+      commandLine 'curl', '--form', 'token=X5pUWlwGfyZ-zPqgkUE61w', '--form' , 'email=martinschaef@gmail.com', '--form', 'file=@cov-report.tgz', '--form', 'version="${version}"', 'https://scan.coverity.com/builds?project=martinschaef%2Fjar2bpl'
+    }
+    exec {
+      workingDir '.'
+      commandLine 'rm', 'cov-report.tgz'
+    }    
+    println("Done")
+  }
+}
+
+
