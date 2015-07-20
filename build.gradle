@@ -34,10 +34,12 @@ configurations{
 }
 
 dependencies {
-    compile 'args4j:args4j:2.32'    
-    compile 'log4j:log4j:1.2.17'
-    compile 'com.google.code.findbugs:annotations:3.0.0'
-    compile fileTree(dir: 'lib', include: '*.jar')
+    compile ( 
+      'args4j:args4j:2.32',
+      'log4j:log4j:1.2.17',
+      'com.google.code.findbugs:annotations:3.0.0',
+      fileTree(dir: 'lib', include: '*.jar')
+    )
     
     testCompile "junit:junit:4.11"  // Or whatever version
 }
@@ -45,6 +47,15 @@ dependencies {
 
 
 // building the jar ---------------------
+
+//copy the jars into the output before zipping it into a jar.
+
+task copyToLib(type: Copy) {
+    into "$buildDir/output/libs"
+    from configurations.runtime
+}
+build.dependsOn(copyToLib)
+
 jar {
   baseName = 'jar2bpl'
 
