@@ -10,3 +10,12 @@ For a quick start, download the [jar file](https://github.com/martinschaef/jar2b
 
 We are currently under construction. The tool still works but the website needs some tlc.
 
+Build the project using:
+
+    gradlew shadowJar
+    
+This builds a fat jar containing all dependencies. Test the project by translating itself to boogie as follows:
+
+    java -jar build/libs/jar2bpl.jar -j build/classes/main/ -b ouput.bpl
+
+This translation is currently only used by [Bixie](https://github.com/martinschaef/bixie). To use it with Boogie or Corral, a few changes have to be made that are mentioend in the issues list.
