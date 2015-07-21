@@ -69,6 +69,11 @@ jar {
     from('src/main/resorces'){ include('log4j.properties')}
 
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+
+    from project.configurations.runtime.collect {
+      println it
+      it.isDirectory() ? it : file(it)
+    }
 }
 
 

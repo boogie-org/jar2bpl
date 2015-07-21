@@ -117,13 +117,13 @@ public class GithubTest {
 				"963d6c9a0af09690d6b37eb80175887961e7e1d6", "ant build",
 				new String[] { "build/classes" } });
 
-		testData.add(new Object[] {
-				"cassandra",
-				"https://github.com/apache/cassandra",
-				"19c2d22e93c52bc4699a0b5a0fdcdeedd3826449",
-				"ant",
-				new String[] { "build/classes/main", "build/classes/stress",
-						"build/classes/thrift" } });
+//		testData.add(new Object[] {
+//				"cassandra",
+//				"https://github.com/apache/cassandra",
+//				"19c2d22e93c52bc4699a0b5a0fdcdeedd3826449",
+//				"ant",
+//				new String[] { "build/classes/main", "build/classes/stress",
+//						"build/classes/thrift" } });
 
 		return testData;
 	}
