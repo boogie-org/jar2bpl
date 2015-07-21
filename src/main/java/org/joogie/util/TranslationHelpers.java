@@ -24,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.joogie.GlobalsCache;
-import org.joogie.soot.SootLocation;
 import org.joogie.soot.SootPrelude;
 import org.joogie.soot.SootProcedureInfo;
 import org.joogie.soot.SootValueSwitch;
@@ -47,7 +46,6 @@ import boogie.ProgramFactory;
 import boogie.ast.Attribute;
 import boogie.ast.expression.Expression;
 import boogie.ast.expression.IdentifierExpression;
-import boogie.ast.location.ILocation;
 import boogie.ast.statement.Statement;
 import boogie.type.BoogieType;
 
@@ -56,10 +54,6 @@ import boogie.type.BoogieType;
  * 
  */
 public class TranslationHelpers {
-
-	public static ILocation createDummyLocation() {
-		return new SootLocation(-1);
-	}
 
 	
 	public static Statement havocEverything(SootProcedureInfo procInfo,

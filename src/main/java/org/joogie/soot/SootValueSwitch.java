@@ -29,7 +29,6 @@ import org.joogie.util.MhpInfo;
 import org.joogie.util.TranslationHelpers;
 
 import soot.ArrayType;
-import soot.Body;
 import soot.DoubleType;
 import soot.FloatType;
 import soot.Immediate;
@@ -952,10 +951,17 @@ public class SootValueSwitch implements JimpleValueSwitch {
 				}
 			}
 
+			//TODO: this is a very clumsy way of obtaining thislocal
+			// but it is not obvious when it throws an exception.
+			Local thislocal = null;
+			try {
+				thislocal =  pinfo.getSootMethod().getActiveBody().getThisLocal();
+			} catch (Exception e) {
+				thislocal = null;
+			}
 			//check if base is "this" or a local variable
 			//that is an alias of "this".
-			Body body = pinfo.getSootMethod().getActiveBody();
-			if (arg0.getBase() instanceof ThisRef || (body!=null && body.getThisLocal() == arg0.getBase()) ) {
+			if (arg0.getBase() ==thislocal || arg0.getBase() instanceof ThisRef)  {
 				nullCheckNeeded = false; // TODO: check if this is actually needed.
 			}
 				
