@@ -6,5 +6,6 @@
 .metadata/
 bin/
 build/
+dump/
 test_data/
 **/*.log

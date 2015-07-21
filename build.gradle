@@ -8,12 +8,28 @@ if(JavaVersion.current() < JavaVersion.VERSION_1_7){
 }
 
 
+buildscript {
+    repositories {
+        mavenCentral()
+		maven {
+			name 'Shadow'
+      		url "https://plugins.gradle.org/m2/"
+    	}        
+    }
+
+    dependencies {
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'jacoco'
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'application'
 apply plugin: 'findbugs'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
@@ -22,6 +38,7 @@ task wrapper(type: Wrapper) {
 sourceCompatibility = 1.7
 def version = '1.2'
 jar.archiveName = "jar2bpl.jar"
+shadowJar.archiveName = "jar2bpl.jar"
 mainClassName = "org.joogie.Main"
 
 repositories {
@@ -70,10 +87,6 @@ jar {
 
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 
-    from project.configurations.runtime.collect {
-      println it
-      it.isDirectory() ? it : file(it)
-    }
 }
 
 
@@ -88,15 +101,7 @@ tasks.withType(FindBugs) {
     }
  }
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
 
-    dependencies {
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.0.1'
-    }
-}
 
 jacocoTestReport {
     reports {
