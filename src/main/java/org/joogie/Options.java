@@ -73,7 +73,7 @@ public class Options {
 		return debug;
 	}
 	public void setDebug(boolean val) {
-		debug=val;;
+		debug=val;
 	}
 	
 	

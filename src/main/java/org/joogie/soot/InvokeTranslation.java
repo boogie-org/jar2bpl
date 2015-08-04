@@ -18,6 +18,7 @@ import soot.SootMethod;
 import soot.Trap;
 import soot.Unit;
 import soot.Value;
+import soot.jimple.DynamicInvokeExpr;
 import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeExpr;
 import soot.jimple.SpecialInvokeExpr;
@@ -101,9 +102,13 @@ public class InvokeTranslation {
 			}
 		} else if (ivk instanceof StaticInvokeExpr) {
 			// Do nothing
+		} else if (ivk instanceof DynamicInvokeExpr) {
+			DynamicInvokeExpr divk = (DynamicInvokeExpr)ivk;
+			Log.info("Ignoring dynamic invoke: "+divk.toString());
+			
 		} else {
 			throw new RuntimeException(
-					"Cannot compute instance for static or dynamic call");
+					"Cannot compute instance for " + ivk.getClass().toString());
 		}
 
 		ss.addStatement(createCallStatement(ss, m, lefts,

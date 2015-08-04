@@ -354,7 +354,7 @@ public class SootValueSwitch implements JimpleValueSwitch {
 
 			final RefType targetType = (RefType) arg0.getCastType();
 
-			if (targetType.getClassName() == "java.lang.Object") {
+			if (targetType.getClassName().equals("java.lang.Object")) {
 				// should always be ok, nothing to assert
 				this.expressionStack.push(exp);
 			} else if (arg0.getOp().getType() instanceof RefType) {

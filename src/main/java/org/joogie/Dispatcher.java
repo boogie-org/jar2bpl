@@ -58,7 +58,7 @@ public class Dispatcher {
 			swSoot.stop();
 
 		} catch (Exception e) {
-			Log.error(e.toString());;
+			Log.error(e.toString());
 		} finally {			
 			GlobalsCache.resetInstance();
 			SootPrelude.resetInstance();

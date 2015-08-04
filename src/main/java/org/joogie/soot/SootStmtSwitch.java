@@ -212,9 +212,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	@Override
 	public void caseEnterMonitorStmt(EnterMonitorStmt arg0) {
-		injectLabelStatements(arg0);
-		EnterMonitorStmt em = (EnterMonitorStmt) arg0;
-		em.getOp().apply(this.valueswitch);
+		injectLabelStatements(arg0);		
+		arg0.getOp().apply(this.valueswitch);
 		this.valueswitch.getExpression();
 
 		this.inMonitor = true;
@@ -235,9 +234,8 @@ public class SootStmtSwitch implements StmtSwitch {
 	 */
 	@Override
 	public void caseExitMonitorStmt(ExitMonitorStmt arg0) {
-		injectLabelStatements(arg0);
-		ExitMonitorStmt em = (ExitMonitorStmt) arg0;
-		em.getOp().apply(this.valueswitch);
+		injectLabelStatements(arg0);		
+		arg0.getOp().apply(this.valueswitch);
 		this.valueswitch.getExpression();
 		// TODO:
 
@@ -250,8 +248,7 @@ public class SootStmtSwitch implements StmtSwitch {
 	 * @see soot.jimple.StmtSwitch#caseGotoStmt(soot.jimple.GotoStmt)
 	 */
 	@Override
-	public void caseGotoStmt(GotoStmt arg0) {
-		;
+	public void caseGotoStmt(GotoStmt arg0) {		
 		injectLabelStatements(arg0);
 		String labelName = GlobalsCache.v().getUnitLabel(
 				(Stmt) arg0.getTarget());
